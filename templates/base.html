@@ -17,6 +17,7 @@
 </head>
 
 <body>
+    {% if request.endpoint not in ['login', 'admin_login', 'register'] %}
     <nav>
         <a href="{{ url_for('home') }}" class="brand">
             <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="UNLOST Logo">
@@ -46,6 +47,7 @@
             {% endif %}
         </div>
     </nav>
+    {% endif %}
 
     <div class="main-content">
         {% if request.endpoint != 'login' %}
@@ -72,11 +74,22 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
     <script>
+        let mouseX = 0;
+        let mouseY = 0;
+        let isTicking = false;
+
         document.addEventListener('mousemove', (e) => {
-            const x = e.clientX;
-            const y = e.clientY;
-            document.body.style.setProperty('--mouse-x', x + 'px');
-            document.body.style.setProperty('--mouse-y', y + 'px');
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+
+            if (!isTicking) {
+                window.requestAnimationFrame(() => {
+                    document.body.style.setProperty('--mouse-x', mouseX + 'px');
+                    document.body.style.setProperty('--mouse-y', mouseY + 'px');
+                    isTicking = false;
+                });
+                isTicking = true;
+            }
         });
 
         function toggleMenu() {
