@@ -1,229 +1,51 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
+
+{% block title %}Items - UNLOST{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div
-        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
-        <h1 class="heading-title" style="margin: 0; font-size: 2.5rem;">Browse Items</h1>
-        <a href="{{ url_for('report') }}" class="btn btn-primary">
-            <i class="fa-solid fa-plus"></i> Report New Item
-        </a>
-    </div>
+<h1 class="mb-4 text-center hero-title" style="font-size: 2.5rem;">Explore Items</h1>
 
-    <div class="card" style="margin-bottom: 2rem;">
-        <div class="card-body">
-            <form id="items-filter-form" action="{{ url_for('items') }}" method="GET"
-                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; align-items: end;">
-                <div class="form-group" style="margin: 0;">
-                    <label for="q">Search</label>
-                    <input type="text" id="q" name="q" placeholder="Keywords..."
-                        value="{{ request.args.get('q', '') }}" autocomplete="off">
+<div class="card mb-5 glass-form fade-in-up border-0">
+    <div class="card-body">
+        <h5 class="card-title mb-4 text-primary"><i class="bi bi-funnel-fill me-2"></i>Search & Filter</h5>
+        <form method="GET" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small text-muted mb-1">Search Keywords</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-transparent border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                    <input type="text" class="form-control border-start-0 ps-0" name="q" placeholder="What are you looking for?" value="{{ request.args.get('q', '') }}">
                 </div>
-                <div class="form-group" style="margin: 0;">
-                    <label for="category">Category</label>
-                    <select id="category" name="category">
-                        <option value="">All Categories</option>
-                        <option value="Electronics">Electronics</option>
-                        <option value="Documents">Documents</option>
-                        <option value="Clothing">Clothing</option>
-                        <option value="Accessories">Accessories</option>
-                        <option value="Books">Books/Stationery</option>
-                        <option value="Other">Other</option>
-                    </select>
-                </div>
-                <div class="form-group" style="margin: 0;">
-                    <label for="status">Status</label>
-                    <select id="status" name="status">
-                        <option value="">All Statuses</option>
-                        <option value="Lost">Lost</option>
-                        <option value="Found">Found</option>
-                    </select>
-                </div>
-                <div style="display: flex; gap: 1rem;">
-                    <button type="submit" class="btn btn-primary" style="flex: 1;">Filter</button>
-                    <a href="{{ url_for('items') }}" class="btn btn-outline" style="padding: 0.8rem 1rem;">
-                        <i class="fa-solid fa-xmark"></i>
-                    </a>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div id="items-loading" class="items-loading" style="display: none;">
-        <span class="items-spinner" aria-hidden="true"></span>
-        <span>Updating results...</span>
-    </div>
-
-    <div id="items-results">
-        {% include 'partials/items_list.html' %}
-    </div>
-
-</div>
-
-<div id="claim-modal" class="modal" aria-hidden="true">
-    <div class="modal-backdrop" onclick="closeClaimModal()"></div>
-    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="claim-title">
-        <div class="modal-header">
-            <h3 id="claim-title">Verify Claim</h3>
-            <button class="modal-close" onclick="closeClaimModal()" aria-label="Close">&times;</button>
-        </div>
-        <div class="modal-body">
-            <p class="modal-label">Security Question</p>
-            <p id="claim-question" class="modal-question"></p>
-            <input type="text" id="claim-answer" placeholder="Your Answer" class="modal-input">
-            <p id="claim-error" class="modal-error" style="display: none;"></p>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-outline" onclick="closeClaimModal()">Cancel</button>
-            <button id="claim-submit" class="btn btn-primary" onclick="submitClaim()">
-                <span id="claim-submit-text">Verify</span>
-                <span id="claim-submit-spinner" class="btn-spinner" style="display: none;"></span>
-            </button>
-        </div>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">Category</label>
+                <select class="form-select" name="category">
+                    <option value="">All Categories</option>
+                    <option value="Electronics" {% if request.args.get('category') == 'Electronics' %}selected{% endif %}>Electronics</option>
+                    <option value="Clothing" {% if request.args.get('category') == 'Clothing' %}selected{% endif %}>Clothing</option>
+                    <option value="Jewelry" {% if request.args.get('category') == 'Jewelry' %}selected{% endif %}>Jewelry</option>
+                    <option value="Other" {% if request.args.get('category') == 'Other' %}selected{% endif %}>Other</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">Status</label>
+                <select class="form-select" name="status">
+                    <option value="">All Statuses</option>
+                    <option value="Lost" {% if request.args.get('status') == 'Lost' %}selected{% endif %}>Lost</option>
+                    <option value="Found" {% if request.args.get('status') == 'Found' %}selected{% endif %}>Found</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">Date</label>
+                <input type="date" class="form-control" name="date" value="{{ request.args.get('date', '') }}">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100 py-2"><i class="bi bi-search me-2"></i>Apply filters</button>
+            </div>
+        </form>
     </div>
 </div>
 
-<script>
-    // Retain select values
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('category')) document.getElementById('category').value = urlParams.get('category');
-    if (urlParams.get('status')) document.getElementById('status').value = urlParams.get('status');
-
-    const filterForm = document.getElementById('items-filter-form');
-    const resultsEl = document.getElementById('items-results');
-    const loadingEl = document.getElementById('items-loading');
-    const searchInput = document.getElementById('q');
-    const categorySelect = document.getElementById('category');
-    const statusSelect = document.getElementById('status');
-
-    function buildQueryString() {
-        const formData = new FormData(filterForm);
-        const params = new URLSearchParams();
-        for (const [key, value] of formData.entries()) {
-            if (value && value.trim) {
-                if (value.trim() !== '') params.append(key, value);
-            } else if (value) {
-                params.append(key, value);
-            }
-        }
-        return params.toString();
-    }
-
-    async function fetchItems() {
-        const queryString = buildQueryString();
-        const url = queryString ? `/items/partial?${queryString}` : '/items/partial';
-
-        loadingEl.style.display = 'flex';
-        try {
-            const response = await fetch(url, { headers: { 'X-Requested-With': 'fetch' } });
-            const html = await response.text();
-            resultsEl.innerHTML = html;
-            const pageUrl = queryString ? `/items?${queryString}` : '/items';
-            window.history.replaceState({}, '', pageUrl);
-        } catch (error) {
-            console.error('Error:', error);
-        } finally {
-            loadingEl.style.display = 'none';
-        }
-    }
-
-    function debounce(fn, delay) {
-        let timer;
-        return (...args) => {
-            clearTimeout(timer);
-            timer = setTimeout(() => fn(...args), delay);
-        };
-    }
-
-    const debouncedFetch = debounce(fetchItems, 300);
-
-    searchInput.addEventListener('input', debouncedFetch);
-    categorySelect.addEventListener('change', fetchItems);
-    statusSelect.addEventListener('change', fetchItems);
-
-    filterForm.addEventListener('submit', (event) => {
-        event.preventDefault();
-        fetchItems();
-    });
-
-    let activeClaimItemId = null;
-
-    function openClaimModal(itemId, question) {
-        activeClaimItemId = itemId;
-        const modal = document.getElementById('claim-modal');
-        const questionEl = document.getElementById('claim-question');
-        const answerEl = document.getElementById('claim-answer');
-        const errorEl = document.getElementById('claim-error');
-
-        questionEl.textContent = question;
-        answerEl.value = '';
-        errorEl.style.display = 'none';
-
-        modal.classList.add('open');
-        modal.setAttribute('aria-hidden', 'false');
-        answerEl.focus();
-    }
-
-    function closeClaimModal() {
-        const modal = document.getElementById('claim-modal');
-        modal.classList.remove('open');
-        modal.setAttribute('aria-hidden', 'true');
-        activeClaimItemId = null;
-    }
-
-    async function submitClaim() {
-        const answerInput = document.getElementById('claim-answer');
-        const errorMsg = document.getElementById('claim-error');
-        const submitBtn = document.getElementById('claim-submit');
-        const submitText = document.getElementById('claim-submit-text');
-        const submitSpinner = document.getElementById('claim-submit-spinner');
-        const answer = answerInput.value.trim();
-
-        if (!answer) {
-            errorMsg.textContent = 'Please enter an answer.';
-            errorMsg.style.display = 'block';
-            return;
-        }
-
-        submitBtn.disabled = true;
-        submitText.textContent = 'Verifying...';
-        submitSpinner.style.display = 'inline-block';
-
-        try {
-            const response = await fetch('/verify_claim', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ item_id: activeClaimItemId, answer: answer })
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                const contactBox = document.getElementById('contact-info-' + activeClaimItemId);
-                const contactText = document.getElementById('contact-text-' + activeClaimItemId);
-                if (contactBox && contactText) {
-                    contactText.textContent = data.contact_info;
-                    contactBox.style.display = 'block';
-                    contactBox.style.backgroundColor = '#ecfdf5';
-                    contactBox.style.borderColor = '#6ee7b7';
-                }
-                closeClaimModal();
-                showToast('Claim verified! Contact info unlocked.', 'success');
-            } else {
-                errorMsg.textContent = data.message || 'Incorrect answer. Please try again.';
-                errorMsg.style.display = 'block';
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            errorMsg.textContent = 'An error occurred. Please try again.';
-            errorMsg.style.display = 'block';
-        } finally {
-            submitBtn.disabled = false;
-            submitText.textContent = 'Verify';
-            submitSpinner.style.display = 'none';
-        }
-    }
-</script>
+<div id="items-container" class="fade-in-up stagger-2">
+    {% include 'partials/items_list.html' %}
+</div>
 {% endblock %}

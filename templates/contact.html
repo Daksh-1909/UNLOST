@@ -1,42 +1,80 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
+
+{% block title %}Contact - UNLOST{% endblock %}
 
 {% block content %}
-<div class="container container-narrow">
-    <div class="card">
-        <div class="card-body" style="text-align: center; padding: 3rem 2rem;">
-            <h1 style="margin-bottom: 1rem; font-size: 2.5rem;">Contact Us</h1>
-            <p style="margin-bottom: 3rem; color: var(--color-text-muted);">Have questions or suggestions for the UNLOST
-                team?
-                Reach out to us directly.</p>
+<div class="row justify-content-center mt-5 mb-5 fade-in-up">
+    <div class="col-lg-10">
+        <div class="text-center mb-5">
+            <h1 class="hero-title mb-3" style="font-size: 3rem;">Get in Touch</h1>
+            <p class="text-muted lead">We're here to help you find what you've lost, or return what you've found.</p>
+        </div>
 
-            <div
-                style="text-align: left; background: rgba(0,0,0,0.2); padding: 2rem; border-radius: var(--radius-md); border: 1px solid var(--card-border);">
-                <div style="margin-bottom: 1.5rem; display: flex; gap: 1rem; align-items: flex-start;">
-                    <i class="fa-solid fa-envelope" style="color: var(--color-primary); margin-top: 0.3rem;"></i>
-                    <div>
-                        <strong style="display: block; margin-bottom: 0.2rem;">Email</strong>
-                        <a href="mailto:exampple123@gmail.com"
-                            style="color: var(--color-text-main); text-decoration: none; border-bottom: 1px dashed var(--color-text-muted);">exampple123@gmail.com</a>
-                    </div>
-                </div>
-                <div style="margin-bottom: 1.5rem; display: flex; gap: 1rem; align-items: flex-start;">
-                    <i class="fa-solid fa-phone" style="color: var(--color-primary); margin-top: 0.3rem;"></i>
-                    <div>
-                        <strong style="display: block; margin-bottom: 0.2rem;">Phone</strong>
-                        <span>+91 9876543210</span>
-                    </div>
-                </div>
-                <div style="display: flex; gap: 1rem; align-items: flex-start;">
-                    <i class="fa-solid fa-location-dot" style="color: var(--color-primary); margin-top: 0.3rem;"></i>
-                    <div>
-                        <strong style="display: block; margin-bottom: 0.2rem;">Office Location</strong>
-                        <span>ABC<br>DEF</span>
+        <div class="row g-4 mb-5">
+            <div class="col-md-4 stagger-1">
+                <div class="card h-100 border-0 shadow-sm text-center p-4">
+                    <div class="card-body">
+                        <div class="d-inline-flex bg-primary bg-opacity-10 p-3 rounded-circle mb-3">
+                            <i class="bi bi-envelope-fill fs-2 text-primary"></i>
+                        </div>
+                        <h4 class="card-title fw-bold">Email Us</h4>
+                        <p class="card-text text-muted mb-2">For general inquiries</p>
+                        <a href="mailto:support@unlost.com" class="text-decoration-none fw-bold fs-5">support@unlost.com</a>
                     </div>
                 </div>
             </div>
 
-            <div style="margin-top: 3rem;">
-                <a href="{{ url_for('home') }}" class="btn btn-outline">Back to Home</a>
+            <div class="col-md-4 stagger-2">
+                <div class="card h-100 border-0 shadow-sm text-center p-4">
+                    <div class="card-body">
+                        <div class="d-inline-flex bg-success bg-opacity-10 p-3 rounded-circle mb-3">
+                            <i class="bi bi-telephone-fill fs-2 text-success"></i>
+                        </div>
+                        <h4 class="card-title fw-bold">Call Us</h4>
+                        <p class="card-text text-muted mb-2">Mon-Fri from 9am to 6pm</p>
+                        <a href="tel:+15551234567" class="text-decoration-none text-success fw-bold fs-5">+1 (555) 123-4567</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 stagger-3">
+                <div class="card h-100 border-0 shadow-sm text-center p-4">
+                    <div class="card-body">
+                        <div class="d-inline-flex bg-info bg-opacity-10 p-3 rounded-circle mb-3">
+                            <i class="bi bi-geo-alt-fill fs-2 text-info"></i>
+                        </div>
+                        <h4 class="card-title fw-bold">Location</h4>
+                        <p class="card-text text-muted mb-2">Our main office</p>
+                        <span class="text-dark fw-bold fs-5">123 Community St, NY</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card glass-form shadow-lg border-0 stagger-4">
+            <div class="card-body p-4 p-md-5">
+                <div class="text-center mb-4">
+                    <h3 class="fw-bold"><i class="bi bi-chat-left-dots-fill text-primary me-2"></i>Send a Message</h3>
+                </div>
+                <form>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="name" class="form-label fw-bold small text-muted">Your Name</label>
+                            <input type="text" class="form-control" id="name" name="name" placeholder="John Doe" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="email" class="form-label fw-bold small text-muted">Your Email</label>
+                            <input type="email" class="form-control" id="email" name="email" placeholder="john@example.com" required>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="message" class="form-label fw-bold small text-muted">Your Message</label>
+                        <textarea class="form-control" id="message" name="message" rows="5" placeholder="How can we help you today?" required></textarea>
+                    </div>
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-primary px-5 py-2 fw-bold"><i class="bi bi-send-fill me-2"></i>Send Message</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

@@ -1,94 +1,171 @@
-{% macro render_item_card(item) %}
-<div class="card">
-    {% if item.image_file %}
-    <img src="{{ url_for('static', filename='uploads/' + item.image_file) }}" alt="{{ item.title }}"
-        class="card-img">
-    {% else %}
-    <div class="card-img"
-        style="display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.2); font-size: 3rem; color: var(--color-text-muted);">
-        <i class="fa-solid fa-image"></i>
-    </div>
-    {% endif %}
-
-    <div class="card-body" style="flex: 1; display: flex; flex-direction: column;">
-        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
-            <span class="badge {{ item.status.lower() }}">{{ item.status }}</span>
-            <span
-                style="font-size: 0.85rem; color: var(--color-text-muted); display: flex; align-items: center; gap: 0.3rem;">
-                <i class="fa-regular fa-calendar"></i> {{ item.date.strftime('%Y-%m-%d') }}
-            </span>
-        </div>
-
-        <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;">{{ item.title }}</h3>
-        <p
-            style="color: var(--color-text-muted); margin-bottom: 1rem; font-size: 0.9rem; display: flex; align-items: center; gap: 0.4rem;">
-            <i class="fa-solid fa-location-dot"></i> {{ item.location }}
-        </p>
-        <p style="margin-bottom: 1.5rem; flex-grow: 1; line-height: 1.6;">{{ item.description[:100] }}{% if
-            item.description|length
-            > 100 %}...{% endif %}</p>
-
-        <div style="margin-top: auto;">
-            {% if item.security_question %}
-            <div id="claim-section-{{ item._id }}">
-                <button onclick="openClaimModal('{{ item._id }}', '{{ item.security_question|e }}')" class="btn btn-primary" style="width: 100%;">
-                    <i class="fa-solid fa-shield-halved"></i> Claim This Item
-                </button>
-            </div>
-
-            <div id="contact-info-{{ item._id }}" class="contact-info-box" style="display: none;">
-                <p style="color: var(--color-text-muted); font-size: 0.9rem; margin-bottom: 0.2rem;">
-                    Contact:</p>
-                <p id="contact-text-{{ item._id }}"></p>
-            </div>
-            {% else %}
-            <details>
-                <summary class="btn btn-outline"
-                    style="width: 100%; text-align: center; cursor: pointer; list-style: none;">
-                    View Contact Info
-                </summary>
-                <div class="contact-info-box">
-                    <p style="color: var(--color-text-muted); font-size: 0.9rem; margin-bottom: 0.2rem;">
-                        Contact:</p>
-                    <p>{{ item.contact_info }}</p>
-                </div>
-            </details>
-            {% endif %}
-        </div>
-    </div>
-</div>
-{% endmacro %}
-
-{% set found_items = items | selectattr('status', 'equalto', 'Found') | list %}
-{% set lost_items = items | selectattr('status', 'equalto', 'Lost') | list %}
-
 {% if items %}
-{% if found_items %}
-<h2
-    style="margin-top: 2rem; margin-bottom: 1rem; color: var(--color-primary); display: flex; align-items: center; gap: 0.5rem;">
-    <i class="fa-solid fa-check-circle"></i> Found Items
-</h2>
-<div class="card-grid">
-    {% for item in found_items %}
-    {{ render_item_card(item) }}
+<div class="row">
+    {% for item in items %}
+    <div class="col-lg-4 col-md-6 mb-4">
+        <div class="card h-100 d-flex flex-column">
+            {% if item.image_file %}
+            <img src="{{ url_for('static', filename='uploads/' + item.image_file) }}" class="card-img-top" alt="{{ item.title }}" style="height: 220px; object-fit: cover;">
+            {% else %}
+            <div class="card-img-top d-flex align-items-center justify-content-center" style="height: 220px; background: rgba(0,0,0,0.2);">
+                <span class="text-muted"><i class="bi bi-image" style="font-size: 2rem;"></i></span>
+            </div>
+            {% endif %}
+            <div class="card-body d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h5 class="card-title fw-bold mb-0 text-truncate" style="max-width: 70%;" title="{{ item.title }}">{{ item.title }}</h5>
+                    <span class="badge bg-{{ 'danger' if item.status == 'Lost' else 'success' }} px-3 py-2 ms-2">{{ item.status }}</span>
+                </div>
+                
+                <div class="mb-3">
+                    <p class="text-muted small mb-1"><i class="bi bi-tag-fill me-2"></i>{{ item.category }}</p>
+                    <p class="text-muted small mb-1"><i class="bi bi-geo-alt-fill me-2 text-danger"></i>{{ item.location }}</p>
+                    <p class="text-muted small mb-0"><i class="bi bi-calendar-event-fill me-2 text-primary"></i>{{ item.date.strftime('%b %d, %Y') }}</p>
+                </div>
+                
+                <p class="card-text flex-grow-1" style="display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;">{{ item.description }}</p>
+                
+                {% if item.security_question %}
+                <div class="mt-auto pt-3 border-top border-secondary">
+                    <label for="answer-{{ item._id }}" class="form-label small fw-bold text-info"><i class="bi bi-shield-lock-fill me-1"></i>Security Question:</label>
+                    <p class="small text-muted mb-2">{{ item.security_question }}</p>
+                    <div class="input-group input-group-sm">
+                        <input type="text" class="form-control bg-dark text-light border-secondary" id="answer-{{ item._id }}" placeholder="Your answer...">
+                        <button class="btn btn-primary" type="button" onclick="verifyClaim('{{ item._id }}', document.getElementById('answer-{{ item._id }}').value)">Verify Claim</button>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
     {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info">
+    No items found. <a href="{{ url_for('report') }}">Report an item</a>
 </div>
 {% endif %}
 
-{% if lost_items %}
-<h2 style="margin-top: 3rem; margin-bottom: 1rem; color: #ef4444; display: flex; align-items: center; gap: 0.5rem;">
-    <i class="fa-solid fa-circle-exclamation"></i> Lost Items
-</h2>
-<div class="card-grid">
-    {% for item in lost_items %}
-    {{ render_item_card(item) }}
-    {% endfor %}
+
+<!-- Custom Claim Result Modal -->
+<div id="claimModal" style="display:none; position:fixed; inset:0; z-index:9999; align-items:center; justify-content:center; background:rgba(0,0,0,0.6); backdrop-filter:blur(6px);">
+    <div id="claimModalBox" style="
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 20px;
+        padding: 2rem 2.5rem;
+        max-width: 420px;
+        width: 90%;
+        box-shadow: 0 25px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05);
+        transform: scale(0.85) translateY(20px);
+        opacity: 0;
+        transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s ease;
+        text-align: center;
+        position: relative;
+    ">
+        <!-- Icon -->
+        <div id="claimModalIcon" style="
+            width: 70px; height: 70px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 1.2rem;
+            font-size: 1.8rem;
+        "></div>
+
+        <!-- Title -->
+        <h5 id="claimModalTitle" style="font-weight:700; font-size:1.2rem; margin-bottom:0.5rem; color:#fff;"></h5>
+
+        <!-- Message -->
+        <p id="claimModalMessage" style="color: rgba(255,255,255,0.65); font-size:0.95rem; margin-bottom:1.5rem; line-height:1.6;"></p>
+
+        <!-- Contact Info Box (shown on success) -->
+        <div id="claimContactBox" style="display:none; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:12px; padding:0.75rem 1rem; margin-bottom:1.5rem;">
+            <p style="margin:0; font-size:0.8rem; color:#10b981; font-weight:600; letter-spacing:0.05em; text-transform:uppercase; margin-bottom:0.25rem;">Contact Info</p>
+            <p id="claimContactValue" style="margin:0; font-size:1.1rem; color:#fff; font-weight:700;"></p>
+        </div>
+
+        <!-- OK Button -->
+        <button onclick="closeClaimModal()" style="
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: #fff;
+            border: none;
+            padding: 0.6rem 2.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            box-shadow: 0 4px 15px rgba(99,102,241,0.4);
+        " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+            Got it
+        </button>
+    </div>
 </div>
-{% endif %}
-{% else %}
-<div style="text-align: center; padding: 6rem 2rem; color: var(--color-text-muted);">
-    <i class="fa-solid fa-ghost" style="font-size: 4rem; margin-bottom: 1.5rem; color: var(--card-border);"></i>
-    <h2 style="font-size: 2rem; margin-bottom: 1rem; color: var(--color-text-main);">No items found</h2>
-    <p>Try adjusting your search filters or check back later.</p>
-</div>
-{% endif %}
+
+<script>
+function showClaimModal(success, title, message, contactInfo) {
+    const modal = document.getElementById('claimModal');
+    const box = document.getElementById('claimModalBox');
+    const icon = document.getElementById('claimModalIcon');
+    const titleEl = document.getElementById('claimModalTitle');
+    const msgEl = document.getElementById('claimModalMessage');
+    const contactBox = document.getElementById('claimContactBox');
+    const contactVal = document.getElementById('claimContactValue');
+
+    if (success) {
+        icon.style.background = 'rgba(16,185,129,0.15)';
+        icon.style.border = '2px solid rgba(16,185,129,0.4)';
+        icon.innerHTML = '<i class="bi bi-check-circle-fill" style="color:#10b981;"></i>';
+        titleEl.textContent = title;
+        msgEl.textContent = message;
+        contactVal.textContent = contactInfo;
+        contactBox.style.display = 'block';
+    } else {
+        icon.style.background = 'rgba(239,68,68,0.12)';
+        icon.style.border = '2px solid rgba(239,68,68,0.35)';
+        icon.innerHTML = '<i class="bi bi-x-circle-fill" style="color:#ef4444;"></i>';
+        titleEl.textContent = title;
+        msgEl.textContent = message;
+        contactBox.style.display = 'none';
+    }
+
+    modal.style.display = 'flex';
+    requestAnimationFrame(() => {
+        box.style.transform = 'scale(1) translateY(0)';
+        box.style.opacity = '1';
+    });
+}
+
+function closeClaimModal() {
+    const modal = document.getElementById('claimModal');
+    const box = document.getElementById('claimModalBox');
+    box.style.transform = 'scale(0.85) translateY(20px)';
+    box.style.opacity = '0';
+    setTimeout(() => { modal.style.display = 'none'; }, 280);
+}
+
+// Close on backdrop click
+document.getElementById('claimModal').addEventListener('click', function(e) {
+    if (e.target === this) closeClaimModal();
+});
+
+function verifyClaim(itemId, answer) {
+    fetch('{{ url_for("verify_claim") }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ item_id: itemId, answer: answer })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showClaimModal(true, 'Claim Verified!', 'Your answer was correct. Here is the contact info:', data.contact_info);
+        } else {
+            showClaimModal(false, 'Verification Failed', data.message || 'Incorrect answer. Please try again.', null);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showClaimModal(false, 'Something went wrong', 'Could not verify claim. Please try again later.', null);
+    });
+}
+</script>
+

@@ -1,327 +1,190 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - UNLOST{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h1 class="page-title">Admin Dashboard</h1>
+<div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom border-secondary fade-in-up">
+    <h1 class="mb-0 fw-bold"><i class="bi bi-speedometer2 text-primary me-2"></i>Admin Dashboard</h1>
+    <span class="badge bg-danger py-2 px-3 rounded-pill"><i class="bi bi-shield-lock-fill me-1"></i>Secure Area</span>
+</div>
 
-    <style>
-        .nav-tabs {
-            display: flex;
-            border-bottom: 2px solid var(--card-border);
-            margin-bottom: 2rem;
-            gap: 1rem;
-        }
-
-        .nav-link {
-            padding: 0.75rem 1.5rem;
-            border: none;
-            background: none;
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--color-text-muted);
-            cursor: pointer;
-            border-bottom: 2px solid transparent;
-            margin-bottom: -2px;
-            transition: all 0.2s;
-        }
-
-        .nav-link:hover {
-            color: var(--color-primary);
-        }
-
-        .nav-link.active {
-            color: var(--color-primary);
-            border-bottom-color: var(--color-primary);
-        }
-
-        .tab-pane {
-            display: none;
-        }
-
-        .tab-pane.active {
-            display: block;
-            animation: fadeIn 0.3s ease;
-        }
-    </style>
-
-    <div class="nav-tabs">
-        <button class="nav-link active" onclick="openTab('overview', this)">Overview</button>
-        <button class="nav-link" onclick="openTab('history', this)">History Log</button>
-        <button class="nav-link" onclick="openTab('security', this)">
-            <i class="fa-solid fa-shield-halved"></i> Security Alerts
-        </button>
-    </div>
-
-    <!-- Tab 1: Overview -->
-    <div id="overview" class="tab-pane active">
-        <div class="admin-kpi-grid">
-            <div class="admin-kpi-card">
-                <p class="kpi-label">Total Items</p>
-                <p class="kpi-value">{{ total_items }}</p>
-                <p class="kpi-meta">Active listings</p>
-            </div>
-            <div class="admin-kpi-card">
-                <p class="kpi-label">Total Users</p>
-                <p class="kpi-value">{{ total_users }}</p>
-                <p class="kpi-meta">Registered accounts</p>
-            </div>
-            <div class="admin-kpi-card">
-                <p class="kpi-label">New Today</p>
-                <p class="kpi-value">{{ new_today }}</p>
-                <p class="kpi-meta">Items reported today</p>
-            </div>
-            <div class="admin-kpi-card">
-                <p class="kpi-label">Archived</p>
-                <p class="kpi-value">{{ archived_items }}</p>
-                <p class="kpi-meta">Recoverable in trash</p>
-            </div>
-        </div>
-
-        <div class="admin-split">
-            <div class="admin-panel">
-                <h2>Recent Items</h2>
-                <div class="card">
-                    <div class="card-body">
-                        {% if recent_items %}
-                        <table class="admin-table">
-                            <thead>
-                                <tr>
-                                    <th>Image</th>
-                                    <th>Title</th>
-                                    <th>Category</th>
-                                    <th>Status</th>
-                                    <th>Date</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for item in recent_items %}
-                                <tr>
-                                    <td data-label="Image">
-                                        {% if item.image_file %}
-                                        <img src="{{ url_for('static', filename='uploads/' + item.image_file) }}"
-                                            alt="Item Image"
-                                            style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px;">
-                                        {% else %}
-                                        <span style="color: var(--color-text-muted);">No Image</span>
-                                        {% endif %}
-                                    </td>
-                                    <td data-label="Title">{{ item.title }}</td>
-                                    <td data-label="Category">{{ item.category }}</td>
-                                    <td data-label="Status">
-                                        <span class="badge {{ 'found' if item.status == 'Found' else 'lost' }}">
-                                            {{ item.status }}
-                                        </span>
-                                    </td>
-                                    <td data-label="Date">{{ item.date.strftime('%Y-%m-%d') if item.date else 'N/A' }}</td>
-                                    <td data-label="Actions">
-                                        <form action="{{ url_for('delete_item', item_id=item._id) }}" method="POST"
-                                            onsubmit="return confirm('Are you sure you want to remove this item?');"
-                                            style="display:inline;">
-                                            <button type="submit" class="btn btn-danger btn-sm">Remove</button>
-                                        </form>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                        {% else %}
-                        <p style="color: var(--color-text-muted); text-align: center;">No items found.</p>
-                        {% endif %}
+<div class="row mb-4 g-4 fade-in-up stagger-1">
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100 border-0 shadow-sm" style="background: linear-gradient(135deg, #4f46e5, #3b82f6);">
+            <div class="card-body text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title text-white-50 text-uppercase fw-bold mb-1">Total Items</h6>
+                        <h2 class="display-5 fw-bold mb-0">{{ total_items }}</h2>
                     </div>
-                </div>
-            </div>
-
-            <div class="admin-panel">
-                <h2>Activity Feed</h2>
-                <div class="card">
-                    <div class="card-body">
-                        {% if logs %}
-                        <ul class="activity-feed">
-                            {% for log in logs[:8] %}
-                            <li class="activity-item">
-                                <div class="activity-dot"></div>
-                                <div>
-                                    <p class="activity-title">{{ log.action }}</p>
-                                    <p class="activity-meta">
-                                        {{ log.timestamp.strftime('%Y-%m-%d %H:%M') }} ? {{ log.item_title or 'System' }}
-                                    </p>
-                                </div>
-                            </li>
-                            {% endfor %}
-                        </ul>
-                        {% else %}
-                        <p style="color: var(--color-text-muted); text-align: center;">No activity yet.</p>
-                        {% endif %}
-                        <div class="activity-footer">
-                            <span class="badge alert"><i class="fa-solid fa-triangle-exclamation"></i> {{ security_alerts }} Alerts</span>
-                        </div>
-                    </div>
+                    <i class="bi bi-box-seam fs-1 text-white-50"></i>
                 </div>
             </div>
         </div>
     </div>
-
-    <div id="history" class="tab-pane">
-        <h2 style="margin-bottom: 1.5rem;">Trash / Recoverable Items</h2>
-        <div class="card" style="margin-bottom: 3rem;">
-            <div class="card-body">
-                {% if trash_items %}
-                <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th>Item</th>
-                            <th>Deleted At</th>
-                            <th>Original Status</th>
-                            <th>Time Left</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in trash_items %}
-                        <tr>
-                            <td data-label="Title">{{ item.title }}</td>
-                            <td data-label="Deleted At" style="color: var(--color-text-muted); font-size: 0.9rem;">
-                                {{ item.deleted_at.strftime('%Y-%m-%d %H:%M') if item.deleted_at else 'Unknown' }}
-                            </td>
-                            <td data-label="Original Status">
-                                <span class="badge {{ 'found' if item.previous_status == 'Found' else 'lost' }}">
-                                    {{ item.previous_status }}
-                                </span>
-                            </td>
-                            <td data-label="Time Left" style="font-weight: 600;">
-                                {% if item.deleted_at %}
-                                {% set days_passed = (now - item.deleted_at.replace(tzinfo=now.tzinfo)).days %}
-                                {% set days_left = 10 - days_passed %}
-
-                                {% if days_left < 0 %}
-                                <span class="countdown-badge danger">Expired</span>
-                                {% elif days_left <= 2 %}
-                                <span class="countdown-badge warn">{{ days_left }} days left</span>
-                                {% else %}
-                                <span class="countdown-badge ok">{{ days_left }} days left</span>
-                                {% endif %}
-                                {% else %}
-                                <span style="color: var(--color-text-muted);">N/A</span>
-                                {% endif %}
-                            </td>
-                            <td data-label="Action">
-                                {% if item.deleted_at and (now - item.deleted_at.replace(tzinfo=now.tzinfo)).days <= 10 %}
-                                <form action="{{ url_for('recover_item', item_id=item._id) }}" method="POST"
-                                    style="display:inline;">
-                                    <button type="submit" class="btn btn-success btn-sm">Recover</button>
-                                </form>
-                                {% else %}
-                                <button disabled class="btn btn-muted btn-sm">Unrecoverable</button>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                {% else %}
-                <p style="color: var(--color-text-muted); text-align: center;">Trash is empty.</p>
-                {% endif %}
-            </div>
-        </div>
-
-        <h2 style="margin-bottom: 1.5rem;">Audit Log</h2>
-        <div class="card">
-            <div class="card-body">
-                {% if logs %}
-                <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th>Timestamp</th>
-                            <th>Action</th>
-                            <th>Item</th>
-                            <th>User/Admin</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for log in logs if 'Security Alert' not in log.action %}
-                        <tr>
-                            <td data-label="Timestamp" style="color: var(--color-text-muted); font-size: 0.9rem;">
-                                {{ log.timestamp.strftime('%Y-%m-%d %H:%M') }}
-                            </td>
-                            <td data-label="Original Status">
-                                <span class="badge {{ 'reported' if 'Reported' in log.action else 'alert' }}">
-                                    {{ log.action }}
-                                </span>
-                            </td>
-                            <td data-label="Item">{{ log.item_title }}</td>
-                            <td data-label="User/Admin" style="font-size: 0.9rem;">{{ log.user or log.admin }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                {% else %}
-                <p style="color: var(--color-text-muted); text-align: center;">No history available.</p>
-                {% endif %}
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100 border-0 shadow-sm" style="background: linear-gradient(135deg, #10b981, #059669);">
+            <div class="card-body text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title text-white-50 text-uppercase fw-bold mb-1">Total Users</h6>
+                        <h2 class="display-5 fw-bold mb-0">{{ total_users }}</h2>
+                    </div>
+                    <i class="bi bi-people-fill fs-1 text-white-50"></i>
+                </div>
             </div>
         </div>
     </div>
-
-    <!-- Tab 3: Security -->
-    <div id="security" class="tab-pane">
-        <h2 style="margin-bottom: 1.5rem;">Security Alerts (Potential Fraud)</h2>
-        <div class="card">
-            <div class="card-body">
-                <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th>Timestamp</th>
-                            <th>Alert Type</th>
-                            <th>Item Targeted</th>
-                            <th>Input Tried</th>
-                            <th>User ID</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% set ns = namespace(found=false) %}
-                        {% for log in logs if 'Security Alert' in log.action %}
-                        {% set ns.found = true %}
-                        <tr class="row-alert">
-                            <td data-label="Timestamp" style="color: var(--color-text-muted); font-size: 0.9rem;">
-                                {{ log.timestamp.strftime('%Y-%m-%d %H:%M') }}
-                            </td>
-                            <td data-label="Alert Type" class="text-danger">
-                                <i class="fa-solid fa-triangle-exclamation"></i> {{ log.action }}
-                            </td>
-                            <td data-label="Item">{{ log.item_title }}</td>
-                            <td data-label="Input Tried" style="font-family: monospace;">{{ log.input_provided }}</td>
-                            <td data-label="User ID" style="font-size: 0.9rem;">{{ log.user }}</td>
-                        </tr>
-                        {% endfor %}
-
-                        {% if not ns.found %}
-                        <tr>
-                            <td colspan="5" style="padding: 2rem; text-align: center; color: var(--color-text-muted);">
-                                No security alerts detected (yet).
-                            </td>
-                        </tr>
-                        {% endif %}
-                    </tbody>
-                </table>
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100 border-0 shadow-sm" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+            <div class="card-body text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title text-white-50 text-uppercase fw-bold mb-1">New Today</h6>
+                        <h2 class="display-5 fw-bold mb-0">{{ new_today }}</h2>
+                    </div>
+                    <i class="bi bi-sun-fill fs-1 text-white-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100 border-0 shadow-sm" style="background: linear-gradient(135deg, #ef4444, #b91c1c);">
+            <div class="card-body text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title text-white-50 text-uppercase fw-bold mb-1">Archived</h6>
+                        <h2 class="display-5 fw-bold mb-0">{{ archived_items }}</h2>
+                    </div>
+                    <i class="bi bi-archive-fill fs-1 text-white-50"></i>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<script>
-    function openTab(tabName, btnElement) {
-        const tabPanes = document.getElementsByClassName("tab-pane");
-        for (let i = 0; i < tabPanes.length; i++) {
-            tabPanes[i].classList.remove("active");
-        }
+<div class="row mb-5 fade-in-up stagger-2">
+    <div class="col-md-12">
+        <div class="alert alert-danger d-flex align-items-center border-0 shadow-sm py-4" role="alert" style="background: rgba(239, 68, 68, 0.1);">
+            <i class="bi bi-exclamation-triangle-fill fs-1 text-danger me-4"></i>
+            <div>
+                <h4 class="alert-heading fw-bold mb-1 text-danger">Security Alerts</h4>
+                <p class="mb-0 text-muted">You have <strong class="text-danger fs-5">{{ security_alerts }}</strong> active security alerts requiring attention.</p>
+            </div>
+        </div>
+    </div>
+</div>
 
-        const navLinks = document.getElementsByClassName("nav-link");
-        for (let i = 0; i < navLinks.length; i++) {
-            navLinks[i].classList.remove("active");
-        }
+<div class="row g-4 mb-5 fade-in-up stagger-3">
+    <div class="col-lg-6">
+        <div class="card glass-form h-100 border-0">
+            <div class="card-header bg-transparent border-bottom border-secondary d-flex justify-content-between align-items-center py-3">
+                <h5 class="mb-0 fw-bold"><i class="bi bi-clock-history text-primary me-2"></i>Recent Items</h5>
+                <a href="#" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                {% if recent_items %}
+                <ul class="list-group list-group-flush rounded-bottom">
+                    {% for item in recent_items %}
+                    <li class="list-group-item bg-transparent border-secondary py-3 d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1 fw-bold text-light">{{ item.title }}</h6>
+                            <p class="text-muted small mb-0"><span class="badge bg-{{ 'danger' if item.status == 'Lost' else 'success' }} px-2 py-1 me-2">{{ item.status }}</span><i class="bi bi-calendar-event me-1"></i>{{ item.date.strftime('%b %d, %Y') }}</p>
+                        </div>
+                        <form method="POST" action="{{ url_for('delete_item', item_id=item._id) }}" class="m-0">
+                            <button type="submit" class="btn btn-sm btn-danger rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; padding: 0;" title="Archive Item"><i class="bi bi-archive"></i></button>
+                        </form>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-inbox fs-1 d-block mb-2 opacity-50"></i>
+                    <p>No recent items found</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
 
-        document.getElementById(tabName).classList.add("active");
-        btnElement.classList.add("active");
-    }
-</script>
+    <div class="col-lg-6">
+        <div class="card glass-form h-100 border-0">
+            <div class="card-header bg-transparent border-bottom border-secondary d-flex justify-content-between align-items-center py-3">
+                <h5 class="mb-0 fw-bold"><i class="bi bi-trash text-warning me-2"></i>Trash (Recoverable)</h5>
+            </div>
+            <div class="card-body p-0">
+                {% if trash_items %}
+                <ul class="list-group list-group-flush rounded-bottom">
+                    {% for item in trash_items %}
+                    <li class="list-group-item bg-transparent border-secondary py-3 d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1 text-light"><del class="text-muted">{{ item.title }}</del></h6>
+                            {% if item.get('days_deleted') is not none %}
+                                <p class="text-warning small mb-0"><i class="bi bi-exclamation-circle me-1"></i>Deleted {{ item.days_deleted }} days ago</p>
+                            {% endif %}
+                        </div>
+                        <form method="POST" action="{{ url_for('recover_item', item_id=item._id) }}" class="m-0">
+                            <button type="submit" class="btn btn-sm btn-success rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; padding: 0;" title="Recover Item"><i class="bi bi-arrow-counterclockwise"></i></button>
+                        </form>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-trash fs-1 d-block mb-2 opacity-50"></i>
+                    <p>Trash is completely empty</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4 mb-5 fade-in-up stagger-4">
+    <div class="col-md-12">
+        <div class="card glass-form border-0">
+            <div class="card-header bg-transparent border-bottom border-secondary py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold"><i class="bi bi-list-columns-reverse text-info me-2"></i>Recent Activity Log</h5>
+                <a href="{{ url_for('all_logs') }}" class="btn btn-sm btn-outline-info">View All</a>
+            </div>
+            <div class="card-body p-0 table-responsive">
+                {% if logs %}
+                <table class="table table-hover table-dark table-striped mb-0 rounded-bottom">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">Action</th>
+                            <th>Details</th>
+                            <th>User</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody class="border-top-0">
+                        {% for log in logs %}
+                        <tr>
+                            <td class="ps-4">
+                                {% if log.action == 'Archive' %}
+                                    <span class="badge bg-danger"><i class="bi bi-archive-fill me-1"></i>{{ log.action }}</span>
+                                {% elif log.action == 'Recover' %}
+                                    <span class="badge bg-success"><i class="bi bi-arrow-counterclockwise me-1"></i>{{ log.action }}</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ log.action }}</span>
+                                {% endif %}
+                            </td>
+                            <td><span class="text-light">{{ log.get('item_title', log.get('admin', 'N/A')) }}</span></td>
+                            <td><span class="text-info">{{ log.get('user', log.get('admin', 'System')) }}</span></td>
+                            <td class="text-muted small align-middle"><i class="bi bi-clock me-1"></i>{{ log.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-journal-x fs-1 d-block mb-2 opacity-50"></i>
+                    <p>No activity logs found</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

@@ -8,10 +8,16 @@ from werkzeug.utils import secure_filename
 from datetime import datetime, timezone
 from dotenv import load_dotenv
 import string
-# from authlib.integrations.flask_client import OAuth
-# from flask import session
-# from flask_mail import Mail, Message
-# import random
+import traceback
+import logging
+from authlib.integrations.flask_client import OAuth
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+import secrets
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 # Load environment variables from .env file
 # Load environment variables from .env file, overriding system vars
@@ -19,6 +25,7 @@ load_dotenv(override=True)
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key_here'
+app.secret_key = app.config['SECRET_KEY']  # Authlib requires secret_key to easily be accessible
 
 # Email Configuration (for 2FA)
 # app.config['MAIL_SERVER'] = 'smtp.gmail.com'
@@ -40,16 +47,34 @@ app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
 
 mongo = PyMongo(app)
 bcrypt = Bcrypt(app)
-# oauth = OAuth(app)
 
-# Google OAuth Configuration
-# google = oauth.register(
-#     name='google',
-#     ...
-# )
+# --- JWT Configuration ---
+app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'default_jwt_secret_key_change_in_production')
+jwt = JWTManager(app)
+
+# --- Google OAuth Configuration ---
+app.config['GOOGLE_CLIENT_ID'] = os.getenv('GOOGLE_CLIENT_ID')
+app.config['GOOGLE_CLIENT_SECRET'] = os.getenv('GOOGLE_CLIENT_SECRET')
+
+oauth = OAuth(app)
+google = oauth.register(
+    name='google',
+    client_id=app.config['GOOGLE_CLIENT_ID'],
+    client_secret=app.config['GOOGLE_CLIENT_SECRET'],
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    client_kwargs={
+        'scope': 'openid email profile'
+    }
+)
 
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
+
+@app.errorhandler(Exception)
+def handle_exception(error):
+    logger.error(f"Exception occurred: {str(error)}")
+    logger.error(traceback.format_exc())
+    return f"Error: {str(error)}", 500
 
 class User(UserMixin):
     def __init__(self, user_data):
@@ -57,7 +82,8 @@ class User(UserMixin):
         self.username = user_data['username']
         self.email = user_data['email']
         self.is_admin = user_data.get('is_admin', False)
-        self.is_admin = user_data.get('is_admin', False)
+        self.date_created = user_data.get('date_created')
+        self.auth_provider = user_data.get('auth_provider', 'local')
 
 
 @login_manager.user_loader
@@ -171,7 +197,8 @@ def report():
             "date": date_obj,
             "image_file": image_filename,
             "security_question": request.form.get('security_question'),
-            "security_answer": request.form.get('security_answer')
+            "security_answer": request.form.get('security_answer'),
+            "reporter_email": current_user.email if current_user.is_authenticated else "Anonymous"
         }
 
         mongo.db.items.insert_one(new_item)
@@ -207,32 +234,40 @@ def verify_claim():
         
     correct_answer = item.get('security_answer', '').strip().lower()
     
+    # Reject empty answers immediately
+    if not user_answer:
+        return {"success": False, "message": "Please enter an answer."}
+
+    # If no security answer is stored, deny access
+    if not correct_answer:
+        return {"success": False, "message": "This item has no security answer configured."}
+
     # Function to normalize and check for match
     def check_match(user, correct):
         if user == correct:
             return True
-            
+
         # Remove punctuation
         translator = str.maketrans('', '', string.punctuation)
         u_clean = user.translate(translator)
         c_clean = correct.translate(translator)
-        
+
         if u_clean == c_clean:
             return True
-            
-        # Check if one is substring of another
-        if u_clean in c_clean or c_clean in u_clean:
+
+        # Check if one is substring of another (only if both are non-empty)
+        if u_clean and c_clean and (u_clean in c_clean or c_clean in u_clean):
             return True
-            
+
         # Check keyword intersection (flexible matching)
         stop_words = {'the', 'a', 'an', 'and', 'or', 'is', 'in', 'at', 'of', 'for', 'with', 'on', 'it', 'its', 'my'}
         u_tokens = set(u_clean.split()) - stop_words
         c_tokens = set(c_clean.split()) - stop_words
-        
+
         # If we have meaningful tokens and there is ANY intersection
-        if c_tokens and u_tokens.intersection(c_tokens):
+        if c_tokens and u_tokens and u_tokens.intersection(c_tokens):
             return True
-            
+
         return False
 
     if check_match(user_answer, correct_answer):
@@ -304,6 +339,69 @@ def login():
 
 
 
+@app.route('/login/google')
+def login_google():
+    redirect_uri = url_for('auth_google_callback', _external=True)
+    return google.authorize_redirect(redirect_uri)
+
+@app.route('/auth/google/callback')
+def auth_google_callback():
+    token = google.authorize_access_token()
+    user_info = token.get('userinfo')
+    
+    if not user_info:
+        flash('Failed to fetch user info from Google.', 'danger')
+        return redirect(url_for('login'))
+        
+    email = user_info.get('email')
+    username = user_info.get('name', email.split('@')[0])
+    
+    # Check if user exists
+    user_data = mongo.db.users.find_one({"email": email})
+    
+    if not user_data:
+        # Register new user with random password
+        random_password = secrets.token_urlsafe(16)
+        hashed_password = bcrypt.generate_password_hash(random_password).decode('utf-8')
+        
+        new_user = {
+            "username": username,
+            "email": email,
+            "password": hashed_password,
+            "is_admin": False,
+            "date_created": datetime.now(timezone.utc),
+            "auth_provider": "google"
+        }
+        result = mongo.db.users.insert_one(new_user)
+        user_data = mongo.db.users.find_one({"_id": result.inserted_id})
+        flash('Account created successfully via Google!', 'success')
+        
+    user = User(user_data)
+    login_user(user)
+    return redirect(url_for('home'))
+
+@app.route('/api/login', methods=['POST'])
+def api_login():
+    data = request.get_json()
+    if not data:
+        return {"msg": "Missing JSON in request"}, 400
+        
+    email = data.get('email')
+    password = data.get('password')
+    
+    if not email or not password:
+        return {"msg": "Missing email or password"}, 400
+        
+    user_data = mongo.db.users.find_one({"email": email})
+    
+    if user_data and bcrypt.check_password_hash(user_data['password'], password):
+        # Create token that lasts for 1 day
+        from datetime import timedelta
+        access_token = create_access_token(identity=str(user_data['_id']), expires_delta=timedelta(days=1))
+        return {"access_token": access_token}, 200
+    else:
+        return {"msg": "Bad email or password"}, 401
+
 @app.route('/admin-login', methods=['GET', 'POST'])
 def admin_login():
     if current_user.is_authenticated:
@@ -356,7 +454,18 @@ def admin():
     recent_items = list(mongo.db.items.find({"status": {"$ne": "Archived"}}).sort("date", -1).limit(10))
 
     # Fetch archived items for recovery (Trash)
-    trash_items = list(mongo.db.items.find({"status": "Archived"}).sort("deleted_at", -1))
+    trash_items_cursor = mongo.db.items.find({"status": "Archived"}).sort("deleted_at", -1)
+    trash_items = []
+    current_time = datetime.now(timezone.utc)
+    for t_item in trash_items_cursor:
+        deleted_at = t_item.get('deleted_at')
+        if deleted_at:
+            if deleted_at.tzinfo is None:
+                deleted_at = deleted_at.replace(tzinfo=timezone.utc)
+            t_item['days_deleted'] = (current_time - deleted_at).days
+        else:
+            t_item['days_deleted'] = None
+        trash_items.append(t_item)
 
     logs = list(mongo.db.logs.find().sort("timestamp", -1).limit(20))
     security_alerts = mongo.db.logs.count_documents({"action": {"$regex": "Security Alert"}})
@@ -369,8 +478,19 @@ def admin():
                          security_alerts=security_alerts,
                          recent_items=recent_items,
                          trash_items=trash_items,
-                         logs=logs,
-                         now=datetime.now(timezone.utc))
+                         logs=logs)
+
+@app.route('/admin/logs')
+@login_required
+def all_logs():
+    if not current_user.is_admin:
+        flash('Access denied: Admin privileges required.', 'danger')
+        return redirect(url_for('home'))
+        
+    # Fetch all logs, sorted by most recent
+    logs = list(mongo.db.logs.find().sort("timestamp", -1))
+    
+    return render_template('admin_logs.html', logs=logs)
 
 @app.route('/admin/delete_item/<item_id>', methods=['POST'])
 @login_required
@@ -457,5 +577,11 @@ def init_db():
     # MongoDB creates collections on the fly
     return "MongoDB is ready!"
 
+@app.route('/profile')
+@login_required
+def profile():
+    user_logs = list(mongo.db.logs.find({"user": current_user.email}).sort("timestamp", -1).limit(10))
+    return render_template('profile.html', user=current_user, logs=user_logs)
+
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)

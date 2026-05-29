@@ -1,204 +1,101 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
+
+{% block title %}Report Item - UNLOST{% endblock %}
 
 {% block content %}
-<div class="container container-medium">
-    <h1 class="page-title">Report an Item</h1>
-
-    <div class="report-progress">
-        <div class="progress-step active" data-step="1">1. Details</div>
-        <div class="progress-step" data-step="2">2. Contact</div>
-        <div class="progress-step" data-step="3">3. Security</div>
-    </div>
-
-    <form id="report-form" action="{{ url_for('report') }}" method="POST" enctype="multipart/form-data" novalidate>
-        <div class="report-step active" data-step="1">
-            <div class="card">
-                <div class="card-body">
-                    <div class="form-group">
-                        <label for="title">Title *</label>
-                        <input type="text" id="title" name="title" placeholder="e.g. Black Wallet" required>
-                        <small class="form-hint">Keep it short and clear.</small>
+<div class="row justify-content-center my-5 fade-in-up">
+    <div class="col-lg-8 col-md-10">
+        <div class="text-center mb-5">
+            <h1 class="hero-title mb-2" style="font-size: 2.5rem;">Report an Item</h1>
+            <p class="text-muted">Help the community by providing details about a lost or found item.</p>
+        </div>
+        
+        <div class="card glass-form shadow-lg border-0">
+            <div class="card-body p-4 p-md-5">
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-8">
+                            <label for="title" class="form-label fw-bold text-muted small"><i class="bi bi-type me-2"></i>Item Title *</label>
+                            <input type="text" class="form-control" id="title" name="title" placeholder="e.g., Calculus Textbook" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="status" class="form-label fw-bold text-muted small"><i class="bi bi-exclamation-circle me-2"></i>Status *</label>
+                            <select class="form-select" id="status" name="status" required>
+                                <option value="Lost">Lost</option>
+                                <option value="Found">Found</option>
+                            </select>
+                        </div>
                     </div>
 
-                    <div class="form-group">
-                        <label for="description">Description *</label>
-                        <textarea id="description" name="description" rows="4" placeholder="Describe the item..." required></textarea>
-                        <small class="form-hint">Add unique details to help verify.</small>
+                    <div class="mb-4">
+                        <label for="description" class="form-label fw-bold text-muted small"><i class="bi bi-card-text me-2"></i>Description *</label>
+                        <textarea class="form-control" id="description" name="description" rows="4" placeholder="Provide a detailed description including distinguishing features..." required></textarea>
                     </div>
 
-                    <div class="form-group">
-                        <label for="category">Category *</label>
-                        <select id="category" name="category" required>
-                            <option value="">Select Category</option>
-                            <option value="Electronics">Electronics</option>
-                            <option value="Documents">Documents</option>
-                            <option value="Clothing">Clothing</option>
-                            <option value="Accessories">Accessories</option>
-                            <option value="Books">Books/Stationery</option>
-                            <option value="Other">Other</option>
-                        </select>
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-6">
+                            <label for="category" class="form-label fw-bold text-muted small"><i class="bi bi-tags me-2"></i>Category *</label>
+                            <select class="form-select" id="category" name="category" required>
+                                <option value="">Select a category</option>
+                                <option value="Electronics">Electronics</option>
+                                <option value="Clothing">Clothing</option>
+                                <option value="Jewelry">Jewelry</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="location" class="form-label fw-bold text-muted small"><i class="bi bi-geo-alt me-2"></i>Location *</label>
+                            <input type="text" class="form-control" id="location" name="location" placeholder="e.g., Central Park, NYC" required>
+                            <div class="form-text text-muted mt-1"><i class="bi bi-info-circle me-1"></i>If you don't know the exact location, write <strong>Unknown</strong>.</div>
+                        </div>
                     </div>
 
-                    <div class="form-group">
-                        <label for="location">Location *</label>
-                        <input type="text" id="location" name="location" placeholder="Where was it lost/found?" required>
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-6">
+                            <label for="date" class="form-label fw-bold text-muted small"><i class="bi bi-calendar-date me-2"></i>Date *</label>
+                            <input type="date" class="form-control" id="date" name="date" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="contact_info" class="form-label fw-bold text-muted small"><i class="bi bi-telephone me-2"></i>Contact Information *</label>
+                            <input type="text" class="form-control" id="contact_info" name="contact_info" placeholder="Email or Phone number" required>
+                        </div>
                     </div>
 
-                    <div class="form-group">
-                        <label for="status">Status *</label>
-                        <select id="status" name="status" required>
-                            <option value="">Select Status</option>
-                            <option value="Lost">Lost</option>
-                            <option value="Found">Found</option>
-                        </select>
+                    <div class="mb-5">
+                        <label for="image" class="form-label fw-bold text-muted small"><i class="bi bi-image me-2"></i>Upload Image</label>
+                        <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                        <div class="form-text text-muted mt-2"><i class="bi bi-info-circle me-1"></i>Allowed formats: PNG, JPG, JPEG, GIF. Max size: 5MB.</div>
                     </div>
 
-                    <div class="form-group">
-                        <label for="date">Date *</label>
-                        <input type="date" id="date" name="date" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Item Image (optional)</label>
-                        <div class="file-upload-wrapper" id="file-upload-area">
-                            <input type="file" class="file-upload-input" id="image" name="image" accept="image/*">
-                            <div class="file-upload-content">
-                                <i class="fa-solid fa-image"></i>
-                                <span>Click to upload</span>
+                    <div class="card bg-dark border-secondary p-4 mb-4 rounded-3 shadow-sm">
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="bi bi-shield-lock-fill text-warning fs-4 me-3"></i>
+                            <div>
+                                <h6 class="mb-0 fw-bold text-light">Security Verification (Optional)</h6>
+                                <p class="text-muted small mb-0">Add a security question to verify claims on your item.</p>
                             </div>
                         </div>
-                        <div id="image-preview" class="image-preview" style="display: none;">
-                            <img id="image-preview-img" alt="Preview">
-                            <button type="button" class="btn btn-outline" onclick="clearImage()">Remove</button>
+                        
+                        <div class="row g-3 mt-1">
+                            <div class="col-md-6">
+                                <label for="security_question" class="form-label small text-muted mb-1">Security Question</label>
+                                <input type="text" class="form-control bg-transparent text-light border-secondary" id="security_question" name="security_question" placeholder="e.g., What color is the case?">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="security_answer" class="form-label small text-muted mb-1">Security Answer</label>
+                                <input type="text" class="form-control bg-transparent text-light border-secondary" id="security_answer" name="security_answer" placeholder="e.g., Red">
+                            </div>
                         </div>
                     </div>
 
-                    <div class="step-actions">
-                        <button type="button" class="btn btn-primary" onclick="nextStep()">Continue</button>
+                    <div class="mt-5 text-center">
+                        <button type="submit" class="btn btn-primary btn-lg w-100 py-3 fw-bold shadow-sm" style="max-width: 400px; font-size: 1.1rem;">
+                            <i class="bi bi-send-fill me-2"></i>Submit Report
+                        </button>
                     </div>
-                </div>
+                </form>
             </div>
         </div>
-
-        <div class="report-step" data-step="2">
-            <div class="card">
-                <div class="card-body">
-                    <div class="form-group">
-                        <label for="contact_info">Contact Info *</label>
-                        <input type="text" id="contact_info" name="contact_info" placeholder="Phone or Email" required>
-                        <small class="form-hint">This will be shown only after claim verification.</small>
-                    </div>
-
-                    <div class="step-actions">
-                        <button type="button" class="btn btn-outline" onclick="prevStep()">Back</button>
-                        <button type="button" class="btn btn-primary" onclick="nextStep()">Continue</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="report-step" data-step="3">
-            <div class="card">
-                <div class="card-body">
-                    <div class="form-group">
-                        <label for="security_question">Security Question (optional)</label>
-                        <input type="text" id="security_question" name="security_question" placeholder="e.g. What color is the wallet?">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="security_answer">Security Answer (optional)</label>
-                        <input type="text" id="security_answer" name="security_answer" placeholder="Answer to verify claim">
-                        <small class="form-hint">Use a detail only the real owner would know.</small>
-                    </div>
-
-                    <div class="step-actions">
-                        <button type="button" class="btn btn-outline" onclick="prevStep()">Back</button>
-                        <button type="submit" class="btn btn-primary">Submit Report</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </form>
+    </div>
 </div>
-
-<script>
-    let currentStep = 1;
-
-    function showStep(step) {
-        document.querySelectorAll('.report-step').forEach(el => {
-            el.classList.remove('active');
-        });
-        document.querySelector(`.report-step[data-step="${step}"]`).classList.add('active');
-
-        document.querySelectorAll('.progress-step').forEach(el => {
-            const stepNum = Number(el.dataset.step);
-            el.classList.toggle('active', stepNum === step);
-            el.classList.toggle('done', stepNum < step);
-        });
-    }
-
-    function validateStep(step) {
-        const stepEl = document.querySelector(`.report-step[data-step="${step}"]`);
-        const requiredFields = stepEl.querySelectorAll('[required]');
-        let valid = true;
-
-        requiredFields.forEach(field => {
-            if (!field.value.trim()) {
-                field.classList.add('input-error');
-                valid = false;
-            } else {
-                field.classList.remove('input-error');
-            }
-        });
-
-        if (!valid) {
-            showToast('Please fill all required fields.', 'error');
-        }
-        return valid;
-    }
-
-    function nextStep() {
-        if (!validateStep(currentStep)) return;
-        if (currentStep < 3) {
-            currentStep += 1;
-            showStep(currentStep);
-        }
-    }
-
-    function prevStep() {
-        if (currentStep > 1) {
-            currentStep -= 1;
-            showStep(currentStep);
-        }
-    }
-
-    const imageInput = document.getElementById('image');
-    const preview = document.getElementById('image-preview');
-    const previewImg = document.getElementById('image-preview-img');
-
-    imageInput.addEventListener('change', () => {
-        const file = imageInput.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = e => {
-            previewImg.src = e.target.result;
-            preview.style.display = 'flex';
-        };
-        reader.readAsDataURL(file);
-    });
-
-    function clearImage() {
-        imageInput.value = '';
-        preview.style.display = 'none';
-        previewImg.src = '';
-    }
-
-    document.getElementById('report-form').addEventListener('submit', (event) => {
-        if (!validateStep(currentStep)) {
-            event.preventDefault();
-        }
-    });
-
-    showStep(currentStep);
-</script>
 {% endblock %}
