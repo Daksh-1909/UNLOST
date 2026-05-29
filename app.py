@@ -380,27 +380,328 @@ def auth_google_callback():
     login_user(user)
     return redirect(url_for('home'))
 
+@app.route('/api/user')
+def api_user():
+    if current_user.is_authenticated:
+        return {
+            "authenticated": True,
+            "user": {
+                "id": current_user.id,
+                "username": current_user.username,
+                "email": current_user.email,
+                "is_admin": current_user.is_admin
+            }
+        }, 200
+    return {"authenticated": False}, 200
+
+@app.route('/api/register', methods=['POST'])
+def api_register():
+    data = request.get_json()
+    if not data:
+        return {"success": False, "message": "Missing JSON data"}, 400
+    
+    username = data.get('username')
+    email = data.get('email')
+    password = data.get('password')
+    
+    if not username or not email or not password:
+        return {"success": False, "message": "Missing username, email or password"}, 400
+        
+    existing_user = mongo.db.users.find_one({"$or": [{"username": username}, {"email": email}]})
+    if existing_user:
+        return {"success": False, "message": "Username or email already exists."}, 400
+        
+    hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+    new_user = {
+        "username": username,
+        "email": email,
+        "password": hashed_password,
+        "is_admin": False,
+        "date_created": datetime.now(timezone.utc)
+    }
+    mongo.db.users.insert_one(new_user)
+    return {"success": True, "message": "Account created successfully! You can now log in."}, 200
+
 @app.route('/api/login', methods=['POST'])
 def api_login():
     data = request.get_json()
     if not data:
-        return {"msg": "Missing JSON in request"}, 400
+        return {"success": False, "message": "Missing JSON data"}, 400
         
     email = data.get('email')
     password = data.get('password')
     
     if not email or not password:
-        return {"msg": "Missing email or password"}, 400
+        return {"success": False, "message": "Missing email or password"}, 400
         
     user_data = mongo.db.users.find_one({"email": email})
     
     if user_data and bcrypt.check_password_hash(user_data['password'], password):
-        # Create token that lasts for 1 day
+        user = User(user_data)
+        login_user(user)
+        
         from datetime import timedelta
         access_token = create_access_token(identity=str(user_data['_id']), expires_delta=timedelta(days=1))
-        return {"access_token": access_token}, 200
+        
+        return {
+            "success": True,
+            "access_token": access_token,
+            "user": {
+                "id": str(user_data['_id']),
+                "username": user_data['username'],
+                "email": user_data['email'],
+                "is_admin": user_data.get('is_admin', False)
+            }
+        }, 200
     else:
-        return {"msg": "Bad email or password"}, 401
+        return {"success": False, "message": "Bad email or password"}, 401
+
+@app.route('/api/logout')
+@login_required
+def api_logout():
+    logout_user()
+    return {"success": True, "message": "Logged out successfully."}, 200
+
+@app.route('/api/items')
+@login_required
+def api_items():
+    filter_criteria = build_items_filter(request.args)
+    items_cursor = mongo.db.items.find(filter_criteria).sort("date", -1)
+    items = []
+    for doc in items_cursor:
+        items.append({
+            "id": str(doc["_id"]),
+            "title": doc.get("title"),
+            "description": doc.get("description"),
+            "category": doc.get("category"),
+            "location": doc.get("location"),
+            "status": doc.get("status"),
+            "date": doc.get("date").isoformat() if doc.get("date") else None,
+            "image_file": doc.get("image_file"),
+            "security_question": doc.get("security_question"),
+            "has_security_answer": bool(doc.get("security_answer")),
+            "reporter_email": doc.get("reporter_email", "Anonymous")
+        })
+    return {"success": True, "items": items}, 200
+
+@app.route('/api/report', methods=['POST'])
+@login_required
+def api_report():
+    title = request.form.get('title')
+    description = request.form.get('description')
+    category = request.form.get('category')
+    location = request.form.get('location')
+    status = request.form.get('status')
+    contact_info = request.form.get('contact_info')
+    date_str = request.form.get('date')
+    
+    if not title or not description or not category or not location or not status or not contact_info:
+        return {"success": False, "message": "Missing required fields"}, 400
+        
+    try:
+        date_obj = datetime.strptime(date_str, '%Y-%m-%d')
+    except (ValueError, TypeError):
+        date_obj = datetime.now(timezone.utc)
+
+    image_filename = None
+    if 'image' in request.files:
+        file = request.files['image']
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+            filename = f"{timestamp}_{filename}"
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            image_filename = filename
+
+    new_item = {
+        "title": title,
+        "description": description,
+        "category": category,
+        "location": location,
+        "status": status,
+        "contact_info": contact_info,
+        "date": date_obj,
+        "image_file": image_filename,
+        "security_question": request.form.get('security_question'),
+        "security_answer": request.form.get('security_answer'),
+        "reporter_email": current_user.email
+    }
+
+    mongo.db.items.insert_one(new_item)
+    
+    mongo.db.logs.insert_one({
+        "action": "Item Reported",
+        "item_title": title,
+        "timestamp": datetime.now(timezone.utc),
+        "user": current_user.email
+    })
+    
+    return {"success": True, "message": "Item reported successfully."}, 200
+
+@app.route('/api/verify_claim', methods=['POST'])
+@login_required
+def api_verify_claim():
+    return verify_claim()
+
+@app.route('/api/profile')
+@login_required
+def api_profile():
+    user_logs = list(mongo.db.logs.find({"user": current_user.email}).sort("timestamp", -1).limit(10))
+    logs = []
+    for l in user_logs:
+        logs.append({
+            "action": l.get("action"),
+            "item_title": l.get("item_title", ""),
+            "timestamp": l.get("timestamp").isoformat() if l.get("timestamp") else None,
+            "item_id": l.get("item_id", "")
+        })
+    return {
+        "success": True,
+        "user": {
+            "username": current_user.username,
+            "email": current_user.email,
+            "date_created": current_user.date_created.isoformat() if current_user.date_created else None
+        },
+        "logs": logs
+    }, 200
+
+@app.route('/api/admin/stats')
+@login_required
+def api_admin_stats():
+    if not current_user.is_admin:
+        return {"success": False, "message": "Admin privileges required."}, 403
+        
+    total_items = mongo.db.items.count_documents({"status": {"$ne": "Archived"}})
+    total_users = mongo.db.users.count_documents({})
+    archived_items = mongo.db.items.count_documents({"status": "Archived"})
+
+    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    new_today = mongo.db.items.count_documents({
+        "date": {"$gte": today_start},
+        "status": {"$ne": "Archived"}
+    })
+
+    recent_items_cursor = mongo.db.items.find({"status": {"$ne": "Archived"}}).sort("date", -1).limit(10)
+    recent_items = []
+    for doc in recent_items_cursor:
+        recent_items.append({
+            "id": str(doc["_id"]),
+            "title": doc.get("title"),
+            "category": doc.get("category"),
+            "status": doc.get("status"),
+            "location": doc.get("location"),
+            "date": doc.get("date").isoformat() if doc.get("date") else None,
+            "reporter_email": doc.get("reporter_email", "Anonymous")
+        })
+
+    trash_items_cursor = mongo.db.items.find({"status": "Archived"}).sort("deleted_at", -1)
+    trash_items = []
+    current_time = datetime.now(timezone.utc)
+    for t_item in trash_items_cursor:
+        deleted_at = t_item.get('deleted_at')
+        days_deleted = None
+        if deleted_at:
+            if deleted_at.tzinfo is None:
+                deleted_at = deleted_at.replace(tzinfo=timezone.utc)
+            days_deleted = (current_time - deleted_at).days
+            
+        trash_items.append({
+            "id": str(t_item["_id"]),
+            "title": t_item.get("title"),
+            "previous_status": t_item.get("previous_status", "Lost"),
+            "deleted_at": deleted_at.isoformat() if deleted_at else None,
+            "days_deleted": days_deleted
+        })
+
+    logs_cursor = mongo.db.logs.find().sort("timestamp", -1).limit(20)
+    logs = []
+    for l in logs_cursor:
+        logs.append({
+            "action": l.get("action"),
+            "item_title": l.get("item_title", ""),
+            "timestamp": l.get("timestamp").isoformat() if l.get("timestamp") else None,
+            "user": l.get("user", l.get("admin", "System")),
+            "item_id": l.get("item_id", "")
+        })
+        
+    security_alerts = mongo.db.logs.count_documents({"action": {"$regex": "Security Alert"}})
+
+    return {
+        "success": True,
+        "stats": {
+            "total_items": total_items,
+            "total_users": total_users,
+            "archived_items": archived_items,
+            "new_today": new_today,
+            "security_alerts": security_alerts
+        },
+        "recent_items": recent_items,
+        "trash_items": trash_items,
+        "logs": logs
+    }, 200
+
+@app.route('/api/admin/delete/<item_id>', methods=['POST'])
+@login_required
+def api_delete_item(item_id):
+    if not current_user.is_admin:
+        return {"success": False, "message": "Admin privileges required."}, 403
+        
+    item = mongo.db.items.find_one({"_id": ObjectId(item_id)})
+    if item:
+        mongo.db.items.update_one(
+            {"_id": ObjectId(item_id)}, 
+            {
+                "$set": {
+                    "status": "Archived",
+                    "previous_status": item.get("status", "Lost"),
+                    "deleted_at": datetime.now(timezone.utc)
+                }
+            }
+        )
+        mongo.db.logs.insert_one({
+            "action": "Item Removed (Archived)",
+            "item_id": str(item_id),
+            "item_title": item.get('title', 'Unknown'),
+            "timestamp": datetime.now(timezone.utc),
+            "admin": current_user.email
+        })
+        return {"success": True, "message": "Item moved to trash (recoverable for 10 days)."}, 200
+    return {"success": False, "message": "Item not found."}, 404
+
+@app.route('/api/admin/recover/<item_id>', methods=['POST'])
+@login_required
+def api_recover_item(item_id):
+    if not current_user.is_admin:
+        return {"success": False, "message": "Admin privileges required."}, 403
+        
+    item = mongo.db.items.find_one({"_id": ObjectId(item_id)})
+    if item and item.get('status') == 'Archived':
+        deleted_at = item.get('deleted_at')
+        if deleted_at:
+            if deleted_at.tzinfo is None:
+                deleted_at = deleted_at.replace(tzinfo=timezone.utc)
+            time_diff = datetime.now(timezone.utc) - deleted_at
+            if time_diff.days > 10:
+                return {"success": False, "message": "Recovery period expired (10 days)."}, 400
+        
+        previous_status = item.get('previous_status', 'Lost')
+        mongo.db.items.update_one(
+            {"_id": ObjectId(item_id)},
+            {
+                "$set": {"status": previous_status},
+                "$unset": {"previous_status": "", "deleted_at": ""}
+            }
+        )
+        mongo.db.logs.insert_one({
+            "action": "Item Recovered",
+            "item_id": str(item_id),
+            "item_title": item.get('title', 'Unknown'),
+            "timestamp": datetime.now(timezone.utc),
+            "admin": current_user.email
+        })
+        return {"success": True, "message": "Item recovered successfully."}, 200
+    return {"success": False, "message": "Item not found or not archived."}, 404
+
 
 @app.route('/admin-login', methods=['GET', 'POST'])
 def admin_login():
