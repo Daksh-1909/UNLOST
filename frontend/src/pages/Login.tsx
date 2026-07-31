@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Mail, Lock, AlertCircle, LogIn } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { buttonHoverVariants } from '../utils/animations';
 import { GoogleLogin } from '@react-oauth/google';
 
 const Login: React.FC = () => {
@@ -74,12 +75,20 @@ const Login: React.FC = () => {
  </div>
 
  {/* Error notification */}
+ <AnimatePresence>
  {error && (
- <div className="p-4 bg-danger/10 border border-danger/20 text-danger text-sm rounded-xl flex items-start gap-2.5 z-10 relative">
+ <motion.div
+ initial={{ opacity: 0, y: -10, x: -10 }}
+ animate={{ opacity: 1, y: 0, x: [0, -5, 5, -5, 5, 0] }}
+ exit={{ opacity: 0, scale: 0.95 }}
+ transition={{ duration: 0.4 }}
+ className="p-4 bg-danger/10 border border-danger/20 text-danger text-sm rounded-xl flex items-start gap-2.5 z-10 relative"
+ >
  <AlertCircle className="h-5 w-5 text-danger flex-shrink-0 mt-0.5" />
  <span>{error}</span>
- </div>
+ </motion.div>
  )}
+ </AnimatePresence>
 
  {/* Form */}
  <form onSubmit={handleSubmit} className="space-y-6 z-10 relative">
@@ -115,14 +124,21 @@ const Login: React.FC = () => {
  </div>
  </div>
 
- <button
+ <motion.button
  type="submit"
  disabled={loading}
- className="w-full py-3.5 rounded-xl btn-primary-custom shadow-lg shadow-primary/25 transition-all text-sm font-semibold flex items-center justify-center gap-2"
+ variants={buttonHoverVariants}
+ whileHover={!loading ? "hover" : ""}
+ whileTap={!loading ? "tap" : ""}
+ className="w-full py-3.5 rounded-xl btn-primary-custom shadow-lg shadow-primary/25 transition-colors disabled:opacity-80 text-sm font-semibold flex items-center justify-center gap-2"
  >
  {loading ? (
  <>
- <div className="h-4 w-4 animate-spin rounded-xl border-2 border-white border-t-transparent"></div>
+ <motion.div 
+ animate={{ rotate: 360 }} 
+ transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+ className="h-4 w-4 rounded-xl border-2 border-white/30 border-t-white"
+ />
  <span>Signing In...</span>
  </>
  ) : (
@@ -131,7 +147,7 @@ const Login: React.FC = () => {
  <span>Sign In</span>
  </>
  )}
- </button>
+ </motion.button>
  </form>
 
  {/* Alternate log ins */}

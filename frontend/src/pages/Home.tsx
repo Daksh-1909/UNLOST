@@ -9,8 +9,6 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { tapHoverVariants, buttonHoverVariants, scrollRevealVariants, scrollRevealViewport, staggerContainer, staggerItem } from '../utils/animations';
 
-const MotionLink = motion(Link);
-
 interface Item {
  id: string;
  title: string;
@@ -639,7 +637,7 @@ const Home: React.FC = () => {
  
 
  {/* ── HERO SECTION ── */}
- <section className="relative glass-panel rounded-xl p-8 sm:p-12 overflow-hidden flex flex-col lg:flex-row items-center justify-between gap-10">
+ <motion.section variants={scrollRevealVariants} initial="hidden" whileInView="visible" viewport={scrollRevealViewport} className="relative glass-panel rounded-xl p-8 sm:p-12 overflow-hidden flex flex-col lg:flex-row items-center justify-between gap-10">
  <div className="absolute top-0 right-0 w-80 h-80 bg-accent/5 rounded-xl blur-3xl pointer-events-none"></div>
  
  {/* Floating abstract accent shapes */}
@@ -766,10 +764,10 @@ const Home: React.FC = () => {
  <Backpack className="w-6 h-6 transition-all duration-300 transform hover:scale-110 hover:text-accent text-primary" />
  </motion.div>
  </div>
- </section>
+ </motion.section>
 
  {/* ── HOW TO USE PORTAL ── */}
- <section className="glass-panel rounded-xl p-8 sm:p-12 mb-10">
+ <motion.section variants={scrollRevealVariants} initial="hidden" whileInView="visible" viewport={scrollRevealViewport} className="glass-panel rounded-xl p-8 sm:p-12 mb-10">
  <h2 className="text-2xl sm:text-3xl font-black font-heading tracking-tight text-text mb-6">How to Use the Portal</h2>
  <ul className="grid grid-cols-1 md:grid-cols-2 gap-8">
  <li className="flex items-start gap-4">
@@ -801,10 +799,10 @@ const Home: React.FC = () => {
  </div>
  </li>
  </ul>
- </section>
+ </motion.section>
 
  {/* ── STATISTICS SECTION ── */}
- <section className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 z-10 relative">
+ <motion.section variants={scrollRevealVariants} initial="hidden" whileInView="visible" viewport={scrollRevealViewport} className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 z-10 relative">
  {statsList.map((stat, idx) => (
  <motion.div
  key={idx}
@@ -831,41 +829,45 @@ const Home: React.FC = () => {
  </div>
  </motion.div>
  ))}
- </section>
+ </motion.section>
 
  {/* ── HORIZONTAL FEATURED FOUND CAROUSEL ── */}
- <section className="space-y-4">
+ <motion.section variants={scrollRevealVariants} initial="hidden" whileInView="visible" viewport={scrollRevealViewport} className="space-y-4">
  <div className="flex items-center justify-between">
  <div className="flex items-center gap-2">
  <Sparkles className="w-5 h-5 text-primary animate-pulse" />
  <h2 className="text-xl sm:text-2xl font-bold text-text tracking-tight">Featured Found Items</h2>
  </div>
  <div className="flex items-center gap-2">
- <button 
+ <motion.button variants={tapHoverVariants} whileHover="hover" whileTap="tap" 
  onClick={() => scrollCarousel('left')}
  className="p-2 rounded-xl bg-surface border border-primary/10 text-secondary hover:text-text transition-colors"
  >
  <ChevronLeft className="w-4 h-4 text-primary" />
- </button>
- <button 
+ </motion.button>
+ <motion.button variants={tapHoverVariants} whileHover="hover" whileTap="tap" 
  onClick={() => scrollCarousel('right')}
  className="p-2 rounded-xl bg-surface border border-primary/10 text-secondary hover:text-text transition-colors"
  >
  <ChevronRight className="w-4 h-4 text-primary" />
- </button>
+ </motion.button>
  </div>
  </div>
 
  {/* Carousel list wrapper */}
- <div 
+ <motion.div 
+ variants={staggerContainer} initial="hidden" whileInView="visible" viewport={scrollRevealViewport}
  ref={carouselRef}
  className="flex gap-6 overflow-x-auto snap-x snap-mandatory no-scrollbar py-2 px-1"
  >
  {allItems.filter(i => i.status === 'Found').slice(0, 8).map((item, idx) => (
- <div 
+ <motion.div 
  key={item.id || idx}
+ variants={{ ...staggerItem, ...tapHoverVariants }}
+ whileHover="hover"
+ whileTap="tap"
  onClick={() => setSelectedItemModal(item)}
- className="flex-shrink-0 w-72 glass-card rounded-xl overflow-hidden snap-start cursor-pointer hover:border-primary/40 transition-all"
+ className="flex-shrink-0 w-72 glass-card rounded-xl overflow-hidden snap-start cursor-pointer transition-all"
  >
  <div className="h-36 w-full relative overflow-hidden bg-surface/30 flex items-center justify-center">
  {item.image_file ? (
@@ -889,10 +891,10 @@ const Home: React.FC = () => {
  <span className="line-clamp-1">{item.location}</span>
  </div>
  </div>
- </div>
+ </motion.div>
  ))}
- </div>
- </section>
+ </motion.div>
+ </motion.section>
 
  {/* Split section: Filter / Grid grid & Interactive widgets */}
  <div className="flex flex-col lg:flex-row gap-8 relative">
@@ -987,7 +989,7 @@ const Home: React.FC = () => {
  {/* Category Chips Horizontal view */}
  <div className="flex gap-2 overflow-x-auto no-scrollbar pt-2">
  {['All', 'Electronics', 'Wallets', 'Keys', 'Bags', 'Documents', 'Clothing', 'Accessories', 'Others'].map((cat) => (
- <button
+ <motion.button variants={tapHoverVariants} whileHover="hover" whileTap="tap"
  key={cat}
  onClick={() => setSelectedCategory(cat)}
  className={`flex-shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all border ${
@@ -997,7 +999,7 @@ const Home: React.FC = () => {
  }`}
  >
  {cat}
- </button>
+ </motion.button>
  ))}
  </div>
 
@@ -1008,7 +1010,7 @@ const Home: React.FC = () => {
  <div className="flex items-center justify-between">
  <h3 className="font-bold text-lg text-text">Item Inventory ({filteredItems.length})</h3>
  {filteredItems.length === 0 && (
- <button 
+ <motion.button variants={tapHoverVariants} whileHover="hover" whileTap="tap" 
  onClick={() => {
  setSearchQuery('');
  setSelectedCategory('All');
@@ -1019,7 +1021,7 @@ const Home: React.FC = () => {
  className="text-xs font-semibold text-secondary hover:text-text"
  >
  Clear all filters
- </button>
+ </motion.button>
  )}
  </div>
 
@@ -1078,19 +1080,19 @@ const Home: React.FC = () => {
  {/* Hover elements overlay */}
  <div className="absolute bottom-3 left-3 flex gap-2">
  {/* Bookmark */}
- <button
+ <motion.button variants={tapHoverVariants} whileHover="hover" whileTap="tap"
  onClick={(e) => toggleBookmark(item.id, e)}
  className="p-2 rounded-xl bg-white/80 border border-primary/10 text-secondary hover:text-primary transition-all duration-300 transform hover:scale-110"
  >
  <Bookmark className={`w-4 h-4 ${bookmarkedIds.includes(item.id) ? 'fill-primary text-primary' : ''}`} />
- </button>
+ </motion.button>
  {/* Share */}
- <button
+ <motion.button variants={tapHoverVariants} whileHover="hover" whileTap="tap"
  onClick={(e) => handleShareItem(item, e)}
  className="p-2 rounded-xl bg-white/80 border border-primary/10 text-secondary hover:text-primary transition-all duration-300 transform hover:scale-110"
  >
  <Share2 className="w-4 h-4" />
- </button>
+ </motion.button>
  </div>
  </div>
 
@@ -1116,13 +1118,13 @@ const Home: React.FC = () => {
  </div>
  </div>
 
- <button
+ <motion.button variants={tapHoverVariants} whileHover="hover" whileTap="tap"
  onClick={() => setSelectedItemModal(item)}
  className="w-full py-2.5 rounded-xl btn-secondary-custom text-xs font-bold flex items-center justify-center gap-1.5"
  >
  <Eye className="w-3.5 h-3.5 text-primary transition-all duration-300 transform hover:scale-110 hover:text-accent" />
  <span>View Details</span>
- </button>
+ </motion.button>
  </div>
  </motion.div>
  ))}
@@ -1263,7 +1265,7 @@ const Home: React.FC = () => {
  </div>
 
  {/* ── FEEDBACK & SUPPORT SECTION ── */}
- <section className="mt-12 glass-panel rounded-xl p-8 sm:p-12 flex flex-col sm:flex-row items-center justify-between gap-6 border border-primary/20 shadow-lg">
+ <motion.section variants={scrollRevealVariants} initial="hidden" whileInView="visible" viewport={scrollRevealViewport} className="mt-12 glass-panel rounded-xl p-8 sm:p-12 flex flex-col sm:flex-row items-center justify-between gap-6 border border-primary/20 shadow-lg">
  <div className="flex-1 space-y-3 text-center sm:text-left">
  <h3 className="text-2xl font-black font-heading text-text">Need Help or Have Feedback?</h3>
  <p className="text-sm text-textSecondary max-w-lg mx-auto sm:mx-0">
@@ -1277,7 +1279,7 @@ const Home: React.FC = () => {
  <PhoneCall className="w-4 h-4 text-textSecondary" />
  <span>Contact Support</span>
  </Link>
- </section>
+ </motion.section>
 
  {/* ── EXPANDABLE QUICK ACTIONS FAB PANEL ── */}
  <div className="fixed bottom-6 right-6 z-[9999] flex flex-col items-end gap-3">
@@ -1313,12 +1315,12 @@ const Home: React.FC = () => {
  <btn.icon className="w-4 h-4 transition-all duration-300 transform hover:scale-110 hover:text-accent" />
  </Link>
  ) : (
- <button
+ <motion.button variants={tapHoverVariants} whileHover="hover" whileTap="tap"
  onClick={btn.action}
  className={`w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-lg transition-transform hover:scale-110 ${btn.color}`}
  >
  <btn.icon className="w-4 h-4 transition-all duration-300 transform hover:scale-110 hover:text-accent" />
- </button>
+ </motion.button>
  )}
  </div>
  ))}
@@ -1327,14 +1329,14 @@ const Home: React.FC = () => {
  </AnimatePresence>
 
  {/* Master FAB Trigger Button */}
- <button
+ <motion.button variants={tapHoverVariants} whileHover="hover" whileTap="tap"
  onClick={() => setFabOpen(!fabOpen)}
  className={`w-14 h-14 rounded-xl flex items-center justify-center text-white shadow-lg transition-all cursor-pointer ${
  fabOpen ? 'bg-secondary rotate-45 border border-white/10' : 'bg-gradient-to-r from-primary to-secondary hover:brightness-110 hover:scale-105'
  }`}
  >
  <Plus className="w-6 h-6 animate-pulse" />
- </button>
+ </motion.button>
 
  </div>
 
@@ -1361,12 +1363,12 @@ const Home: React.FC = () => {
  >
  
  {/* Close Button */}
- <button
+ <motion.button variants={tapHoverVariants} whileHover="hover" whileTap="tap"
  onClick={() => setSelectedItemModal(null)}
  className="absolute top-4 right-4 p-2 rounded-xl bg-white/40 text-secondary hover:text-primary border border-primary/10 cursor-pointer z-50"
  >
  <X className="w-4 h-4 text-primary transition-all duration-300 transform hover:scale-110 hover:text-accent" />
- </button>
+ </motion.button>
 
  {/* Graphic Category Header */}
  <div className="h-48 w-full relative border-b border-primary/10">
@@ -1440,7 +1442,7 @@ const Home: React.FC = () => {
 
  {/* Modal actions */}
  <div className="flex gap-4 pt-2">
- <button 
+ <motion.button variants={buttonHoverVariants} whileHover="hover" whileTap="tap" 
  onClick={() => {
  setSelectedItemModal(null);
  triggerToast('Claim request details generated. Check inbox.');
@@ -1448,13 +1450,13 @@ const Home: React.FC = () => {
  className="flex-1 py-3 rounded-xl btn-primary-custom font-extrabold text-sm text-center"
  >
  Claim & Recover Item
- </button>
- <button
+ </motion.button>
+ <motion.button variants={tapHoverVariants} whileHover="hover" whileTap="tap"
  onClick={(e) => toggleBookmark(selectedItemModal.id, e)}
  className="px-4 rounded-xl bg-white/60 hover:bg-shade-5 border border-primary/10 text-secondary hover:text-primary transition-colors"
  >
  <Bookmark className={`w-5 h-5 ${bookmarkedIds.includes(selectedItemModal.id) ? 'fill-primary text-primary' : ''}`} />
- </button>
+ </motion.button>
  </div>
 
  </div>

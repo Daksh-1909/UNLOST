@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Menu, X, LogOut, LayoutGrid, PlusCircle, Shield, User, Phone, Home, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { tapHoverVariants, TRANSITION_BASE } from '../config/animations';
+import { tapHoverVariants, TRANSITION_BASE } from '../utils/animations';
 
 const MotionLink = motion(Link);
 

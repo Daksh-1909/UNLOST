@@ -47,7 +47,6 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode; requireAdmin?: boole
 // Component to handle route animations
 const AnimatedRoutes: React.FC = () => {
   const location = useLocation();
-  const { user } = useAuth();
 
   return (
     <AnimatePresence mode="wait">

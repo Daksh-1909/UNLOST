@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Mail, Calendar, Clock, Shield, Activity, FileText } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { pageVariants, staggerContainer, staggerItem } from '../utils/animations';
 
 interface ProfileLog {
  action: string;
@@ -55,19 +56,24 @@ const Profile: React.FC = () => {
  };
 
  return (
- <div className="space-y-8 max-w-4xl mx-auto">
- <div>
- <h1 className="text-3xl font-extrabold font-heading text-text tracking-tight">Your Profile</h1>
- <p className="text-sm text-textSecondary">Manage account information and view your activity logs</p>
- </div>
+  <motion.div 
+  variants={pageVariants}
+  initial="initial"
+  animate="animate"
+  exit="exit"
+  className="space-y-8 max-w-4xl mx-auto"
+  >
+  <motion.div variants={staggerItem}>
+  <h1 className="text-3xl font-extrabold font-heading text-text tracking-tight">Your Profile</h1>
+  <p className="text-sm text-textSecondary">Manage account information and view your activity logs</p>
+  </motion.div>
 
  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
- {/* Profile Card */}
- <motion.div
- initial={{ opacity: 0, y: 15 }}
- animate={{ opacity: 1, y: 0 }}
- className="glass-panel rounded-xl p-6 flex flex-col items-center text-center space-y-5 md:col-span-1"
- >
+  {/* Profile Card */}
+  <motion.div
+  variants={staggerItem}
+  className="glass-panel rounded-xl p-6 flex flex-col items-center text-center space-y-5 md:col-span-1"
+  >
  {/* Avatar sphere */}
  <div className="relative h-24 w-24 rounded-xl bg-primary-gradient flex items-center justify-center shadow-lg shadow-primary/20 select-none overflow-hidden border-2 border-primary/20">
  {user?.profilePicture ? (
@@ -107,9 +113,9 @@ const Profile: React.FC = () => {
  </div>
  </motion.div>
 
- {/* Activity Logs */}
- <div className="md:col-span-2 space-y-4">
- <div className="glass-panel rounded-xl p-6 space-y-6">
+  {/* Activity Logs */}
+  <motion.div variants={staggerItem} className="md:col-span-2 space-y-4">
+  <div className="glass-panel rounded-xl p-6 space-y-6">
  <div className="flex items-center gap-2 border-b border-primary/10 pb-3">
  <Activity className="h-5 w-5 text-primary" />
  <h3 className="text-lg font-bold font-heading text-text">Recent Activity</h3>
@@ -127,15 +133,16 @@ const Profile: React.FC = () => {
  <p>No activity logs found under this account.</p>
  </div>
  ) : (
- <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1">
- {profileData.logs.map((log, index) => (
- <motion.div
- key={index}
- initial={{ opacity: 0, x: -10 }}
- animate={{ opacity: 1, x: 0 }}
- transition={{ delay: index * 0.05 }}
- className="p-4 rounded-xl bg-primary/5 hover:bg-primary/10 border border-primary/10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 transition-all"
- >
+  <motion.div 
+  variants={staggerContainer} initial="hidden" animate="visible"
+  className="space-y-3 max-h-[380px] overflow-y-auto pr-1"
+  >
+  {profileData.logs.map((log, index) => (
+  <motion.div
+  key={index}
+  variants={staggerItem}
+  className="p-4 rounded-xl bg-primary/5 hover:bg-primary/10 border border-primary/10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 transition-all"
+  >
  <div className="space-y-1">
  <p className="text-sm font-semibold text-text">
  {log.action}
@@ -156,12 +163,12 @@ const Profile: React.FC = () => {
  </div>
  </motion.div>
  ))}
- </div>
+  </motion.div>
  )}
  </div>
- </div>
- </div>
- </div>
+  </motion.div>
+  </div>
+  </motion.div>
  );
 };
 

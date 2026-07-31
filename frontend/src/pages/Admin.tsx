@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Shield, Users, Layers, AlertTriangle, Archive, RefreshCw, Trash2, Clock, CheckCircle2, AlertCircle, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { pageVariants, staggerContainer, staggerItem, tapHoverVariants, TRANSITION_BASE } from '../utils/animations';
 
 interface AdminStats {
  total_items: number;
@@ -129,9 +130,15 @@ const Admin: React.FC = () => {
  ];
 
  return (
- <div className="space-y-8">
+ <motion.div 
+  variants={pageVariants}
+  initial="initial"
+  animate="animate"
+  exit="exit"
+  className="space-y-8"
+  >
  {/* Title */}
- <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-white/5 pb-4">
+ <motion.div variants={staggerItem} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-white/5 pb-4">
  <div>
  <h1 className="text-3xl font-extrabold font-heading text-text tracking-tight flex items-center gap-2">
  <Shield className="h-8 w-8 text-primary" />
@@ -139,14 +146,17 @@ const Admin: React.FC = () => {
  </h1>
  <p className="text-sm text-textSecondary">Manage system operations, view global statistics, and moderate reported items.</p>
  </div>
- <button
+ <motion.button
  onClick={fetchAdminStats}
+ variants={tapHoverVariants}
+ whileHover="hover"
+ whileTap="tap"
  className="self-start sm:self-center px-4 py-2 bg-surface hover:bg-surface/80 border border-primary/20 rounded-xl text-xs font-semibold text-text flex items-center gap-1.5 transition-all shadow"
  >
  <RefreshCw className="h-3.5 w-3.5" />
  <span>Refresh</span>
- </button>
- </div>
+ </motion.button>
+ </motion.div>
 
  {/* Action alerts */}
  <AnimatePresence>
@@ -180,17 +190,20 @@ const Admin: React.FC = () => {
  </AnimatePresence>
 
  {/* Stat grid widgets */}
- <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+ <motion.div 
+  variants={staggerContainer} initial="hidden" animate="visible"
+  className="grid grid-cols-2 md:grid-cols-5 gap-4"
+  >
  {statCards.map((card) => (
- <div key={card.title} className={`glass-panel rounded-xl p-5 border flex flex-col justify-between space-y-3 ${card.color}`}>
+ <motion.div variants={staggerItem} key={card.title} className={`glass-panel rounded-xl p-5 border flex flex-col justify-between space-y-3 ${card.color}`}>
  <div className="flex items-center justify-between">
  <span className="text-xs font-bold uppercase tracking-wider text-textSecondary">{card.title}</span>
  <card.icon className="h-5 w-5 opacity-80" />
  </div>
  <span className="text-3xl font-extrabold text-text tracking-tight">{card.value}</span>
- </div>
+ </motion.div>
  ))}
- </div>
+ </motion.div>
 
  {/* Tabs */}
  <div className="flex border-b border-white/5 gap-2 overflow-x-auto pb-px">
@@ -215,10 +228,15 @@ const Admin: React.FC = () => {
  </div>
 
  {/* Content panel */}
- <div className="glass-panel rounded-xl p-6">
+ <div className="glass-panel rounded-xl p-6 relative overflow-hidden min-h-[400px]">
+ <AnimatePresence mode="wait">
  {/* OVERVIEW TAB */}
  {activeTab === 'overview' && (
- <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+ <motion.div 
+  key="overview"
+  initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={TRANSITION_BASE}
+  className="grid grid-cols-1 lg:grid-cols-2 gap-8"
+  >
  <div className="space-y-4">
  <h3 className="text-base font-bold text-text uppercase tracking-wider font-heading">Recent Listings</h3>
  <div className="space-y-3">
@@ -256,12 +274,16 @@ const Admin: React.FC = () => {
  ))}
  </div>
  </div>
- </div>
+ </motion.div>
  )}
 
  {/* ITEMS TAB */}
  {activeTab === 'items' && (
- <div className="overflow-x-auto -mx-6">
+ <motion.div 
+  key="items"
+  initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={TRANSITION_BASE}
+  className="overflow-x-auto -mx-6"
+  >
  <div className="inline-block min-w-full align-middle px-6">
  {data?.recent_items.length === 0 ? (
  <p className="text-center py-6 text-textSecondary text-sm">No items in the system.</p>
@@ -315,12 +337,16 @@ const Admin: React.FC = () => {
  </div>
  )}
  </div>
- </div>
+ </motion.div>
  )}
 
  {/* TRASH TAB */}
  {activeTab === 'trash' && (
- <div className="overflow-x-auto -mx-6">
+ <motion.div 
+  key="trash"
+  initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={TRANSITION_BASE}
+  className="overflow-x-auto -mx-6"
+  >
  <div className="inline-block min-w-full align-middle px-6">
  {data?.trash_items.length === 0 ? (
  <div className="text-center py-8 text-textSecondary text-sm">
@@ -379,12 +405,16 @@ const Admin: React.FC = () => {
  </div>
  )}
  </div>
- </div>
+ </motion.div>
  )}
 
  {/* LOGS TAB */}
  {activeTab === 'logs' && (
- <div className="overflow-x-auto -mx-6">
+ <motion.div 
+  key="logs"
+  initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={TRANSITION_BASE}
+  className="overflow-x-auto -mx-6"
+  >
  <div className="inline-block min-w-full align-middle px-6">
  {data?.logs.length === 0 ? (
  <p className="text-center py-6 text-textSecondary text-sm">No audit logs reported.</p>
@@ -435,10 +465,11 @@ const Admin: React.FC = () => {
  </div>
  )}
  </div>
- </div>
+ </motion.div>
  )}
+ </AnimatePresence>
  </div>
- </div>
+ </motion.div>
  );
 };
 

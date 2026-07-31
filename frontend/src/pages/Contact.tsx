@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Mail, Phone, MapPin, Clock, Send, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { pageVariants, buttonHoverVariants, staggerContainer, staggerItem } from '../utils/animations';
 
 const Contact: React.FC = () => {
  const [name, setName] = useState('');
@@ -51,21 +52,30 @@ const Contact: React.FC = () => {
  ];
 
  return (
- <div className="space-y-8 max-w-5xl mx-auto">
- <div>
- <h1 className="text-3xl font-extrabold font-heading text-text tracking-tight">Contact Administration</h1>
- <p className="text-sm text-textSecondary">Reach out to office operations for claiming support or escalations</p>
- </div>
+  <motion.div 
+  variants={pageVariants}
+  initial="initial"
+  animate="animate"
+  exit="exit"
+  className="space-y-8 max-w-5xl mx-auto"
+  >
+  <motion.div variants={staggerItem}>
+  <h1 className="text-3xl font-extrabold font-heading text-text tracking-tight">Contact Administration</h1>
+  <p className="text-sm text-textSecondary">Reach out to office operations for claiming support or escalations</p>
+  </motion.div>
 
  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
  {/* Left column: Direct info */}
- <div className="space-y-6 md:col-span-1">
- <div className="glass-panel hero-warm-gradient rounded-xl p-6 space-y-6">
- <h3 className="text-lg font-bold font-heading text-text border-b border-primary/20 pb-2">Office Directory</h3>
- 
- <div className="space-y-5">
+  <div className="space-y-6 md:col-span-1">
+  <motion.div variants={staggerItem} className="glass-panel hero-warm-gradient rounded-xl p-6 space-y-6">
+  <h3 className="text-lg font-bold font-heading text-text border-b border-primary/20 pb-2">Office Directory</h3>
+  
+  <motion.div 
+  variants={staggerContainer} initial="hidden" animate="visible"
+  className="space-y-5"
+  >
  {offices.map((office) => (
- <div key={office.title} className="flex gap-3">
+ <motion.div variants={staggerItem} key={office.title} className="flex gap-3">
  <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/20 text-text h-10 w-10 flex items-center justify-center flex-shrink-0">
  <office.icon className="h-5 w-5" />
  </div>
@@ -73,19 +83,17 @@ const Contact: React.FC = () => {
  <h4 className="text-xs font-semibold uppercase tracking-wider text-primary/70">{office.title}</h4>
  <p className="text-sm text-primary font-medium mt-0.5">{office.desc}</p>
  </div>
- </div>
+ </motion.div>
  ))}
- </div>
- </div>
+ </motion.div>
+ </motion.div>
  </div>
 
- {/* Right column: Query Form */}
- <div className="md:col-span-2">
- <motion.div
- initial={{ opacity: 0, x: 20 }}
- animate={{ opacity: 1, x: 0 }}
- className="glass-panel hero-warm-gradient rounded-xl p-6 sm:p-8 space-y-6"
- >
+  {/* Right column: Query Form */}
+  <motion.div variants={staggerItem} className="md:col-span-2">
+  <div
+  className="glass-panel hero-warm-gradient rounded-xl p-6 sm:p-8 space-y-6"
+  >
  <h3 className="text-lg font-bold font-heading text-text border-b border-primary/20 pb-2">Send a Message</h3>
 
  <AnimatePresence>
@@ -152,28 +160,35 @@ const Contact: React.FC = () => {
  />
  </div>
 
- <button
- type="submit"
- disabled={sending}
- className="w-full py-3 rounded-xl btn-primary-custom shadow-lg shadow-primary/20 transition-all text-sm font-semibold flex items-center justify-center gap-2 text-white"
- >
- {sending ? (
- <>
- <div className="h-4 w-4 animate-spin rounded-xl border-2 border-white border-t-transparent"></div>
- <span>Sending Query...</span>
- </>
- ) : (
- <>
- <Send className="h-4 w-4" />
- <span>Send Message</span>
- </>
- )}
- </button>
- </form>
- </motion.div>
- </div>
- </div>
- </div>
+  <motion.button
+  type="submit"
+  disabled={sending}
+  variants={buttonHoverVariants}
+  whileHover={!sending ? "hover" : ""}
+  whileTap={!sending ? "tap" : ""}
+  className="w-full py-3 rounded-xl btn-primary-custom shadow-lg shadow-primary/20 transition-colors disabled:opacity-80 text-sm font-semibold flex items-center justify-center gap-2 text-white"
+  >
+  {sending ? (
+  <>
+  <motion.div 
+  animate={{ rotate: 360 }} 
+  transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+  className="h-4 w-4 rounded-xl border-2 border-white/30 border-t-white"
+  />
+  <span>Sending Query...</span>
+  </>
+  ) : (
+  <>
+  <Send className="h-4 w-4" />
+  <span>Send Message</span>
+  </>
+  )}
+  </motion.button>
+  </form>
+  </div>
+  </motion.div>
+  </div>
+  </motion.div>
  );
 };
 

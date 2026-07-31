@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PlusCircle, HelpCircle, FileText, AlertCircle, Image as ImageIcon, MapPin, Calendar, Tag, ShieldCheck } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { PlusCircle, HelpCircle, FileText, AlertCircle, Image as ImageIcon, MapPin, Calendar, Tag, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { tapHoverVariants, buttonHoverVariants, TRANSITION_BASE } from '../utils/animations';
 
 const CATEGORIES = ['Accessories', 'Books', 'Electronics', 'Other'];
 
 const Report: React.FC = () => {
  const navigate = useNavigate();
  const [loading, setLoading] = useState(false);
+ const [success, setSuccess] = useState(false);
  const [error, setError] = useState<string | null>(null);
 
  // Form states
@@ -68,7 +70,10 @@ const Report: React.FC = () => {
  });
  const data = await response.json();
  if (response.ok && data.success) {
+ setSuccess(true);
+ setTimeout(() => {
  navigate('/items');
+ }, 1800);
  } else {
  setError(data.message || 'Failed to submit report.');
  }
@@ -92,13 +97,51 @@ const Report: React.FC = () => {
  animate={{ opacity: 1, y: 0 }}
  className="glass-panel rounded-xl p-6 sm:p-8"
  >
- <form onSubmit={handleSubmit} className="space-y-6">
- {error && (
- <div className="p-4 bg-danger/10 border border-danger/20 text-danger text-sm rounded-xl flex items-start gap-2.5">
- <AlertCircle className="h-5 w-5 text-danger flex-shrink-0 mt-0.5" />
- <span>{error}</span>
- </div>
- )}
+  <AnimatePresence mode="wait">
+    {success ? (
+      <motion.div
+        key="success-state"
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        transition={TRANSITION_BASE}
+        className="py-16 flex flex-col items-center justify-center text-center space-y-4"
+      >
+        <motion.div 
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", stiffness: 200, damping: 15 }}
+          className="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center mb-4"
+        >
+          <CheckCircle2 className="w-8 h-8 text-success" />
+        </motion.div>
+        <h2 className="text-2xl font-bold text-text">Report Submitted!</h2>
+        <p className="text-textSecondary">Your item has been successfully posted to the directory.</p>
+        <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mt-4" />
+      </motion.div>
+    ) : (
+      <motion.form 
+        key="form-state"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0, y: -10 }}
+        transition={TRANSITION_BASE}
+        onSubmit={handleSubmit} 
+        className="space-y-6"
+      >
+        <AnimatePresence>
+          {error && (
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="p-4 bg-danger/10 border border-danger/20 text-danger text-sm rounded-xl flex items-start gap-2.5"
+            >
+              <AlertCircle className="h-5 w-5 text-danger flex-shrink-0 mt-0.5" />
+              <span>{error}</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
  {/* Title & Status */}
  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -124,20 +167,21 @@ const Report: React.FC = () => {
  </label>
  <div className="grid grid-cols-2 gap-2 bg-[#5C321E]/5 p-1.5 rounded-xl border border-[#5C321E]/15">
  {['Lost', 'Found'].map((st) => (
- <button
- key={st}
- type="button"
- onClick={() => setStatus(st)}
- className={`py-1.5 text-xs font-bold rounded-lg transition-all ${
- status === st
- ? st === 'Lost'
- ? 'bg-[#5C321E] text-white shadow-sm'
- : 'bg-[#5C321E] text-white shadow-sm'
- : 'text-[#926347] hover:text-[#5C321E] hover:bg-[#5C321E]/5'
- }`}
- >
- {st}
- </button>
+            <motion.button
+              key={st}
+              type="button"
+              variants={tapHoverVariants}
+              whileHover="hover"
+              whileTap="tap"
+              onClick={() => setStatus(st)}
+              className={`py-1.5 text-xs font-bold rounded-lg transition-colors ${
+                status === st
+                  ? 'bg-[#5C321E] text-white shadow-sm'
+                  : 'text-[#926347] hover:text-[#5C321E] hover:bg-[#5C321E]/5'
+              }`}
+            >
+              {st}
+            </motion.button>
  ))}
  </div>
  </div>
@@ -245,24 +289,44 @@ const Report: React.FC = () => {
  <span>Choose Image</span>
  </label>
 
- {imagePreview ? (
- <div className="relative h-20 w-20 rounded-lg overflow-hidden border border-[#926347]/30 flex-shrink-0">
- <img src={imagePreview} alt="Preview" className="h-full w-full object-cover" />
- <button
- type="button"
- onClick={() => {
- setImage(null);
- setImagePreview(null);
- }}
- className="absolute top-0.5 right-0.5 bg-danger rounded-xl p-0.5 text-white hover:bg-danger/80 shadow-sm shadow-danger/50"
- >
- <PlusCircle className="h-3 w-3 rotate-45" />
- </button>
- </div>
- ) : (
- <span className="text-xs font-medium text-textSecondary">No file chosen</span>
- )}
- </div>
+        <AnimatePresence mode="wait">
+          {imagePreview ? (
+            <motion.div 
+              key="preview"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={TRANSITION_BASE}
+              className="relative h-20 w-20 rounded-lg overflow-hidden border border-[#926347]/30 flex-shrink-0"
+            >
+              <img src={imagePreview} alt="Preview" className="h-full w-full object-cover" />
+              <motion.button
+                type="button"
+                variants={tapHoverVariants}
+                whileHover="hover"
+                whileTap="tap"
+                onClick={() => {
+                  setImage(null);
+                  setImagePreview(null);
+                }}
+                className="absolute top-0.5 right-0.5 bg-danger rounded-xl p-0.5 text-white hover:bg-danger/80 shadow-sm shadow-danger/50"
+              >
+                <PlusCircle className="h-3 w-3 rotate-45" />
+              </motion.button>
+            </motion.div>
+          ) : (
+            <motion.span 
+              key="no-preview"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="text-xs font-medium text-textSecondary"
+            >
+              No file chosen
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </div>
  </div>
 
  <div className="space-y-4 pt-4 border-t border-white/5">
@@ -305,24 +369,33 @@ const Report: React.FC = () => {
  </div>
  </div>
 
- <button
- type="submit"
- disabled={loading}
- className="w-full py-3.5 rounded-xl bg-[#5C321E] hover:bg-[#6D3D24] shadow-lg shadow-[#5C321E]/25 transition-all text-sm font-semibold flex items-center justify-center gap-2 text-white"
- >
- {loading ? (
- <>
- <div className="h-4 w-4 animate-spin rounded-xl border-2 border-white border-t-transparent"></div>
- <span>Posting Report...</span>
- </>
- ) : (
- <>
- <PlusCircle className="h-4 w-4" />
- <span>Report Item</span>
- </>
- )}
- </button>
- </form>
+      <motion.button
+        type="submit"
+        disabled={loading}
+        variants={buttonHoverVariants}
+        whileHover={!loading ? "hover" : ""}
+        whileTap={!loading ? "tap" : ""}
+        className="w-full py-3.5 rounded-xl bg-[#5C321E] hover:bg-[#6D3D24] shadow-lg shadow-[#5C321E]/25 transition-colors disabled:opacity-80 text-sm font-semibold flex items-center justify-center gap-2 text-white"
+      >
+        {loading ? (
+          <>
+            <motion.div 
+              animate={{ rotate: 360 }} 
+              transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+              className="h-4 w-4 rounded-xl border-2 border-white/30 border-t-white"
+            />
+            <span>Posting Report...</span>
+          </>
+        ) : (
+          <>
+            <PlusCircle className="h-4 w-4" />
+            <span>Report Item</span>
+          </>
+        )}
+      </motion.button>
+    </motion.form>
+  )}
+  </AnimatePresence>
  </motion.div>
  </div>
  );
