@@ -1,6 +1,9 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { AnimatePresence, motion } from 'framer-motion';
+import { pageVariants } from './utils/animations';
+
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import Items from './pages/Items';
@@ -41,6 +44,75 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode; requireAdmin?: boole
   return <>{children}</>;
 };
 
+// Component to handle route animations
+const AnimatedRoutes: React.FC = () => {
+  const location = useLocation();
+  const { user } = useAuth();
+
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        
+        {/* Wrap protected routes to apply page transitions consistently */}
+        <Route path="/" element={
+          <ProtectedRoute>
+            <motion.div initial="initial" animate="animate" exit="exit" variants={pageVariants} className="w-full h-full">
+              <Home />
+            </motion.div>
+          </ProtectedRoute>
+        } />
+        <Route path="/items" element={
+          <ProtectedRoute>
+            <motion.div initial="initial" animate="animate" exit="exit" variants={pageVariants} className="w-full h-full">
+              <Items />
+            </motion.div>
+          </ProtectedRoute>
+        } />
+        <Route path="/report" element={
+          <ProtectedRoute>
+            <motion.div initial="initial" animate="animate" exit="exit" variants={pageVariants} className="w-full h-full">
+              <Report />
+            </motion.div>
+          </ProtectedRoute>
+        } />
+        <Route path="/contact" element={
+          <ProtectedRoute>
+            <motion.div initial="initial" animate="animate" exit="exit" variants={pageVariants} className="w-full h-full">
+              <Contact />
+            </motion.div>
+          </ProtectedRoute>
+        } />
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <motion.div initial="initial" animate="animate" exit="exit" variants={pageVariants} className="w-full h-full">
+              <Profile />
+            </motion.div>
+          </ProtectedRoute>
+        } />
+        <Route path="/admin" element={
+          <ProtectedRoute requireAdmin>
+            <motion.div initial="initial" animate="animate" exit="exit" variants={pageVariants} className="w-full h-full">
+              <Admin />
+            </motion.div>
+          </ProtectedRoute>
+        } />
+        <Route path="/assistant" element={
+          <ProtectedRoute>
+            <motion.div initial="initial" animate="animate" exit="exit" variants={pageVariants} className="w-full h-full">
+              <SmiloPage />
+            </motion.div>
+          </ProtectedRoute>
+        } />
+        
+        {/* Fallback to home */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </AnimatePresence>
+  );
+};
+
 const AppContent: React.FC = () => {
   const { user } = useAuth();
 
@@ -53,47 +125,7 @@ const AppContent: React.FC = () => {
         
         {user && <Navbar />}
         <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 z-10">
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/" element={
-              <ProtectedRoute>
-                <Home />
-              </ProtectedRoute>
-            } />
-            <Route path="/items" element={
-              <ProtectedRoute>
-                <Items />
-              </ProtectedRoute>
-            } />
-            <Route path="/report" element={
-              <ProtectedRoute>
-                <Report />
-              </ProtectedRoute>
-            } />
-            <Route path="/contact" element={
-              <ProtectedRoute>
-                <Contact />
-              </ProtectedRoute>
-            } />
-            <Route path="/profile" element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin" element={
-              <ProtectedRoute requireAdmin>
-                <Admin />
-              </ProtectedRoute>
-            } />
-            <Route path="/assistant" element={
-              <ProtectedRoute>
-                <SmiloPage />
-              </ProtectedRoute>
-            } />
-            {/* Fallback to home */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+          <AnimatedRoutes />
         </main>
         {user && <SmiloWidget />}
       </div>

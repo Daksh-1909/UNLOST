@@ -7,6 +7,9 @@ import {
  HelpCircle, Shield, X, AlertCircle, Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { tapHoverVariants, buttonHoverVariants, scrollRevealVariants, scrollRevealViewport, staggerContainer, staggerItem } from '../utils/animations';
+
+const MotionLink = motion(Link);
 
 interface Item {
  id: string;
