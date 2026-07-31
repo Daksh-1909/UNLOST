@@ -58,7 +58,7 @@ const playChime = (type: 'click' | 'think' | 'happy') => {
 const SmiloPage: React.FC = () => {
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const [messages, setMessages] = useState<Message[]>([
-        { sender: 'bot', text: "Hi! I'm Smilo, your UNLOST assistant. Ask me anything about lost & found items or how to use the portal! 😊", timestamp: new Date() }
+        { sender: 'bot', text: "Hi! I'm Smilo, your UNLOST assistant. Ask me anything about lost & found items or how to use the portal!", timestamp: new Date() }
     ]);
     const [inputValue, setInputValue] = useState('');
     const [botTyping, setBotTyping] = useState(false);
@@ -195,9 +195,9 @@ const SmiloPage: React.FC = () => {
             {/* Quick suggestions */}
             <div className="px-6 pt-3 flex gap-2 overflow-x-auto whitespace-nowrap scrollbar-hide">
                 {[
-                    { label: '🔍 Latest Items', query: 'Show latest items' },
-                    { label: '➕ Report Item', query: 'How to report an item' },
-                    { label: '🔒 Claiming', query: 'How to claim an item' }
+                    { label: 'Latest Items', query: 'Show latest items' },
+                    { label: 'Report Item', query: 'How to report an item' },
+                    { label: 'Claiming', query: 'How to claim an item' }
                 ].map((s, i) => (
                     <button
                         key={i}

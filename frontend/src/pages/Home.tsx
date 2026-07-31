@@ -704,18 +704,18 @@ const Home: React.FC = () => {
 
           <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-2">
             <Link
-              to="/report?status=lost"
+              to="/report"
               className="px-6 py-3.5 rounded-2xl btn-primary-custom text-xs sm:text-sm font-bold flex items-center gap-2 hover-glow"
             >
               <PlusCircle className="w-4 h-4 text-[#E6CAAB] transition-transform duration-300 transform group-hover:scale-110" />
-              <span>Report Lost Item</span>
+              <span>Report a Lost Item</span>
             </Link>
             <Link
-              to="/report?status=found"
+              to="/items"
               className="px-6 py-3.5 rounded-2xl btn-secondary-custom text-xs sm:text-sm font-bold flex items-center gap-2 hover-glow"
             >
-              <CheckCircle2 className="w-4 h-4 text-[#926347] transition-transform duration-300 transform group-hover:scale-110" />
-              <span>Report Found Item</span>
+              <Search className="w-4 h-4 text-[#926347] transition-transform duration-300 transform group-hover:scale-110" />
+              <span>Search for Found Items</span>
             </Link>
           </div>
         </div>
@@ -763,6 +763,41 @@ const Home: React.FC = () => {
             <Backpack className="w-6 h-6 transition-all duration-300 transform hover:scale-110 hover:text-accent text-primary" />
           </motion.div>
         </div>
+      </section>
+
+      {/* ── HOW TO USE PORTAL ── */}
+      <section className="glass-panel rounded-3xl p-8 sm:p-12 mb-10 border-l-4 border-l-primary">
+        <h2 className="text-2xl sm:text-3xl font-black font-heading tracking-tight text-brand-primary mb-6">How to Use the Portal</h2>
+        <ul className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <li className="flex items-start gap-4">
+            <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-lg">1</div>
+            <div>
+              <h3 className="text-lg font-bold text-primary mb-1">Report a Lost Item</h3>
+              <p className="text-sm text-textSecondary leading-relaxed">Submit detailed information about what you lost, including a visual description and the last known location on campus.</p>
+            </div>
+          </li>
+          <li className="flex items-start gap-4">
+            <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-lg">2</div>
+            <div>
+              <h3 className="text-lg font-bold text-primary mb-1">Search Found Items</h3>
+              <p className="text-sm text-textSecondary leading-relaxed">Browse our real-time catalog of items found and turned in around campus to quickly spot your belongings.</p>
+            </div>
+          </li>
+          <li className="flex items-start gap-4">
+            <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-lg">3</div>
+            <div>
+              <h3 className="text-lg font-bold text-primary mb-1">Claim Securely</h3>
+              <p className="text-sm text-textSecondary leading-relaxed">Answer pre-configured security questions to prove ownership and securely place a claim on your item.</p>
+            </div>
+          </li>
+          <li className="flex items-start gap-4">
+            <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-lg">4</div>
+            <div>
+              <h3 className="text-lg font-bold text-primary mb-1">Coordinate Pickup</h3>
+              <p className="text-sm text-textSecondary leading-relaxed">Once your claim is verified by the staff, coordinate with the administration office to physically retrieve your item.</p>
+            </div>
+          </li>
+        </ul>
       </section>
 
       {/* ── STATISTICS SECTION ── */}
@@ -1223,6 +1258,23 @@ const Home: React.FC = () => {
         </aside>
 
       </div>
+
+      {/* ── FEEDBACK & SUPPORT SECTION ── */}
+      <section className="mt-12 glass-panel rounded-3xl p-8 sm:p-12 flex flex-col sm:flex-row items-center justify-between gap-6 hero-warm-gradient border border-primary/20 shadow-lg">
+        <div className="flex-1 space-y-3 text-center sm:text-left">
+          <h3 className="text-2xl font-black font-heading text-brand-primary">Need Help or Have Feedback?</h3>
+          <p className="text-sm text-brand-secondary max-w-lg mx-auto sm:mx-0">
+            Encountering issues with a claim? Need assistance navigating the portal? Reach out to our administrative support team to get your questions answered.
+          </p>
+        </div>
+        <Link 
+          to="/contact" 
+          className="px-8 py-4 rounded-2xl btn-primary-custom font-bold text-sm flex items-center gap-2 hover-glow flex-shrink-0"
+        >
+          <PhoneCall className="w-4 h-4 text-[#E6CAAB]" />
+          <span>Contact Support</span>
+        </Link>
+      </section>
 
       {/* ── EXPANDABLE QUICK ACTIONS FAB PANEL ── */}
       <div className="fixed bottom-6 right-6 z-[9999] flex flex-col items-end gap-3">
