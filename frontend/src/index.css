@@ -5,7 +5,7 @@
 @layer base {
   body {
     @apply bg-background text-text font-sans min-h-screen antialiased;
-    background-image: radial-gradient(circle at 50% -20%, #1e293b 0%, transparent 60%);
+    background-image: radial-gradient(circle at 50% -20%, #F3E7D9 0%, transparent 60%);
   }
 
   /* Custom styled scrollbars */
@@ -25,44 +25,44 @@
 
 /* Glassmorphism minimal utility classes */
 .glass-panel {
-  background-color: rgba(30, 41, 59, 0.4);
-  border: 1px solid rgba(248, 250, 252, 0.05);
+  background-color: rgba(243, 231, 217, 0.4);
+  border: 1px solid rgba(92, 50, 30, 0.08);
   @apply backdrop-blur-md rounded-xl shadow-sm;
 }
 
 .glass-card {
-  background-color: rgba(30, 41, 59, 0.5);
+  background-color: rgba(243, 231, 217, 0.5);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(248, 250, 252, 0.05);
+  border: 1px solid rgba(92, 50, 30, 0.08);
   border-radius: 12px;
   transition: all 0.2s ease-out;
 }
 
 .glass-card:hover {
   transform: scale(1.01);
-  border-color: rgba(99, 102, 241, 0.2);
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.3);
+  border-color: rgba(92, 50, 30, 0.2);
+  box-shadow: 0 4px 20px -2px rgba(92, 50, 30, 0.15);
 }
 
 .glass-input {
-  background-color: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(248, 250, 252, 0.1);
-  color: #f8fafc;
+  background-color: rgba(230, 202, 171, 0.6);
+  border: 1px solid rgba(92, 50, 30, 0.1);
+  color: #3A2417;
   @apply rounded-xl px-4 py-3 transition-all duration-200 ease-out;
 }
 .glass-input:focus {
   outline: none;
-  border-color: #6366f1;
-  background-color: rgba(30, 41, 59, 0.8);
+  border-color: #926347;
+  background-color: rgba(243, 231, 217, 0.8);
 }
 .glass-input::placeholder {
-  color: rgba(148, 163, 184, 0.5);
+  color: rgba(146, 99, 71, 0.5);
 }
 
 /* Custom minimal buttons */
 .btn-primary-custom {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(168, 85, 247, 0.9));
+  background: linear-gradient(135deg, rgba(92, 50, 30, 0.9), rgba(146, 99, 71, 0.9));
   color: #FFFFFF;
   border-radius: 12px;
   transition: all 0.2s ease-out;
@@ -74,36 +74,36 @@
 
 .btn-secondary-custom {
   background-color: transparent;
-  border: 1px solid rgba(248, 250, 252, 0.1);
-  color: #e2e8f0;
+  border: 1px solid rgba(92, 50, 30, 0.2);
+  color: #5C321E;
   border-radius: 12px;
   transition: all 0.2s ease-out;
 }
 .btn-secondary-custom:hover {
-  background-color: rgba(248, 250, 252, 0.05);
-  border-color: rgba(248, 250, 252, 0.2);
+  background-color: rgba(92, 50, 30, 0.05);
+  border-color: rgba(92, 50, 30, 0.3);
 }
 
 /* Hero Gradient */
 .hero-warm-gradient {
-  background: linear-gradient(180deg, rgba(30, 41, 59, 0.3) 0%, rgba(15, 23, 42, 0) 100%) !important;
+  background: linear-gradient(180deg, rgba(243, 231, 217, 0.6) 0%, rgba(230, 202, 171, 0) 100%) !important;
 }
 
-/* Theme Palette Hardcoded Fallbacks (Dark Indigo) */
-.bg-background, body { background-color: #0f172a !important; }
-.bg-primary { background-color: #6366f1 !important; }
-.bg-secondary { background-color: #a855f7 !important; }
-.bg-accent { background-color: #ec4899 !important; }
-.bg-shade-5 { background-color: #1e293b !important; }
+/* Theme Palette Hardcoded Fallbacks */
+.bg-background, body { background-color: #E6CAAB !important; }
+.bg-primary { background-color: #5C321E !important; }
+.bg-secondary { background-color: #926347 !important; }
+.bg-accent { background-color: #C9A07A !important; }
+.bg-shade-5 { background-color: #F3E7D9 !important; }
 
-.text-primary, .text-brand-primary, .text-text { color: #f8fafc !important; }
-.text-secondary, .text-brand-secondary, .text-textSecondary { color: #cbd5e1 !important; }
-.text-brand-muted, .text-textMuted { color: #64748b !important; }
-.text-accent { color: #ec4899 !important; }
+.text-primary, .text-brand-primary, .text-text { color: #3B2418 !important; }
+.text-secondary, .text-brand-secondary, .text-textSecondary { color: #6B5B4D !important; }
+.text-brand-muted, .text-textMuted { color: #8B7A6A !important; }
+.text-accent { color: #C9A07A !important; }
 
-.border-primary { border-color: rgba(99, 102, 241, 0.3) !important; }
-.border-secondary { border-color: rgba(168, 85, 247, 0.3) !important; }
-.border-accent { border-color: rgba(236, 72, 153, 0.3) !important; }
+.border-primary { border-color: rgba(92, 50, 30, 0.3) !important; }
+.border-secondary { border-color: rgba(146, 99, 71, 0.3) !important; }
+.border-accent { border-color: rgba(201, 160, 122, 0.3) !important; }
 
 /* Float animations */
 @keyframes float {
@@ -121,9 +121,9 @@
 
 /* Pulse animation for map pins */
 @keyframes pin-pulse {
-  0% { transform: scale(0.95); opacity: 0.5; box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
-  70% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 6px rgba(99, 102, 241, 0); }
-  100% { transform: scale(0.95); opacity: 0.5; box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+  0% { transform: scale(0.95); opacity: 0.5; box-shadow: 0 0 0 0 rgba(92, 50, 30, 0.4); }
+  70% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 6px rgba(92, 50, 30, 0); }
+  100% { transform: scale(0.95); opacity: 0.5; box-shadow: 0 0 0 0 rgba(92, 50, 30, 0); }
 }
 .animate-pin-pulse {
   animation: pin-pulse 2s infinite ease-out;
