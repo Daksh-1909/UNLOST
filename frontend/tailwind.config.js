@@ -7,25 +7,25 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: "#6366f1",      // Indigo 500
-        secondary: "#a855f7",    // Purple 500
-        accent: "#ec4899",       // Pink 500
-        background: "#0f172a",   // Slate 900
-        surface: "#1e293b",      // Slate 800
-        text: "#f8fafc",         // Slate 50
-        textSecondary: "#cbd5e1", // Slate 300
-        textMuted: "#64748b",    // Slate 500
-        success: "#22c55e",
-        warning: "#eab308",
-        danger: "#ef4444",
-        border: "#334155"        // Slate 700
+        primary: "#5C321E",
+        secondary: "#926347",
+        accent: "#C9A07A",
+        background: "#E6CAAB",
+        surface: "#F3E7D9",
+        text: "#3B2418",
+        textSecondary: "#6B5B4D",
+        textMuted: "#8B7A6A",
+        success: "#4E7A52",
+        warning: "#B07A1A",
+        danger: "#B4463A",
+        border: "#D4B79A"
       },
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
         heading: ['Outfit', 'sans-serif'],
       },
       backgroundImage: {
-        'primary-gradient': 'linear-gradient(135deg, #6366f1, #a855f7, #ec4899)',
+        'primary-gradient': 'linear-gradient(135deg, #5C321E, #926347, #C9A07A)',
       },
       boxShadow: {
         'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.2)',
