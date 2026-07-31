@@ -42,6 +42,11 @@ const Report: React.FC = () => {
       return;
     }
 
+    if ((securityQuestion && !securityAnswer) || (!securityQuestion && securityAnswer)) {
+      setError('Both Security Question and Answer must be provided together, or leave both empty.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
@@ -227,7 +232,7 @@ const Report: React.FC = () => {
             <div className="flex flex-col sm:flex-row items-center gap-4 bg-[#5C321E]/5 p-4 rounded-xl border border-[#926347]/20">
               <input
                 type="file"
-                accept="image/*"
+                accept="image/png, image/jpeg, image/gif"
                 onChange={handleImageChange}
                 className="hidden"
                 id="item-image-file"

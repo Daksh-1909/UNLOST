@@ -57,7 +57,10 @@ const Items: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchItems();
+    const handler = setTimeout(() => {
+      fetchItems();
+    }, 300);
+    return () => clearTimeout(handler);
   }, [search, category, status, date]);
 
   const handleClaimSubmit = async (e: React.FormEvent) => {

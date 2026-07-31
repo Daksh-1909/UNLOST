@@ -10,23 +10,37 @@ const Contact: React.FC = () => {
   const [sending, setSending] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  const handleContactSubmit = (e: React.FormEvent) => {
+  const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !email || !subject || !message) return;
 
     setSending(true);
-    // Simulate API query dispatch
-    setTimeout(() => {
-      setSending(false);
-      setSubmitted(true);
-      setName('');
-      setEmail('');
-      setSubject('');
-      setMessage('');
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name, email, subject, message })
+      });
+      const data = await response.json();
       
-      // Hide notification after 5 seconds
-      setTimeout(() => setSubmitted(false), 5000);
-    }, 1200);
+      if (response.ok && data.success) {
+        setSubmitted(true);
+        setName('');
+        setEmail('');
+        setSubject('');
+        setMessage('');
+        setTimeout(() => setSubmitted(false), 5000);
+      } else {
+        alert(data.message || 'Failed to send message.');
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      alert('Network error, please try again later.');
+    } finally {
+      setSending(false);
+    }
   };
 
   const offices = [

@@ -74,7 +74,7 @@ const Profile: React.FC = () => {
               <img src={user.profilePicture} alt="Profile" className="h-full w-full object-cover" />
             ) : (
               <span className="text-3xl font-extrabold text-white uppercase font-heading">
-                {user?.username.slice(0, 2)}
+                {user?.username?.slice(0, 2)}
               </span>
             )}
             {user?.is_admin && (

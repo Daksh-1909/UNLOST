@@ -433,7 +433,7 @@ const Home: React.FC = () => {
   useEffect(() => {
     const fetchItems = async () => {
       try {
-        const response = await fetch('/api/items');
+        const response = await fetch('/api/items?limit=10');
         const data = await response.json();
         if (response.ok && data.success) {
           setDbItems(data.items);
@@ -1018,7 +1018,9 @@ const Home: React.FC = () => {
                         <span className={`absolute top-3 right-3 px-3 py-1 text-[10px] font-black uppercase tracking-wider rounded-full shadow-md select-none border ${
                           item.status === 'Lost' 
                             ? 'bg-rose-500/20 text-rose-800 border-rose-500/30' 
-                            : 'bg-emerald-500/20 text-emerald-800 border-emerald-500/30'
+                            : item.status === 'Claimed'
+                              ? 'bg-slate-500/20 text-slate-800 border-slate-500/30'
+                              : 'bg-emerald-500/20 text-emerald-800 border-emerald-500/30'
                         }`}>
                           {item.status}
                         </span>
@@ -1155,8 +1157,12 @@ const Home: React.FC = () => {
                         <div className="text-[10px] text-secondary font-semibold mb-1 truncate">{target.location}</div>
                         <div className="text-[9px] text-brand-muted flex items-center justify-between">
                           <span>{target.category}</span>
-                          <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold ${
-                            target.status === 'Lost' ? 'bg-rose-500/10 text-rose-700' : 'bg-emerald-500/10 text-emerald-700'
+                          <span className={`p-1.5 rounded-lg border border-primary/5 shadow-sm ${
+                            target.status === 'Lost' 
+                              ? 'bg-rose-500/10 text-rose-700' 
+                              : target.status === 'Claimed'
+                                ? 'bg-slate-500/10 text-slate-700'
+                                : 'bg-emerald-500/10 text-emerald-700'
                           }`}>{target.status}</span>
                         </div>
                       </div>
@@ -1311,7 +1317,9 @@ const Home: React.FC = () => {
                 <span className={`absolute top-4 left-4 px-3.5 py-1 text-xs font-black uppercase tracking-wider rounded-full shadow-lg border ${
                   selectedItemModal.status === 'Lost' 
                     ? 'bg-rose-500/20 text-rose-700 border-rose-500/30' 
-                    : 'bg-emerald-500/20 text-emerald-700 border-emerald-500/30'
+                    : selectedItemModal.status === 'Claimed'
+                      ? 'bg-slate-500/20 text-slate-700 border-slate-500/30'
+                      : 'bg-emerald-500/20 text-emerald-700 border-emerald-500/30'
                 }`}>
                   {selectedItemModal.status}
                 </span>

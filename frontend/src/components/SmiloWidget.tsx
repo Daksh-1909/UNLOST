@@ -74,7 +74,8 @@ const SmiloRobot: React.FC<{
     isHovered: boolean;
     isWavingHover: boolean;
     mood: string;
-}> = ({ mouseX, mouseY, isWaving, isClicked, isHovered, isWavingHover, mood }) => {
+    hoverGreeting: string;
+}> = ({ mouseX, mouseY, isWaving, isClicked, isHovered, isWavingHover, mood, hoverGreeting }) => {
 
     // Spring-smoothed mouse-driven head rotation
     const rotY = useSpring(useMotionValue(mouseX * 20), { stiffness: 60, damping: 18 });
@@ -154,7 +155,7 @@ const SmiloRobot: React.FC<{
                     ease: [0.22, 1, 0.36, 1]
                 }}
             >
-                👋 Hello!
+                {hoverGreeting}
             </motion.div>
 
             {/* ── ANTENNA (floats with head) ── */}
@@ -419,12 +420,16 @@ const SmiloWidget: React.FC = () => {
     const [isClicked, setIsClicked] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
     const [isWavingHover, setIsWavingHover] = useState(false);
+    const [hoverGreeting, setHoverGreeting] = useState("👋 Hello!");
 
     const hoverTimeoutRef = useRef<any>(null);
+
+    const HOVER_GREETINGS = ["👋 Hello!", "Need help?", "Find something?"];
 
     const handleMouseEnter = () => {
         setIsHovered(true);
         setIsWavingHover(true);
+        setHoverGreeting(HOVER_GREETINGS[Math.floor(Math.random() * HOVER_GREETINGS.length)]);
         if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
         hoverTimeoutRef.current = setTimeout(() => {
             setIsWavingHover(false);
@@ -1322,6 +1327,7 @@ const SmiloWidget: React.FC = () => {
                         isHovered={isHovered}
                         isWavingHover={isWavingHover}
                         mood={mood}
+                        hoverGreeting={hoverGreeting}
                     />
                     {/* Label */}
                     <div style={{textAlign:'center',marginTop:4,fontFamily:"'Orbitron',sans-serif",fontSize:8,fontWeight:900,letterSpacing:'0.2em',color:'rgba(255,255,255,0.88)',textShadow:`0 0 8px ${acc}99,0 0 16px ${acc}44`,background:'rgba(255,255,255,0.02)',border:`1px solid ${acc}28`,borderRadius:4,padding:'3px 10px',backdropFilter:'blur(8px)',transition:'border-color 0.3s'}}>

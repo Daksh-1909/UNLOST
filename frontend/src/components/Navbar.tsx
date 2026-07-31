@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Menu, X, LogOut, Search, PlusCircle, Shield, User, Phone } from 'lucide-react';
+import { Menu, X, LogOut, Search, PlusCircle, Shield, User, Phone, Home } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Navbar: React.FC = () => {
@@ -11,7 +11,7 @@ const Navbar: React.FC = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const navigation = [
-    { name: 'Home', href: '/', icon: Search },
+    { name: 'Home', href: '/', icon: Home },
     { name: 'Items', href: '/items', icon: Search },
     { name: 'Report Item', href: '/report', icon: PlusCircle },
     { name: 'Contact', href: '/contact', icon: Phone },

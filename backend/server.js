@@ -43,9 +43,14 @@ mongoose.connect(mongoURI)
     process.exit(1);
   });
 
+const sessionSecret = process.env.SECRET_KEY || 'unlost_session_secret_123';
+if (process.env.NODE_ENV === 'production' && !process.env.SECRET_KEY) {
+  console.warn('WARNING: SECRET_KEY is not defined in production.');
+}
+
 // Session configuration
 app.use(session({
-  secret: process.env.SECRET_KEY || 'unlost_session_secret_123',
+  secret: sessionSecret,
   resave: false,
   saveUninitialized: false,
   store: MongoStore.create({
@@ -57,7 +62,7 @@ app.use(session({
     maxAge: 24 * 60 * 60 * 1000, // 1 day
     httpOnly: true,
     sameSite: 'lax',
-    secure: false // Set to true in production with HTTPS
+    secure: process.env.NODE_ENV === 'production'
   }
 }));
 
@@ -67,7 +72,10 @@ app.use('/', apiRouter);
 // Global Error Handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ success: false, message: err.message || 'Internal Server Error' });
+  res.status(500).json({ 
+    success: false, 
+    message: process.env.NODE_ENV === 'production' ? 'Internal Server Error' : (err.message || 'Internal Server Error')
+  });
 });
 
 // Start listening

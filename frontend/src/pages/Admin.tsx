@@ -48,6 +48,9 @@ const Admin: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'overview' | 'items' | 'trash' | 'logs'>('overview');
   const [actionMessage, setActionMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [itemsPage, setItemsPage] = useState(1);
+  const [logsPage, setLogsPage] = useState(1);
+  const itemsPerPage = 10;
 
   const fetchAdminStats = async () => {
     try {
@@ -275,7 +278,7 @@ const Admin: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-primary/10">
-                    {data?.recent_items.map((item) => (
+                    {data?.recent_items.slice((itemsPage - 1) * itemsPerPage, itemsPage * itemsPerPage).map((item) => (
                       <tr key={item.id} className="hover:bg-surface/80 transition-all text-text">
                         <td className="py-3.5 px-4 font-bold max-w-[200px] truncate">{item.title}</td>
                         <td className="py-3.5 px-4">{item.category}</td>
@@ -295,6 +298,21 @@ const Admin: React.FC = () => {
                     ))}
                   </tbody>
                 </table>
+              )}
+              {data && data.recent_items.length > itemsPerPage && (
+                <div className="flex justify-between items-center py-4 px-6 text-sm">
+                  <button 
+                    disabled={itemsPage === 1}
+                    onClick={() => setItemsPage(p => p - 1)}
+                    className="px-3 py-1.5 bg-slate-800 text-slate-300 rounded hover:bg-slate-700 disabled:opacity-50"
+                  >Previous</button>
+                  <span className="text-slate-400">Page {itemsPage} of {Math.ceil(data.recent_items.length / itemsPerPage)}</span>
+                  <button 
+                    disabled={itemsPage >= Math.ceil(data.recent_items.length / itemsPerPage)}
+                    onClick={() => setItemsPage(p => p + 1)}
+                    className="px-3 py-1.5 bg-slate-800 text-slate-300 rounded hover:bg-slate-700 disabled:opacity-50"
+                  >Next</button>
+                </div>
               )}
             </div>
           </div>
@@ -381,7 +399,7 @@ const Admin: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-primary/10">
-                    {data?.logs.map((log, i) => (
+                    {data?.logs.slice((logsPage - 1) * itemsPerPage, logsPage * itemsPerPage).map((log, i) => (
                       <tr key={i} className="hover:bg-surface/80 transition-all text-text">
                         <td className="py-3.5 px-4 font-medium flex items-center gap-1.5 text-slate-400">
                           <Calendar className="h-3.5 w-3.5" />
@@ -400,6 +418,21 @@ const Admin: React.FC = () => {
                     ))}
                   </tbody>
                 </table>
+              )}
+              {data && data.logs.length > itemsPerPage && (
+                <div className="flex justify-between items-center py-4 px-6 text-sm">
+                  <button 
+                    disabled={logsPage === 1}
+                    onClick={() => setLogsPage(p => p - 1)}
+                    className="px-3 py-1.5 bg-slate-800 text-slate-300 rounded hover:bg-slate-700 disabled:opacity-50"
+                  >Previous</button>
+                  <span className="text-slate-400">Page {logsPage} of {Math.ceil(data.logs.length / itemsPerPage)}</span>
+                  <button 
+                    disabled={logsPage >= Math.ceil(data.logs.length / itemsPerPage)}
+                    onClick={() => setLogsPage(p => p + 1)}
+                    className="px-3 py-1.5 bg-slate-800 text-slate-300 rounded hover:bg-slate-700 disabled:opacity-50"
+                  >Next</button>
+                </div>
               )}
             </div>
           </div>

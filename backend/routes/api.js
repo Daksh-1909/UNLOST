@@ -11,6 +11,28 @@ import Log from '../models/Log.js';
 import jwt from 'jsonwebtoken';
 import passport from 'passport';
 import { GoogleGenAI } from '@google/genai';
+import rateLimit from 'express-rate-limit';
+
+const JWT_SECRET = process.env.JWT_SECRET_KEY || 'jwtsecret123';
+if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET_KEY) {
+  console.warn('WARNING: JWT_SECRET_KEY is not defined in production.');
+}
+
+const authRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20, // limit each IP to 20 requests per windowMs
+  message: { success: false, message: 'Too many requests, please try again later.' }
+});
+
+const verifyRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  message: { success: false, message: 'Too many verification attempts, please try again later.' }
+});
+
+const validateParulEmail = (email) => {
+  return email.endsWith('@paruluniversity.ac.in') || email === (process.env.ADMIN_EMAIL || 'admin@unlost.com');
+};
 
 const router = express.Router();
 
@@ -42,6 +64,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB limit
   fileFilter: (req, file, cb) => {
     const allowedExts = ['.png', '.jpg', '.jpeg', '.gif'];
     const ext = path.extname(file.originalname).toLowerCase();
@@ -52,6 +75,19 @@ const upload = multer({
     }
   }
 });
+
+// Middleware to handle multer errors gracefully
+const uploadMiddleware = (req, res, next) => {
+  const uploadSingle = upload.single('image');
+  uploadSingle(req, res, (err) => {
+    if (err instanceof multer.MulterError) {
+      return res.status(400).json({ success: false, message: `Upload error: ${err.message}` });
+    } else if (err) {
+      return res.status(400).json({ success: false, message: err.message });
+    }
+    next();
+  });
+};
 
 // --- Authentication Middlewares ---
 const loginRequired = (req, res, next) => {
@@ -84,7 +120,7 @@ const adminRequired = (req, res, next) => {
 const generateJWT = (user) => {
   return jwt.sign(
     { id: user._id.toString(), email: user.email, role: user.role, is_admin: user.is_admin },
-    process.env.JWT_SECRET_KEY || 'jwtsecret123',
+    JWT_SECRET,
     { expiresIn: '7d' }
   );
 };
@@ -101,6 +137,10 @@ router.post('/api/auth/google', (req, res, next) => {
     if (err || !user) {
       console.error('Google OAuth error:', err || info);
       return res.status(401).json({ success: false, message: 'Google authentication failed.' });
+    }
+
+    if (!validateParulEmail(user.email)) {
+      return res.status(403).json({ success: false, message: 'Only @paruluniversity.ac.in emails are allowed.' });
     }
 
     const jwtToken = generateJWT(user);
@@ -132,7 +172,7 @@ router.get('/api/user', async (req, res) => {
   const token = req.cookies?.token;
   if (token) {
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY || 'jwtsecret123');
+      const decoded = jwt.verify(token, JWT_SECRET);
       const user = await User.findById(decoded.id);
       if (user) {
         return res.status(200).json({
@@ -153,10 +193,14 @@ router.get('/api/user', async (req, res) => {
 });
 
 // POST /api/register
-router.post('/api/register', async (req, res) => {
+router.post('/api/register', authRateLimiter, async (req, res) => {
   const { username, email, password } = req.body;
   if (!username || !email || !password) {
     return res.status(400).json({ success: false, message: 'Missing username, email or password' });
+  }
+
+  if (!validateParulEmail(email)) {
+    return res.status(403).json({ success: false, message: 'Only @paruluniversity.ac.in emails are allowed to register.' });
   }
 
   try {
@@ -184,7 +228,7 @@ router.post('/api/register', async (req, res) => {
 });
 
 // POST /api/login
-router.post('/api/login', (req, res, next) => {
+router.post('/api/login', authRateLimiter, (req, res, next) => {
   passport.authenticate('local', { session: false }, async (err, user, info) => {
     if (err) {
       return res.status(500).json({ success: false, message: 'Authentication error' });
@@ -246,10 +290,11 @@ const buildItemsFilter = (query) => {
   }
 
   if (query.date) {
-    const startOfDay = new Date(query.date);
+    // Treat date as UTC day boundary
+    const dateStr = query.date;
+    const startOfDay = new Date(`${dateStr}T00:00:00Z`);
     if (!isNaN(startOfDay.getTime())) {
-      const endOfDay = new Date(startOfDay);
-      endOfDay.setDate(endOfDay.getDate() + 1);
+      const endOfDay = new Date(`${dateStr}T23:59:59.999Z`);
       filter.date = {
         $gte: startOfDay,
         $lt: endOfDay
@@ -268,7 +313,14 @@ const buildItemsFilter = (query) => {
 router.get('/api/items', loginRequired, async (req, res) => {
   try {
     const filter = buildItemsFilter(req.query);
-    const items = await Item.find(filter).sort({ date: -1 });
+    const limit = parseInt(req.query.limit, 10) || 0; // 0 means no limit
+    
+    let query = Item.find(filter).sort({ date: -1 });
+    if (limit > 0) {
+      query = query.limit(limit);
+    }
+    
+    const items = await query;
 
     const formattedItems = items.map(doc => ({
       id: doc._id.toString(),
@@ -291,7 +343,7 @@ router.get('/api/items', loginRequired, async (req, res) => {
 });
 
 // POST /api/report
-router.post('/api/report', loginRequired, upload.single('image'), async (req, res) => {
+router.post('/api/report', loginRequired, uploadMiddleware, async (req, res) => {
   const { title, description, category, location, status, contact_info, date } = req.body;
   if (!title || !description || !category || !location || !status || !contact_info) {
     return res.status(400).json({ success: false, message: 'Missing required fields' });
@@ -330,7 +382,7 @@ router.post('/api/report', loginRequired, upload.single('image'), async (req, re
 });
 
 // POST /api/verify_claim
-router.post('/api/verify_claim', loginRequired, async (req, res) => {
+router.post('/api/verify_claim', loginRequired, verifyRateLimiter, async (req, res) => {
   const { item_id, answer } = req.body;
   if (!item_id || !answer) {
     return res.status(400).json({ success: false, message: 'Missing item_id or answer' });
@@ -355,6 +407,9 @@ router.post('/api/verify_claim', loginRequired, async (req, res) => {
       res.status(200).json({ success: false, message: 'Incorrect answer. Please try again.' });
     }
   } catch (err) {
+    if (err.name === 'CastError') {
+      return res.status(400).json({ success: false, message: 'Invalid item ID format' });
+    }
     res.status(500).json({ success: false, message: 'Verification error' });
   }
 });
@@ -377,6 +432,7 @@ You help users report lost items or claim found items. Keep answers brief, frien
 Use emojis where appropriate.
 If a user asks about accuracy or statistics, let them know our matching algorithms are highly precise but encourage them to search the portal for specific items.
 IMPORTANT: You MUST ONLY answer questions related to the UNLOST portal, lost & found items, or the app's features. If the user asks off-topic, useless, or irrelevant questions, politely decline to answer and steer them back to lost & found topics.
+CRITICAL: If a user asks about an item that is NOT explicitly listed in your database context, explicitly encourage them to use the "Report Item" page to submit a new report, or direct them to the "Contact" page if they need administrative help.
 Here are the most recent items in the database for your context:
 ${itemsContext}`;
 
@@ -523,6 +579,9 @@ router.post('/api/admin/delete/:item_id', adminRequired, async (req, res) => {
       res.status(404).json({ success: false, message: 'Item not found.' });
     }
   } catch (err) {
+    if (err.name === 'CastError') {
+      return res.status(400).json({ success: false, message: 'Invalid item ID format' });
+    }
     res.status(500).json({ success: false, message: 'Failed to archive item.' });
   }
 });
@@ -548,7 +607,31 @@ router.post('/api/admin/recover/:item_id', adminRequired, async (req, res) => {
       res.status(404).json({ success: false, message: 'Item not found or not in archived state.' });
     }
   } catch (err) {
+    if (err.name === 'CastError') {
+      return res.status(400).json({ success: false, message: 'Invalid item ID format' });
+    }
     res.status(500).json({ success: false, message: 'Failed to recover item.' });
+  }
+});
+
+// POST /api/contact
+router.post('/api/contact', loginRequired, async (req, res) => {
+  const { name, email, subject, message } = req.body;
+  if (!name || !email || !subject || !message) {
+    return res.status(400).json({ success: false, message: 'Missing fields' });
+  }
+
+  try {
+    const newLog = new Log({
+      action: `Contact Form Submission: ${subject}`,
+      user: req.user.email
+    });
+    await newLog.save();
+    
+    // In a real app, this would dispatch an email via SendGrid, NodeMailer, etc.
+    res.status(200).json({ success: true, message: 'Message sent successfully.' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to send message.' });
   }
 });
 
