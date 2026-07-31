@@ -113,19 +113,19 @@ const Admin: React.FC = () => {
     return (
       <div className="flex h-[60vh] items-center justify-center">
         <div className="relative flex items-center justify-center">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-indigo-500/25 border-t-indigo-500"></div>
-          <span className="absolute text-xs font-semibold text-indigo-400">UL</span>
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary/25 border-t-primary"></div>
+          <span className="absolute text-xs font-semibold text-primary">UL</span>
         </div>
       </div>
     );
   }
 
   const statCards = [
-    { title: 'Active Items', value: data?.stats.total_items ?? 0, icon: Layers, color: 'text-indigo-400 border-indigo-500/10 bg-indigo-500/5' },
-    { title: 'Registered Users', value: data?.stats.total_users ?? 0, icon: Users, color: 'text-emerald-400 border-emerald-500/10 bg-emerald-500/5' },
-    { title: 'Archived Trash', value: data?.stats.archived_items ?? 0, icon: Archive, color: 'text-slate-400 border-slate-500/10 bg-slate-500/5' },
-    { title: "Today's Activities", value: data?.stats.new_today ?? 0, icon: Clock, color: 'text-pink-400 border-pink-500/10 bg-pink-500/5' },
-    { title: 'Security Alerts', value: data?.stats.security_alerts ?? 0, icon: AlertTriangle, color: 'text-rose-400 border-rose-500/10 bg-rose-500/5' },
+    { title: 'Active Items', value: data?.stats.total_items ?? 0, icon: Layers, color: 'text-primary border-primary/10 bg-primary/5' },
+    { title: 'Registered Users', value: data?.stats.total_users ?? 0, icon: Users, color: 'text-success border-success/10 bg-success/5' },
+    { title: 'Archived Trash', value: data?.stats.archived_items ?? 0, icon: Archive, color: 'text-textSecondary border-textSecondary/10 bg-textSecondary/5' },
+    { title: "Today's Activities", value: data?.stats.new_today ?? 0, icon: Clock, color: 'text-accent border-accent/10 bg-accent/5' },
+    { title: 'Security Alerts', value: data?.stats.security_alerts ?? 0, icon: AlertTriangle, color: 'text-danger border-danger/10 bg-danger/5' },
   ];
 
   return (
@@ -141,7 +141,7 @@ const Admin: React.FC = () => {
         </div>
         <button
           onClick={fetchAdminStats}
-          className="self-start sm:self-center px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-white/5 rounded-xl text-xs font-semibold text-slate-200 flex items-center gap-1.5 transition-all shadow"
+          className="self-start sm:self-center px-4 py-2 bg-surface hover:bg-surface/80 border border-primary/20 rounded-xl text-xs font-semibold text-text flex items-center gap-1.5 transition-all shadow"
         >
           <RefreshCw className="h-3.5 w-3.5" />
           <span>Refresh</span>
@@ -157,21 +157,21 @@ const Admin: React.FC = () => {
             exit={{ opacity: 0, y: -10 }}
             className={`p-4 rounded-xl border text-sm flex items-center justify-between gap-3 ${
               actionMessage.type === 'success'
-                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300'
-                : 'bg-rose-500/10 border-rose-500/20 text-rose-300'
+                ? 'bg-success/10 border-success/20 text-success'
+                : 'bg-danger/10 border-danger/20 text-danger'
             }`}
           >
             <div className="flex items-center gap-2">
               {actionMessage.type === 'success' ? (
-                <CheckCircle2 className="h-5 w-5 text-emerald-400 flex-shrink-0" />
+                <CheckCircle2 className="h-5 w-5 text-success flex-shrink-0" />
               ) : (
-                <AlertCircle className="h-5 w-5 text-rose-400 flex-shrink-0" />
+                <AlertCircle className="h-5 w-5 text-danger flex-shrink-0" />
               )}
               <span>{actionMessage.text}</span>
             </div>
             <button
               onClick={() => setActionMessage(null)}
-              className="text-xs font-semibold underline hover:text-white"
+              className="text-xs font-semibold underline hover:text-text"
             >
               Dismiss
             </button>
@@ -205,8 +205,8 @@ const Admin: React.FC = () => {
             onClick={() => setActiveTab(tab.id as any)}
             className={`px-4 py-2.5 text-sm font-semibold border-b-2 -mb-px transition-all flex-shrink-0 ${
               activeTab === tab.id
-                ? 'border-indigo-500 text-white'
-                : 'border-transparent text-slate-400 hover:text-white'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-textSecondary hover:text-text'
             }`}
           >
             {tab.label}
@@ -229,7 +229,7 @@ const Admin: React.FC = () => {
                       <p className="text-xs text-textSecondary mt-0.5">{item.category} • {item.location}</p>
                     </div>
                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
-                      item.status === 'Lost' ? 'bg-rose-500/10 text-rose-700' : 'bg-emerald-500/10 text-emerald-700'
+                      item.status === 'Lost' ? 'bg-danger/10 text-danger' : 'bg-success/10 text-success'
                     }`}>
                       {item.status}
                     </span>
@@ -248,7 +248,7 @@ const Admin: React.FC = () => {
                       <span>{formatDate(log.timestamp)}</span>
                     </div>
                     <p className={`font-medium ${
-                      log.action.includes('Security Alert') ? 'text-rose-600' : 'text-text'
+                      log.action.includes('Security Alert') ? 'text-danger' : 'text-text'
                     }`}>
                       {log.action} {log.item_title && `• ${log.item_title}`}
                     </p>
@@ -264,7 +264,7 @@ const Admin: React.FC = () => {
           <div className="overflow-x-auto -mx-6">
             <div className="inline-block min-w-full align-middle px-6">
               {data?.recent_items.length === 0 ? (
-                <p className="text-center py-6 text-slate-500 text-sm">No items in the system.</p>
+                <p className="text-center py-6 text-textSecondary text-sm">No items in the system.</p>
               ) : (
                 <table className="min-w-full divide-y divide-primary/10 text-sm text-left">
                   <thead>
@@ -288,7 +288,7 @@ const Admin: React.FC = () => {
                         <td className="py-3.5 px-4 text-right">
                           <button
                             onClick={() => handleDeleteItem(item.id)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-all"
+                            className="p-1.5 rounded-lg text-textMuted hover:text-danger hover:bg-danger/5 transition-all"
                             title="Soft Delete (Move to Trash)"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -304,13 +304,13 @@ const Admin: React.FC = () => {
                   <button 
                     disabled={itemsPage === 1}
                     onClick={() => setItemsPage(p => p - 1)}
-                    className="px-3 py-1.5 bg-slate-800 text-slate-300 rounded hover:bg-slate-700 disabled:opacity-50"
+                    className="px-3 py-1.5 bg-primary/10 text-primary rounded hover:bg-primary/20 disabled:opacity-50"
                   >Previous</button>
-                  <span className="text-slate-400">Page {itemsPage} of {Math.ceil(data.recent_items.length / itemsPerPage)}</span>
+                  <span className="text-textSecondary">Page {itemsPage} of {Math.ceil(data.recent_items.length / itemsPerPage)}</span>
                   <button 
                     disabled={itemsPage >= Math.ceil(data.recent_items.length / itemsPerPage)}
                     onClick={() => setItemsPage(p => p + 1)}
-                    className="px-3 py-1.5 bg-slate-800 text-slate-300 rounded hover:bg-slate-700 disabled:opacity-50"
+                    className="px-3 py-1.5 bg-primary/10 text-primary rounded hover:bg-primary/20 disabled:opacity-50"
                   >Next</button>
                 </div>
               )}
@@ -323,14 +323,14 @@ const Admin: React.FC = () => {
           <div className="overflow-x-auto -mx-6">
             <div className="inline-block min-w-full align-middle px-6">
               {data?.trash_items.length === 0 ? (
-                <div className="text-center py-8 text-slate-500 text-sm">
-                  <Archive className="h-10 w-10 text-slate-600 mx-auto mb-2" />
+                <div className="text-center py-8 text-textSecondary text-sm">
+                  <Archive className="h-10 w-10 text-textMuted mx-auto mb-2" />
                   <p>Trash is empty. Soft deleted listings are saved here.</p>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div className="p-4 bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs rounded-xl flex items-start gap-2.5">
-                    <AlertCircle className="h-4 w-4 text-indigo-400 flex-shrink-0 mt-0.5" />
+                  <div className="p-4 bg-primary/5 border border-primary/10 text-primary text-xs rounded-xl flex items-start gap-2.5">
+                    <AlertCircle className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
                     <span>Soft deleted items are retained here for up to 10 days before automatic permanent collection purge.</span>
                   </div>
 
@@ -349,14 +349,14 @@ const Admin: React.FC = () => {
                         <tr key={item.id} className="hover:bg-surface/80 transition-all text-text">
                           <td className="py-3.5 px-4 font-bold">{item.title}</td>
                           <td className="py-3.5 px-4">
-                            <span className="px-2 py-0.5 bg-slate-800 text-slate-400 rounded-full text-xs">
+                            <span className="px-2 py-0.5 bg-primary/10 text-textSecondary rounded-full text-xs">
                               {item.previous_status}
                             </span>
                           </td>
                           <td className="py-3.5 px-4">{formatDate(item.deleted_at)}</td>
                           <td className="py-3.5 px-4 font-semibold">
                             {item.days_deleted !== null ? (
-                              <span className={item.days_deleted >= 9 ? 'text-rose-400' : 'text-slate-300'}>
+                              <span className={item.days_deleted >= 9 ? 'text-danger' : 'text-textSecondary'}>
                                 {item.days_deleted} / 10 days
                               </span>
                             ) : (
@@ -366,7 +366,7 @@ const Admin: React.FC = () => {
                           <td className="py-3.5 px-4 text-right">
                             <button
                               onClick={() => handleRecoverItem(item.id)}
-                              className="px-3 py-1.5 bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-600 hover:text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm ml-auto"
+                              className="px-3 py-1.5 bg-primary/10 border border-primary/20 text-primary hover:bg-primary hover:text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm ml-auto"
                             >
                               <Archive className="h-3.5 w-3.5" />
                               <span>Recover Item</span>
@@ -387,7 +387,7 @@ const Admin: React.FC = () => {
           <div className="overflow-x-auto -mx-6">
             <div className="inline-block min-w-full align-middle px-6">
               {data?.logs.length === 0 ? (
-                <p className="text-center py-6 text-slate-500 text-sm">No audit logs reported.</p>
+                <p className="text-center py-6 text-textSecondary text-sm">No audit logs reported.</p>
               ) : (
                 <table className="min-w-full divide-y divide-primary/10 text-sm text-left">
                   <thead>
@@ -401,19 +401,19 @@ const Admin: React.FC = () => {
                   <tbody className="divide-y divide-primary/10">
                     {data?.logs.slice((logsPage - 1) * itemsPerPage, logsPage * itemsPerPage).map((log, i) => (
                       <tr key={i} className="hover:bg-surface/80 transition-all text-text">
-                        <td className="py-3.5 px-4 font-medium flex items-center gap-1.5 text-slate-400">
+                        <td className="py-3.5 px-4 font-medium flex items-center gap-1.5 text-textMuted">
                           <Calendar className="h-3.5 w-3.5" />
                           <span>{formatDate(log.timestamp)}</span>
                         </td>
                         <td className="py-3.5 px-4">
                           <span className={`font-semibold ${
-                            log.action.includes('Security Alert') ? 'text-rose-400' : 'text-slate-200'
+                            log.action.includes('Security Alert') ? 'text-danger' : 'text-text'
                           }`}>
                             {log.action}
                           </span>
                         </td>
                         <td className="py-3.5 px-4">{log.item_title || 'N/A'}</td>
-                        <td className="py-3.5 px-4 truncate max-w-[150px] font-semibold text-indigo-300">{log.user}</td>
+                        <td className="py-3.5 px-4 truncate max-w-[150px] font-semibold text-primary">{log.user}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -424,13 +424,13 @@ const Admin: React.FC = () => {
                   <button 
                     disabled={logsPage === 1}
                     onClick={() => setLogsPage(p => p - 1)}
-                    className="px-3 py-1.5 bg-slate-800 text-slate-300 rounded hover:bg-slate-700 disabled:opacity-50"
+                    className="px-3 py-1.5 bg-primary/10 text-primary rounded hover:bg-primary/20 disabled:opacity-50"
                   >Previous</button>
-                  <span className="text-slate-400">Page {logsPage} of {Math.ceil(data.logs.length / itemsPerPage)}</span>
+                  <span className="text-textSecondary">Page {logsPage} of {Math.ceil(data.logs.length / itemsPerPage)}</span>
                   <button 
                     disabled={logsPage >= Math.ceil(data.logs.length / itemsPerPage)}
                     onClick={() => setLogsPage(p => p + 1)}
-                    className="px-3 py-1.5 bg-slate-800 text-slate-300 rounded hover:bg-slate-700 disabled:opacity-50"
+                    className="px-3 py-1.5 bg-primary/10 text-primary rounded hover:bg-primary/20 disabled:opacity-50"
                   >Next</button>
                 </div>
               )}

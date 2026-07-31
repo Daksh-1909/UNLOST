@@ -84,7 +84,7 @@ const Report: React.FC = () => {
     <div className="max-w-3xl mx-auto space-y-8">
       <div>
         <h1 className="text-3xl font-extrabold font-heading text-text tracking-tight">Report Item</h1>
-        <p className="text-sm text-slate-500">Post details of a lost or found item to help recover it</p>
+        <p className="text-sm text-textSecondary">Post details of a lost or found item to help recover it</p>
       </div>
 
       <motion.div
@@ -94,8 +94,8 @@ const Report: React.FC = () => {
       >
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
-            <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-300 text-sm rounded-xl flex items-start gap-2.5">
-              <AlertCircle className="h-5 w-5 text-rose-400 flex-shrink-0 mt-0.5" />
+            <div className="p-4 bg-danger/10 border border-danger/20 text-danger text-sm rounded-xl flex items-start gap-2.5">
+              <AlertCircle className="h-5 w-5 text-danger flex-shrink-0 mt-0.5" />
               <span>{error}</span>
             </div>
           )}
@@ -105,7 +105,7 @@ const Report: React.FC = () => {
             <div className="md:col-span-2 space-y-1.5">
               <label className="text-xs font-semibold text-[#926347] uppercase tracking-wider flex items-center gap-1">
                 <FileText className="h-3.5 w-3.5" />
-                <span>Item Title <span className="text-rose-500">*</span></span>
+                <span>Item Title <span className="text-danger">*</span></span>
               </label>
               <input
                 type="text"
@@ -120,7 +120,7 @@ const Report: React.FC = () => {
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-[#926347] uppercase tracking-wider flex items-center gap-1">
                 <Tag className="h-3.5 w-3.5" />
-                <span>Status <span className="text-rose-500">*</span></span>
+                <span>Status <span className="text-danger">*</span></span>
               </label>
               <div className="grid grid-cols-2 gap-2 bg-[#5C321E]/5 p-1.5 rounded-xl border border-[#5C321E]/15">
                 {['Lost', 'Found'].map((st) => (
@@ -145,9 +145,9 @@ const Report: React.FC = () => {
 
           {/* Description */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-[#926347] uppercase tracking-wider flex items-center gap-1">
+              <label className="text-xs font-semibold text-[#926347] uppercase tracking-wider flex items-center gap-1">
               <FileText className="h-3.5 w-3.5" />
-              <span>Description <span className="text-rose-500">*</span></span>
+              <span>Description <span className="text-danger">*</span></span>
             </label>
             <textarea
               required
@@ -164,7 +164,7 @@ const Report: React.FC = () => {
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-[#926347] uppercase tracking-wider flex items-center gap-1">
                 <Tag className="h-3.5 w-3.5" />
-                <span>Category <span className="text-rose-500">*</span></span>
+                <span>Category <span className="text-danger">*</span></span>
               </label>
               <select
                 value={category}
@@ -180,7 +180,7 @@ const Report: React.FC = () => {
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-[#926347] uppercase tracking-wider flex items-center gap-1">
                 <MapPin className="h-3.5 w-3.5" />
-                <span>Location <span className="text-rose-500">*</span></span>
+                <span>Location <span className="text-danger">*</span></span>
               </label>
               <input
                 type="text"
@@ -195,7 +195,7 @@ const Report: React.FC = () => {
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-[#926347] uppercase tracking-wider flex items-center gap-1">
                 <Calendar className="h-3.5 w-3.5" />
-                <span>Date <span className="text-rose-500">*</span></span>
+                <span>Date <span className="text-danger">*</span></span>
               </label>
               <input
                 type="date"
@@ -211,7 +211,7 @@ const Report: React.FC = () => {
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-[#926347] uppercase tracking-wider flex items-center gap-1">
               <PlusCircle className="h-3.5 w-3.5" />
-              <span>Contact Information <span className="text-rose-500">*</span></span>
+              <span>Contact Information <span className="text-danger">*</span></span>
             </label>
             <input
               type="text"
@@ -254,13 +254,13 @@ const Report: React.FC = () => {
                       setImage(null);
                       setImagePreview(null);
                     }}
-                    className="absolute top-0.5 right-0.5 bg-rose-600 rounded-full p-0.5 text-white hover:bg-rose-500 shadow-sm shadow-rose-900/50"
+                    className="absolute top-0.5 right-0.5 bg-danger rounded-full p-0.5 text-white hover:bg-danger/80 shadow-sm shadow-danger/50"
                   >
                     <PlusCircle className="h-3 w-3 rotate-45" />
                   </button>
                 </div>
               ) : (
-                <span className="text-xs font-medium text-[#926347]/70">No file chosen</span>
+                <span className="text-xs font-medium text-textSecondary">No file chosen</span>
               )}
             </div>
           </div>
@@ -270,14 +270,14 @@ const Report: React.FC = () => {
               <ShieldCheck className="h-5 w-5" />
               <h3 className="text-sm font-bold uppercase tracking-wider font-heading">Claim Lock Security (Optional)</h3>
             </div>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-textSecondary">
               Set a security checking query. When other users click claim, they must answer correctly to unlock contact information.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-[#926347] uppercase tracking-wider flex items-center gap-1">
-                  <HelpCircle className="h-3.5 w-3.5 text-slate-500" />
+                  <HelpCircle className="h-3.5 w-3.5 text-textMuted" />
                   <span>Security Question</span>
                 </label>
                 <input
@@ -291,7 +291,7 @@ const Report: React.FC = () => {
 
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-[#926347] uppercase tracking-wider flex items-center gap-1">
-                  <ShieldCheck className="h-3.5 w-3.5 text-slate-500" />
+                  <ShieldCheck className="h-3.5 w-3.5 text-textMuted" />
                   <span>Expected Answer</span>
                 </label>
                 <input

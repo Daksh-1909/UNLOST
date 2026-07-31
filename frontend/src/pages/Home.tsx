@@ -14,7 +14,7 @@ interface Item {
   description: string;
   category: string;
   location: string;
-  status: 'Lost' | 'Found';
+  status: 'Lost' | 'Found' | 'Claimed' | 'Archived';
   date: string;
   reporter_email: string;
   image_file: string | null;
@@ -454,6 +454,18 @@ const Home: React.FC = () => {
     };
     fetchItems();
   }, []);
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (selectedItemModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [selectedItemModal]);
 
   // Filter application trigger
   useEffect(() => {

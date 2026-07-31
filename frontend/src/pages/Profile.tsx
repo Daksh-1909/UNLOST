@@ -69,7 +69,7 @@ const Profile: React.FC = () => {
           className="glass-panel rounded-2xl p-6 flex flex-col items-center text-center space-y-5 md:col-span-1"
         >
           {/* Avatar sphere */}
-          <div className="relative h-24 w-24 rounded-full bg-gradient-to-tr from-indigo-500 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 select-none overflow-hidden border-2 border-white/20">
+          <div className="relative h-24 w-24 rounded-full bg-primary-gradient flex items-center justify-center shadow-lg shadow-primary/20 select-none overflow-hidden border-2 border-primary/20">
             {user?.profilePicture ? (
               <img src={user.profilePicture} alt="Profile" className="h-full w-full object-cover" />
             ) : (
@@ -78,7 +78,7 @@ const Profile: React.FC = () => {
               </span>
             )}
             {user?.is_admin && (
-              <span className="absolute bottom-0 right-0 p-1.5 bg-indigo-500 rounded-full border-2 border-slate-900 shadow text-white" title="Admin Account">
+              <span className="absolute bottom-0 right-0 p-1.5 bg-primary rounded-full border-2 border-surface shadow text-white" title="Admin Account">
                 <Shield className="h-3.5 w-3.5" />
               </span>
             )}
@@ -88,7 +88,7 @@ const Profile: React.FC = () => {
             <h3 className="text-xl font-bold font-heading text-text">{user?.username}</h3>
             <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold select-none ${
               user?.is_admin
-                ? 'bg-indigo-500/20 text-indigo-700 border border-indigo-500/30'
+                ? 'bg-primary/20 text-primary border border-primary/30'
                 : 'bg-primary/10 text-textSecondary border border-primary/20'
             }`}>
               {user?.is_admin ? 'Administrator' : 'Student Account'}

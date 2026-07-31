@@ -43,14 +43,16 @@ mongoose.connect(mongoURI)
     process.exit(1);
   });
 
-const sessionSecret = process.env.SECRET_KEY || 'unlost_session_secret_123';
-if (process.env.NODE_ENV === 'production' && !process.env.SECRET_KEY) {
-  console.warn('WARNING: SECRET_KEY is not defined in production.');
+const sessionSecret = process.env.SECRET_KEY;
+if (process.env.NODE_ENV === 'production' && !sessionSecret) {
+  console.error('FATAL ERROR: SECRET_KEY is not defined in production.');
+  process.exit(1);
 }
+const finalSessionSecret = sessionSecret || 'unlost_session_secret_123';
 
 // Session configuration
 app.use(session({
-  secret: sessionSecret,
+  secret: finalSessionSecret,
   resave: false,
   saveUninitialized: false,
   store: MongoStore.create({
@@ -74,7 +76,7 @@ app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ 
     success: false, 
-    message: process.env.NODE_ENV === 'production' ? 'Internal Server Error' : (err.message || 'Internal Server Error')
+    message: 'An unexpected error occurred. Please try again later.'
   });
 });
 

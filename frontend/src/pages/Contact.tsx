@@ -94,9 +94,9 @@ const Contact: React.FC = () => {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-sm rounded-xl flex items-center gap-2.5"
+                  className="p-4 bg-success/10 border border-success/20 text-success text-sm rounded-xl flex items-center gap-2.5"
                 >
-                  <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+                  <CheckCircle2 className="h-5 w-5 text-success" />
                   <span>Message Sent Successfully! We will get back to you within 24 hours.</span>
                 </motion.div>
               )}

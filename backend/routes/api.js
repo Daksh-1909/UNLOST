@@ -13,10 +13,12 @@ import passport from 'passport';
 import { GoogleGenAI } from '@google/genai';
 import rateLimit from 'express-rate-limit';
 
-const JWT_SECRET = process.env.JWT_SECRET_KEY || 'jwtsecret123';
-if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET_KEY) {
-  console.warn('WARNING: JWT_SECRET_KEY is not defined in production.');
+const jwtSecretKey = process.env.JWT_SECRET_KEY;
+if (process.env.NODE_ENV === 'production' && !jwtSecretKey) {
+  console.error('FATAL ERROR: JWT_SECRET_KEY is not defined in production.');
+  process.exit(1);
 }
+const JWT_SECRET = jwtSecretKey || 'jwtsecret123';
 
 const authRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes

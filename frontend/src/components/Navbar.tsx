@@ -30,7 +30,7 @@ const Navbar: React.FC = () => {
   };
 
   return (
-    <nav className="sticky top-0 z-50 glass-panel border-b bg-shade-5/80 backdrop-blur-lg" style={{ borderBottomColor: 'rgba(92, 50, 30, 0.12)' }}>
+    <nav className="sticky top-0 z-50 glass-panel border-b" style={{ borderBottomColor: 'rgba(92, 50, 30, 0.12)' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
@@ -87,7 +87,7 @@ const Navbar: React.FC = () => {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute right-0 mt-2 w-48 rounded-xl bg-white shadow-xl border border-primary/10 overflow-hidden z-50"
+                    className="absolute right-0 mt-2 w-48 rounded-xl bg-surface border border-primary/10 shadow-lg py-1 ring-1 ring-black ring-opacity-5 focus:outline-none"
                   >
                     <div className="px-4 py-3 border-b border-primary/5 bg-slate-50/50">
                       <p className="text-sm font-semibold text-slate-800 truncate">{user?.username}</p>
@@ -132,7 +132,7 @@ const Navbar: React.FC = () => {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden border-t border-primary/10 bg-shade-5/95"
+            className="md:hidden border-t border-primary/10 bg-surface/95"
           >
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
               {navigation.map((item) => (
@@ -157,7 +157,7 @@ const Navbar: React.FC = () => {
                     setIsOpen(false);
                     logout();
                   }}
-                  className="flex items-center space-x-1 text-sm font-bold text-rose-500 hover:text-rose-450"
+                  className="flex items-center space-x-1 text-sm font-bold text-danger hover:opacity-80"
                 >
                   <LogOut className="h-4 w-4" />
                   <span>Logout</span>

@@ -143,12 +143,12 @@ const SmiloPage: React.FC = () => {
     };
 
     return (
-        <div className="flex flex-col h-[calc(100vh-140px)] w-full max-w-4xl mx-auto rounded-2xl overflow-hidden shadow-2xl bg-slate-900/95 border border-white/10 backdrop-blur-xl">
+        <div className="flex flex-col h-[calc(100vh-140px)] w-full max-w-4xl mx-auto rounded-2xl overflow-hidden shadow-2xl bg-surface/95 border border-primary/10 backdrop-blur-xl">
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-white/10 bg-gradient-to-r from-indigo-500/10 to-pink-500/10">
+            <div className="flex items-center justify-between p-4 border-b border-primary/10 bg-primary/5">
                 <div className="flex items-center gap-3">
                     <div className="w-3 h-3 rounded-full bg-green-400 shadow-[0_0_10px_#4ade80]" />
-                    <span className="text-sm font-bold text-slate-50 tracking-wider">SMILO ASSISTANT</span>
+                    <span className="text-sm font-bold text-text tracking-wider">SMILO ASSISTANT</span>
                 </div>
             </div>
 
@@ -161,8 +161,8 @@ const SmiloPage: React.FC = () => {
                     >
                         <div className={`
                             max-w-[85%] sm:max-w-[75%] p-4
-                            ${msg.sender === 'user' ? 'rounded-2xl rounded-tr-sm bg-gradient-to-br from-indigo-500 to-purple-500' : 'rounded-2xl rounded-tl-sm bg-white/5 border border-white/10'}
-                            text-slate-50 text-sm leading-relaxed whitespace-pre-line
+                            ${msg.sender === 'user' ? 'rounded-2xl rounded-tr-sm btn-primary-custom' : 'rounded-2xl rounded-tl-sm bg-primary/5 border border-primary/10'}
+                            text-text text-sm leading-relaxed whitespace-pre-line
                         `}>
                             {msg.sender === 'bot' ? parseMarkdownLinks(msg.text) : msg.text}
 
@@ -172,19 +172,19 @@ const SmiloPage: React.FC = () => {
                                     {msg.items.map((item) => (
                                         <div 
                                             key={item.id} 
-                                            className="bg-white/5 border border-white/10 rounded-xl p-3 text-xs"
+                                            className="bg-surface border border-primary/10 rounded-xl p-3 text-xs"
                                         >
-                                            <div className="font-bold text-indigo-400 flex justify-between">
+                                            <div className="font-bold text-primary flex justify-between">
                                                 <span className="text-sm">{item.title}</span>
                                                 <span className={`
                                                     text-[10px] px-2 py-0.5 rounded-full
-                                                    ${item.status === 'Lost' ? 'bg-red-500/20 text-red-300' : 'bg-emerald-500/20 text-emerald-300'}
+                                                    ${item.status === 'Lost' ? 'bg-danger/10 text-danger' : 'bg-success/10 text-success'}
                                                 `}>
                                                     {item.status}
                                                 </span>
                                             </div>
-                                            <div className="text-slate-400 mt-1">Loc: {item.location}</div>
-                                            <a href="/items" className="text-emerald-400 hover:text-emerald-300 underline block mt-2 font-medium">View on Items Page</a>
+                                            <div className="text-textSecondary mt-1">Loc: {item.location}</div>
+                                            <a href="/items" className="text-primary hover:text-primary/80 underline block mt-2 font-medium">View on Items Page</a>
                                         </div>
                                     ))}
                                 </div>
@@ -196,11 +196,11 @@ const SmiloPage: React.FC = () => {
                 {/* Typing Indicator */}
                 {botTyping && (
                     <div className="flex justify-start w-full">
-                        <div className="p-4 rounded-2xl rounded-tl-sm bg-white/5 border border-white/10 flex gap-1.5 items-center">
+                        <div className="p-4 rounded-2xl rounded-tl-sm bg-primary/5 border border-primary/10 flex gap-1.5 items-center">
                             {[0, 1, 2].map((idx) => (
                                 <div 
                                     key={idx} 
-                                    className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"
+                                    className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse"
                                     style={{ animationDelay: `${idx * 0.2}s` }} 
                                 />
                             ))}
@@ -223,7 +223,7 @@ const SmiloPage: React.FC = () => {
                             setInputValue(s.query);
                             setTimeout(() => handleSendMessage(), 50);
                         }}
-                        className="text-xs px-4 py-2 rounded-full bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 transition-colors focus:outline-none"
+                        className="text-xs px-4 py-2 rounded-full bg-primary/5 border border-primary/10 text-textSecondary hover:bg-primary/10 transition-colors focus:outline-none"
                     >
                         {s.label}
                     </button>
@@ -233,18 +233,18 @@ const SmiloPage: React.FC = () => {
             {/* Form */}
             <form 
                 onSubmit={handleSendMessage} 
-                className="flex p-6 border-t border-white/10 gap-3"
+                className="flex p-6 border-t border-primary/10 gap-3"
             >
                 <input 
                     type="text"
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     placeholder="Ask Smilo..."
-                    className="flex-1 bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-50 focus:outline-none focus:border-indigo-500/50 transition-colors"
+                    className="flex-1 glass-input bg-surface border border-primary/10 rounded-xl px-4 py-3 text-sm text-text focus:outline-none focus:border-primary/50 transition-colors"
                 />
                 <button
                     type="submit"
-                    className="bg-gradient-to-br from-indigo-500 to-purple-500 w-12 h-12 rounded-xl flex items-center justify-center text-white hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-900"
+                    className="btn-primary-custom w-12 h-12 rounded-xl flex items-center justify-center transition-all focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface shadow-md"
                 >
                     ➔
                 </button>
