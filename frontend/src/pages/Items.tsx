@@ -274,7 +274,7 @@ const Items: React.FC = () => {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="glass-panel w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl bg-surface border border-primary/10"
+              className="glass-panel w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl border border-primary/10"
             >
               {/* Modal header */}
               <div className="border-b border-primary/10 p-5 flex items-center justify-between bg-surface/80">
@@ -306,7 +306,7 @@ const Items: React.FC = () => {
                   </div>
                 ) : (
                   <form onSubmit={handleClaimSubmit} className="space-y-4">
-                    <div className="p-4 rounded-xl bg-surface border border-primary/10 space-y-2">
+                    <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 space-y-2">
                       <div className="flex items-center gap-1.5 text-primary font-semibold text-xs uppercase tracking-wider">
                         <HelpCircle className="h-4 w-4" />
                         <span>Security Question</span>

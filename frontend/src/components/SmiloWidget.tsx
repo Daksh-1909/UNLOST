@@ -1113,36 +1113,7 @@ const SmiloWidget: React.FC = () => {
                                     }}>
                                         {msg.sender === 'bot' ? parseMarkdownLinks(msg.text) : msg.text}
 
-                                        {/* Display items if attached to bot response */}
-                                        {msg.items && msg.items.length > 0 && (
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' }}>
-                                                {msg.items.map((item) => (
-                                                    <div 
-                                                        key={item.id} 
-                                                        style={{ 
-                                                            background: 'rgba(255, 255, 255, 0.03)', 
-                                                            border: '1px solid rgba(255, 255, 255, 0.05)', 
-                                                            borderRadius: '8px', 
-                                                            padding: '8px', 
-                                                            fontSize: '11px' 
-                                                        }}
-                                                    >
-                                                        <div style={{ fontWeight: 'bold', color: '#818cf8', display: 'flex', justifyContent: 'space-between' }}>
-                                                            <span>{item.title}</span>
-                                                            <span style={{ 
-                                                                fontSize: '9px', 
-                                                                padding: '1px 5px', 
-                                                                borderRadius: '999px',
-                                                                background: item.status === 'Lost' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)',
-                                                                color: item.status === 'Lost' ? '#fca5a5' : '#6ee7b7'
-                                                            }}>{item.status}</span>
-                                                        </div>
-                                                        <div style={{ color: '#94a3b8', marginTop: '2px' }}>Loc: {item.location}</div>
-                                                        <a href="/items" style={{ color: '#34d399', textDecoration: 'underline', display: 'block', marginTop: '4px', fontSize: '9px' }}>View on Items Page</a>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
+
                                     </div>
                                 </div>
                             ))}

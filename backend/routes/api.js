@@ -470,7 +470,7 @@ ${itemsContext}`;
         }
     });
 
-    res.status(200).json({ success: true, text: response.text, items: recentItems.slice(0, 3) });
+    res.status(200).json({ success: true, text: response.text });
   } catch (error) {
     console.error('Gemini API Error:', error);
     res.status(500).json({ success: false, message: 'Failed to communicate with AI.' });

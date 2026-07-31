@@ -143,7 +143,11 @@ const SmiloPage: React.FC = () => {
     };
 
     return (
-        <div className="flex flex-col h-[calc(100vh-140px)] w-full max-w-4xl mx-auto rounded-2xl overflow-hidden shadow-2xl bg-surface/95 border border-primary/10 backdrop-blur-xl">
+        <div className="w-full h-full flex flex-col" style={{ minHeight: 'calc(100vh - 140px)' }}>
+            <div 
+                className="flex flex-col w-full max-w-4xl mx-auto my-auto rounded-2xl overflow-hidden shadow-2xl bg-surface/95 border border-primary/10 backdrop-blur-xl"
+                style={{ height: '75vh', maxHeight: '800px', minHeight: '500px' }}
+            >
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-primary/10 bg-primary/5">
                 <div className="flex items-center gap-3">
@@ -166,29 +170,7 @@ const SmiloPage: React.FC = () => {
                         `}>
                             {msg.sender === 'bot' ? parseMarkdownLinks(msg.text) : msg.text}
 
-                            {/* Display items if attached to bot response */}
-                            {msg.items && msg.items.length > 0 && (
-                                <div className="flex flex-col gap-3 mt-4">
-                                    {msg.items.map((item) => (
-                                        <div 
-                                            key={item.id} 
-                                            className="bg-surface border border-primary/10 rounded-xl p-3 text-xs"
-                                        >
-                                            <div className="font-bold text-primary flex justify-between">
-                                                <span className="text-sm">{item.title}</span>
-                                                <span className={`
-                                                    text-[10px] px-2 py-0.5 rounded-full
-                                                    ${item.status === 'Lost' ? 'bg-danger/10 text-danger' : 'bg-success/10 text-success'}
-                                                `}>
-                                                    {item.status}
-                                                </span>
-                                            </div>
-                                            <div className="text-textSecondary mt-1">Loc: {item.location}</div>
-                                            <a href="/items" className="text-primary hover:text-primary/80 underline block mt-2 font-medium">View on Items Page</a>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
+
                         </div>
                     </div>
                 ))}
@@ -249,6 +231,7 @@ const SmiloPage: React.FC = () => {
                     ➔
                 </button>
             </form>
+        </div>
         </div>
     );
 };
