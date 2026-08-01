@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search as SearchIcon, MapPin, Calendar, Tag, Filter, ShieldCheck, CheckCircle2, AlertCircle, X, HelpCircle, Mail } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { tapHoverVariants, buttonHoverVariants, scrollRevealVariants, scrollRevealViewport, staggerContainer, staggerItem, TRANSITION_BASE } from '../utils/animations';
@@ -21,6 +22,7 @@ const CATEGORIES = ['Accessories', 'Books', 'Electronics', 'Other'];
 const STATUSES = ['Lost', 'Found', 'Claimed'];
 
 const Items: React.FC = () => {
+  const navigate = useNavigate();
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -217,11 +219,7 @@ const Items: React.FC = () => {
                 whileTap="tap"
                 exit={{ opacity: 0, scale: 0.95 }}
                 className="glass-card rounded-xl flex flex-col overflow-hidden group cursor-pointer"
-                onClick={() => {
-                  if (item.status !== 'Claimed') {
-                    setClaimingItem(item);
-                  }
-                }}
+                onClick={() => navigate(`/item/${(item as any)._id || item.id}`)}
               >
                 {/* Image Placeholder */}
                 <div className="h-44 w-full bg-surface/50 relative overflow-hidden flex items-center justify-center border-b border-primary/10">

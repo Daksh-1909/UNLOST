@@ -8,18 +8,18 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: "var(--color-primary)",
-        secondary: "var(--color-secondary)",
-        accent: "var(--color-accent)",
-        background: "var(--color-background)",
-        surface: "var(--color-surface)",
-        text: "var(--color-text)",
-        textSecondary: "var(--color-text-secondary)",
-        textMuted: "var(--color-text-muted)",
-        success: "var(--color-success)",
-        warning: "var(--color-warning)",
-        danger: "var(--color-danger)",
-        border: "var(--color-border)"
+        primary: "rgb(var(--color-primary) / <alpha-value>)",
+        secondary: "rgb(var(--color-secondary) / <alpha-value>)",
+        accent: "rgb(var(--color-accent) / <alpha-value>)",
+        background: "rgb(var(--color-background) / <alpha-value>)",
+        surface: "rgb(var(--color-surface) / <alpha-value>)",
+        text: "rgb(var(--color-text) / <alpha-value>)",
+        textSecondary: "rgb(var(--color-text-secondary) / <alpha-value>)",
+        textMuted: "rgb(var(--color-text-muted) / <alpha-value>)",
+        success: "rgb(var(--color-success) / <alpha-value>)",
+        warning: "rgb(var(--color-warning) / <alpha-value>)",
+        danger: "rgb(var(--color-danger) / <alpha-value>)",
+        border: "rgb(var(--color-border) / <alpha-value>)"
       },
       fontFamily: {
         sans: ['Inter', 'sans-serif'],

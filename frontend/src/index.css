@@ -3,33 +3,33 @@
 @tailwind utilities;
 
 :root {
-  --color-primary: #5C321E;
-  --color-secondary: #926347;
-  --color-accent: #C9A07A;
-  --color-background: #E6CAAB;
-  --color-surface: #F3E7D9;
-  --color-text: #3B2418;
-  --color-text-secondary: #6B5B4D;
-  --color-text-muted: #8B7A6A;
-  --color-success: #4E7A52;
-  --color-warning: #B07A1A;
-  --color-danger: #B4463A;
-  --color-border: #D4B79A;
+  --color-primary: 92 50 30;
+  --color-secondary: 146 99 71;
+  --color-accent: 201 160 122;
+  --color-background: 230 202 171;
+  --color-surface: 243 231 217;
+  --color-text: 59 36 24;
+  --color-text-secondary: 107 91 77;
+  --color-text-muted: 139 122 106;
+  --color-success: 78 122 82;
+  --color-warning: 176 122 26;
+  --color-danger: 180 70 58;
+  --color-border: 212 183 154;
 }
 
 .dark {
-  --color-primary: #C9A07A;
-  --color-secondary: #D4B79A;
-  --color-accent: #E6CAAB;
-  --color-background: #1E140F;
-  --color-surface: #2A1D16;
-  --color-text: #F3E7D9;
-  --color-text-secondary: #D4B79A;
-  --color-text-muted: #926347;
-  --color-success: #66A36C;
-  --color-warning: #DB9922;
-  --color-danger: #DB5A4B;
-  --color-border: #4A3224;
+  --color-primary: 201 160 122;
+  --color-secondary: 212 183 154;
+  --color-accent: 230 202 171;
+  --color-background: 30 20 15;
+  --color-surface: 42 29 22;
+  --color-text: 243 231 217;
+  --color-text-secondary: 212 183 154;
+  --color-text-muted: 146 99 71;
+  --color-success: 102 163 108;
+  --color-warning: 219 153 34;
+  --color-danger: 219 90 75;
+  --color-border: 74 50 36;
 }
 
 @layer base {
