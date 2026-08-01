@@ -1,0 +1,70 @@
+import Item from '../models/Item.js';
+import Notification from '../models/Notification.js';
+import User from '../models/User.js';
+
+export async function findMatchesAndNotify(newItem) {
+  try {
+    const targetStatus = newItem.status === 'Lost' ? 'Found' : 'Lost';
+    
+    // 1. Find potential items in same category and opposite status
+    const potentialMatches = await Item.find({
+      status: targetStatus,
+      category: newItem.category,
+      _id: { $ne: newItem._id }
+    });
+
+    const newKeywords = new Set(
+      `${newItem.title} ${newItem.description}`.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/)
+    );
+
+    const matches = [];
+
+    for (let item of potentialMatches) {
+      const itemKeywords = new Set(
+        `${item.title} ${item.description}`.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/)
+      );
+
+      let overlap = 0;
+      for (let word of newKeywords) {
+        if (word.length > 3 && itemKeywords.has(word)) {
+          overlap++;
+        }
+      }
+
+      // If at least 1 significant keyword overlaps, consider it a match
+      if (overlap >= 1) {
+        matches.push({ item, score: overlap });
+      }
+    }
+
+    // Generate notifications for matched items
+    for (let match of matches) {
+      // Notify the owner of the existing item
+      const existingUser = await User.findOne({ email: match.item.reporter_email });
+      if (existingUser) {
+        await new Notification({
+          user_id: existingUser._id,
+          user_email: existingUser.email,
+          message: `A potential match for your ${targetStatus.toLowerCase()} item "${match.item.title}" has been reported.`,
+          link: `/item/${newItem._id}`
+        }).save();
+      }
+
+      // Notify the creator of the new item
+      const newUser = await User.findOne({ email: newItem.reporter_email });
+      if (newUser) {
+        await new Notification({
+          user_id: newUser._id,
+          user_email: newUser.email,
+          message: `A potential match for your ${newItem.status.toLowerCase()} item "${newItem.title}" was found in our system.`,
+          link: `/item/${match.item._id}`
+        }).save();
+      }
+    }
+
+    return matches;
+  } catch (error) {
+    console.error('Matching Error:', error);
+    return [];
+  }
+}

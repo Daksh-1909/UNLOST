@@ -4,21 +4,22 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        primary: "#5C321E",
-        secondary: "#926347",
-        accent: "#C9A07A",
-        background: "#E6CAAB",
-        surface: "#F3E7D9",
-        text: "#3B2418",
-        textSecondary: "#6B5B4D",
-        textMuted: "#8B7A6A",
-        success: "#4E7A52",
-        warning: "#B07A1A",
-        danger: "#B4463A",
-        border: "#D4B79A"
+        primary: "var(--color-primary)",
+        secondary: "var(--color-secondary)",
+        accent: "var(--color-accent)",
+        background: "var(--color-background)",
+        surface: "var(--color-surface)",
+        text: "var(--color-text)",
+        textSecondary: "var(--color-text-secondary)",
+        textMuted: "var(--color-text-muted)",
+        success: "var(--color-success)",
+        warning: "var(--color-warning)",
+        danger: "var(--color-danger)",
+        border: "var(--color-border)"
       },
       fontFamily: {
         sans: ['Inter', 'sans-serif'],

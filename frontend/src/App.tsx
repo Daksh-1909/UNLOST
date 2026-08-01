@@ -15,6 +15,8 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import SmiloWidget from './components/SmiloWidget';
 import SmiloPage from './pages/SmiloPage';
+import ItemDetail from './pages/ItemDetail';
+import AdminAnalytics from './pages/AdminAnalytics';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode; requireAdmin?: boolean }> = ({ 
   children, 
@@ -101,6 +103,21 @@ const AnimatedRoutes: React.FC = () => {
           <ProtectedRoute>
             <motion.div initial="initial" animate="animate" exit="exit" variants={pageVariants} className="w-full h-full">
               <SmiloPage />
+            </motion.div>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/item/:id" element={
+          <ProtectedRoute>
+            <motion.div initial="initial" animate="animate" exit="exit" variants={pageVariants} className="w-full h-full">
+              <ItemDetail />
+            </motion.div>
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/analytics" element={
+          <ProtectedRoute requireAdmin>
+            <motion.div initial="initial" animate="animate" exit="exit" variants={pageVariants} className="w-full h-full">
+              <AdminAnalytics />
             </motion.div>
           </ProtectedRoute>
         } />

@@ -143,9 +143,9 @@ const SmiloPage: React.FC = () => {
  };
 
  return (
- <div className="w-full flex justify-center mt-4 sm:mt-8" style={{ height: 'calc(100vh - 160px)' }}>
+ <div className="w-full flex justify-center mt-12 sm:mt-16" style={{ height: 'calc(100vh - 240px)' }}>
  <div 
- className="flex flex-col w-full max-w-4xl h-full rounded-xl overflow-hidden shadow-lg bg-surface/95 border border-primary/10 backdrop-blur-xl"
+ className="flex flex-col w-full max-w-6xl h-full rounded-2xl overflow-hidden shadow-2xl bg-surface/95 border border-primary/10 backdrop-blur-xl"
  >
  {/* Header */}
  <div className="flex items-center justify-between p-4 border-b border-primary/10 bg-primary/5">

@@ -21,8 +21,14 @@ const itemSchema = new mongoose.Schema({
   status: {
     type: String,
     required: true,
-    enum: ['Lost', 'Found', 'Archived'],
+    enum: ['Lost', 'Found', 'Claimed', 'Returned', 'Archived'],
     default: 'Lost'
+  },
+  claimant_email: {
+    type: String
+  },
+  claim_answers: {
+    type: mongoose.Schema.Types.Mixed
   },
   contact_info: {
     type: String,
