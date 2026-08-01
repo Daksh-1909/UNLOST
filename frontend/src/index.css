@@ -54,63 +54,40 @@
 
 /* Glassmorphism minimal utility classes */
 .glass-panel {
-  background-color: rgba(243, 231, 217, 0.4);
-  border: 1px solid rgba(92, 50, 30, 0.08);
-  @apply backdrop-blur-md rounded-xl shadow-sm;
+  @apply bg-surface/40 border border-primary/10 backdrop-blur-md rounded-xl shadow-sm;
 }
 
 .glass-card {
-  background-color: rgba(243, 231, 217, 0.5);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(92, 50, 30, 0.08);
-  border-radius: 12px;
-  transition: all 0.2s ease-out;
+  @apply bg-surface/50 border border-primary/10 rounded-xl backdrop-blur-md transition-all duration-200 ease-out;
 }
 
 .glass-card:hover {
-  transform: scale(1.01);
-  border-color: rgba(92, 50, 30, 0.2);
-  box-shadow: 0 4px 20px -2px rgba(92, 50, 30, 0.15);
+  @apply scale-[1.01] border-primary/20 shadow-lg shadow-primary/10;
 }
 
 .glass-input {
-  background-color: rgba(230, 202, 171, 0.6);
-  border: 1px solid rgba(92, 50, 30, 0.1);
-  color: #3A2417;
-  @apply rounded-xl px-4 py-3 transition-all duration-200 ease-out;
+  @apply bg-background/60 border border-primary/10 text-text rounded-xl px-4 py-3 transition-all duration-200 ease-out;
 }
 .glass-input:focus {
-  outline: none;
-  border-color: #926347;
-  background-color: rgba(243, 231, 217, 0.8);
+  @apply outline-none border-secondary bg-surface/80;
 }
 .glass-input::placeholder {
-  color: rgba(146, 99, 71, 0.5);
+  @apply text-textSecondary/50;
 }
 
 /* Custom minimal buttons */
 .btn-primary-custom {
-  background: linear-gradient(135deg, rgba(92, 50, 30, 0.9), rgba(146, 99, 71, 0.9));
-  color: #FFFFFF;
-  border-radius: 12px;
-  transition: all 0.2s ease-out;
+  @apply bg-primary-gradient text-white rounded-xl transition-all duration-200 ease-out;
 }
 .btn-primary-custom:hover {
-  transform: scale(1.02);
-  filter: brightness(1.1);
+  @apply scale-[1.02] brightness-110;
 }
 
 .btn-secondary-custom {
-  background-color: transparent;
-  border: 1px solid rgba(92, 50, 30, 0.2);
-  color: #5C321E;
-  border-radius: 12px;
-  transition: all 0.2s ease-out;
+  @apply bg-transparent border border-primary/20 text-primary rounded-xl transition-all duration-200 ease-out;
 }
 .btn-secondary-custom:hover {
-  background-color: rgba(92, 50, 30, 0.05);
-  border-color: rgba(92, 50, 30, 0.3);
+  @apply bg-primary/5 border-primary/40;
 }
 
 /* Hero Gradient */
