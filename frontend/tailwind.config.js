@@ -26,7 +26,7 @@ export default {
         heading: ['Outfit', 'sans-serif'],
       },
       backgroundImage: {
-        'primary-gradient': 'linear-gradient(135deg, #5C321E, #926347, #C9A07A)',
+        'primary-gradient': 'linear-gradient(135deg, rgb(var(--color-primary)), rgb(var(--color-secondary)), rgb(var(--color-accent)))',
       },
       boxShadow: {
         'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.2)',
