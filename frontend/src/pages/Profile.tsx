@@ -77,11 +77,18 @@ const Profile: React.FC = () => {
  {/* Avatar sphere */}
  <div className="relative h-24 w-24 rounded-xl bg-primary-gradient flex items-center justify-center shadow-lg shadow-primary/20 select-none overflow-hidden border-2 border-primary/20">
  {user?.profilePicture ? (
- <img src={user.profilePicture} alt="Profile" className="h-full w-full object-cover" />
+ <img 
+ src={user.profilePicture} 
+ alt="Profile" 
+ className="h-full w-full object-cover" 
+ onError={(e) => { e.currentTarget.src = "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y"; }}
+ />
  ) : (
- <span className="text-3xl font-extrabold text-white uppercase font-heading">
- {user?.username?.slice(0, 2)}
- </span>
+ <img 
+ src="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y" 
+ alt="Profile" 
+ className="h-full w-full object-cover" 
+ />
  )}
  {user?.is_admin && (
  <span className="absolute bottom-0 right-0 p-1.5 bg-primary rounded-xl border-2 border-surface shadow text-white" title="Admin Account">

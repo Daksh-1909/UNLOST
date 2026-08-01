@@ -86,11 +86,18 @@ const Navbar: React.FC = () => {
  variants={tapHoverVariants}
  >
  {user?.profilePicture ? (
- <img src={user.profilePicture} alt="Avatar" className="h-8 w-8 rounded-xl border border-white/10" />
+ <img 
+ src={user.profilePicture} 
+ alt="Avatar" 
+ className="h-8 w-8 rounded-xl border border-white/10" 
+ onError={(e) => { e.currentTarget.src = "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y"; }}
+ />
  ) : (
- <div className="h-8 w-8 rounded-xl bg-surface flex items-center justify-center border border-white/5">
- <User className="h-4 w-4 text-textSecondary" />
- </div>
+ <img 
+ src="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y" 
+ alt="Avatar" 
+ className="h-8 w-8 rounded-xl border border-white/10" 
+ />
  )}
  <ChevronDown className="w-3 h-3 text-textMuted group-hover:text-text transition-colors" />
  </motion.button>
