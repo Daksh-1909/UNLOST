@@ -165,7 +165,7 @@ const Report: React.FC = () => {
  <Tag className="h-3.5 w-3.5" />
  <span>Status <span className="text-danger">*</span></span>
  </label>
- <div className="grid grid-cols-2 gap-2 bg-[#5C321E]/5 p-1.5 rounded-xl border border-[#5C321E]/15">
+ <div className="relative grid grid-cols-2 gap-2 bg-[#5C321E]/5 p-1.5 rounded-xl border border-[#5C321E]/15">
  {['Lost', 'Found'].map((st) => (
             <motion.button
               key={st}
@@ -174,13 +174,20 @@ const Report: React.FC = () => {
               whileHover="hover"
               whileTap="tap"
               onClick={() => setStatus(st)}
-              className={`py-1.5 text-xs font-bold rounded-lg transition-colors ${
+              className={`relative py-1.5 text-xs font-bold rounded-lg transition-colors z-10 ${
                 status === st
-                  ? 'bg-[#5C321E] text-white shadow-sm'
+                  ? 'text-white'
                   : 'text-[#926347] hover:text-[#5C321E] hover:bg-[#5C321E]/5'
               }`}
             >
-              {st}
+              {status === st && (
+                <motion.div
+                  layoutId="status-toggle-indicator"
+                  className="absolute inset-0 bg-[#5C321E] rounded-lg shadow-sm -z-10"
+                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                />
+              )}
+              <span className="relative z-10">{st}</span>
             </motion.button>
  ))}
  </div>

@@ -143,7 +143,7 @@ const SmiloPage: React.FC = () => {
  };
 
  return (
- <div className="w-full flex justify-center" style={{ height: 'calc(100vh - 160px)' }}>
+ <div className="w-full flex justify-center mt-4 sm:mt-8" style={{ height: 'calc(100vh - 160px)' }}>
  <div 
  className="flex flex-col w-full max-w-4xl h-full rounded-xl overflow-hidden shadow-lg bg-surface/95 border border-primary/10 backdrop-blur-xl"
  >

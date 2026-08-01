@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useCallback, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { motion, useMotionValue, useSpring } from 'framer-motion';
 
 /* ══════════════════════════════════════════════════════ */
@@ -413,6 +414,10 @@ const SmiloRobot: React.FC<{
 /* WIDGET MAIN */
 /* ══════════════════════════════════════════════════════ */
 const SmiloWidget: React.FC = () => {
+  const location = useLocation();
+
+  if (location.pathname === '/assistant') return null;
+
  const messagesEndRef = useRef<HTMLDivElement>(null);
  const [mouseX, setMouseX] = useState(0);
  const [mouseY, setMouseY] = useState(0);
