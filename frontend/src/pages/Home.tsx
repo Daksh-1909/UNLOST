@@ -310,7 +310,8 @@ const Home: React.FC = () => {
  const dynamicMapHotspots = getMapHotspots();
 
  return (
- <AmbientGlowBg className="space-y-10 pb-16">
+ <AmbientGlowBg>
+ <div className="space-y-10 relative pb-16">
  
  {/* Toast Notification */}
  <AnimatePresence>
@@ -1101,6 +1102,7 @@ const Home: React.FC = () => {
  )}
  </AnimatePresence>
 
+ </div>
  </AmbientGlowBg>
  );
 };
