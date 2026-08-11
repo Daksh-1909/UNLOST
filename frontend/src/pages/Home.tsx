@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { 
  Search, Plus, PlusCircle, Calendar, MapPin, Tag, ChevronRight, Eye, Bookmark, 
@@ -23,309 +24,6 @@ interface Item {
  isMock?: boolean;
 }
 
-// 25 Realistic Mock Items
-const mockItems: Item[] = [
- {
- id: 'mock-1',
- title: 'Black Leather Wallet',
- description: 'Bifold leather wallet containing some cash, a transit card, and gym membership. No credit cards inside.',
- category: 'Wallets',
- location: 'Student Center Cafeteria',
- status: 'Lost',
- date: '2026-07-11',
- reporter_email: 'clara.jones@univ.edu',
- image_file: null,
- isMock: true
- },
- {
- id: 'mock-2',
- title: 'Apple AirPods Pro',
- description: 'Found a pair of AirPods Pro in their wireless charging case. Case has a small green silicone cover with a key ring.',
- category: 'Electronics',
- location: 'Library 2nd Floor Study Desks',
- status: 'Found',
- date: '2026-07-10',
- reporter_email: 'alex.smith@univ.edu',
- image_file: null,
- isMock: true
- },
- {
- id: 'mock-3',
- title: 'Blue Herschel Backpack',
- description: 'Blue canvas backpack with brown leather straps. Contains a math textbook, notebook, and a blue pencil case.',
- category: 'Bags',
- location: 'Science Lecture Hall Room 302',
- status: 'Lost',
- date: '2026-07-09',
- reporter_email: 'jake.miller@univ.edu',
- image_file: null,
- isMock: true
- },
- {
- id: 'mock-4',
- title: 'Student ID Card - Alex Rivera',
- description: 'Found ID card for sophomore Alex Rivera. Left near the check-in desk at the gym entrance.',
- category: 'Documents',
- location: 'Gym Locker Rooms',
- status: 'Found',
- date: '2026-07-11',
- reporter_email: 'gym.staff@univ.edu',
- image_file: null,
- isMock: true
- },
- {
- id: 'mock-5',
- title: 'Toyota Car Keys',
- description: 'Keyring with a Toyota key fob, two house keys, and a miniature rubber duck keychain.',
- category: 'Keys',
- location: 'Campus Parking Lot B',
- status: 'Lost',
- date: '2026-07-08',
- reporter_email: 'mariah.d@univ.edu',
- image_file: null,
- isMock: true
- },
- {
- id: 'mock-6',
- title: 'Silver Rolex Oyster Watch',
- description: 'Men silver wrist watch with blue dial face. Found on the bottom benches near the track field.',
- category: 'Accessories',
- location: 'Sports Center Stadium',
- status: 'Found',
- date: '2026-07-10',
- reporter_email: 'coach.bill@univ.edu',
- image_file: null,
- isMock: true
- },
- {
- id: 'mock-7',
- title: 'Hydro Flask Water Bottle',
- description: 'Mint green 32oz Hydro Flask with a metal straw lid and a few national park stickers.',
- category: 'Others',
- location: 'Main Hall Lobby',
- status: 'Lost',
- date: '2026-07-11',
- reporter_email: 'henry.t@univ.edu',
- image_file: null,
- isMock: true
- },
- {
- id: 'mock-8',
- title: 'MacBook USB-C Charger',
- description: '87W Apple brand power brick with a 2-meter USB-C cable wrapped around it.',
- category: 'Electronics',
- location: 'Engineering Building',
- status: 'Found',
- date: '2026-07-09',
- reporter_email: 'eng.lab@univ.edu',
- image_file: null,
- isMock: true
- },
- {
- id: 'mock-9',
- title: 'Black Compact Umbrella',
- description: 'Totes umbrella, black color, wet. Found standing in the umbrella rack by the main double doors.',
- category: 'Clothing',
- location: 'Humanities Hall Entryway',
- status: 'Found',
- date: '2026-07-10',
- reporter_email: 'sam.r@univ.edu',
- image_file: null,
- isMock: true
- },
- {
- id: 'mock-10',
- title: 'TI-84 Graphing Calculator',
- description: 'Texas Instruments TI-84 Plus CE. Has"Property of Sarah" written in silver sharpie on the back cover.',
- category: 'Electronics',
- location: 'Mathematics Annex Room 104',
- status: 'Lost',
- date: '2026-07-07',
- reporter_email: 'sarah.k@univ.edu',
- image_file: null,
- isMock: true
- },
- {
- id: 'mock-11',
- title: 'Leather Moleskine Notebook',
- description: 'Black ruled paper notebook. Left on one of the benches inside the art corridor.',
- category: 'Others',
- location: 'Fine Arts Gallery',
- status: 'Found',
- date: '2026-07-11',
- reporter_email: 'curator@univ.edu',
- image_file: null,
- isMock: true
- },
- {
- id: 'mock-12',
- title: 'Sony WH-1000XM4 Headphones',
- description: 'Black over-ear active noise canceling headphones in their gray zippered travel case.',
- category: 'Electronics',
- location: 'Library Quiet Zone',
- status: 'Lost',
- date: '2026-07-10',
- reporter_email: 'lucas.p@univ.edu',
- image_file: null,
- isMock: true
- },
- {
- id: 'mock-13',
- title: 'US Passport',
- description: 'US Passport under the name of Ethan Zhao. Found inside a blue passport holder sleeve.',
- category: 'Documents',
- location: 'International Office lobby',
- status: 'Found',
- date: '2026-07-08',
- reporter_email: 'advising@univ.edu',
- image_file: null,
- isMock: true
- },
- {
- id: 'mock-14',
- title: 'Ray-Ban Wayfarer Glasses',
- description: 'Classic tortoiseshell frame prescription glasses. Left at the corner table on the outdoor patio.',
- category: 'Accessories',
- location: 'Starbucks Patio',
- status: 'Lost',
- date: '2026-07-10',
- reporter_email: 'oliver.g@univ.edu',
- image_file: null,
- isMock: true
- },
- {
- id: 'mock-15',
- title: 'iPhone 14 Pro Max',
- description: 'Space Gray iPhone 14 Pro Max with a transparent OtterBox case. The lock screen shows a dog wallpaper.',
- category: 'Electronics',
- location: 'Science Quad courtyard',
- status: 'Found',
- date: '2026-07-11',
- reporter_email: 'security@univ.edu',
- image_file: null,
- isMock: true
- },
- {
- id: 'mock-16',
- title: 'Specialized Bicycle Helmet',
- description: 'White and red specialized cycling helmet. Left locked or hanging on the bike racks.',
- category: 'Clothing',
- location: 'Gym Bike Racks',
- status: 'Lost',
- date: '2026-07-09',
- reporter_email: 'cyclist99@univ.edu',
- image_file: null,
- isMock: true
- },
- {
- id: 'mock-17',
- title: 'SanDisk 128GB USB Drive',
- description: 'Red and black slide-out USB flash drive. Found plugged into Desktop workstation number 14.',
- category: 'Electronics',
- location: 'Library Computer Lab',
- status: 'Found',
- date: '2026-07-11',
- reporter_email: 'lib.tech@univ.edu',
- image_file: null,
- isMock: true
- },
- {
- id: 'mock-18',
- title: 'Yeti Metal Lunch Box',
- description: 'Navy blue Yeti Daytrip lunch box with insulated interior. Has a key strap clip on the top handle.',
- category: 'Others',
- location: 'Chemistry Lab benches',
- status: 'Lost',
- date: '2026-07-11',
- reporter_email: 'chem.major@univ.edu',
- image_file: null,
- isMock: true
- },
- {
- id: 'mock-19',
- title: 'Canon EOS Rebel Camera',
- description: 'Canon DSLR camera with an 18-55mm kit lens. Found on a wooden trail bench near the rose garden.',
- category: 'Electronics',
- location: 'Botanical Gardens',
- status: 'Found',
- date: '2026-07-07',
- reporter_email: 'garden.staff@univ.edu',
- image_file: null,
- isMock: true
- },
- {
- id: 'mock-20',
- title: 'Anker Power Bank',
- description: 'Black heavy duty external battery charger. Left at the charging kiosk in the student center.',
- category: 'Electronics',
- location: 'Student Center Lounge',
- status: 'Lost',
- date: '2026-07-08',
- reporter_email: 'sophie.m@univ.edu',
- image_file: null,
- isMock: true
- },
- {
- id: 'mock-21',
- title: 'Blue Denim Jacket',
- description: 'Levis denim jacket size Medium. Found draped over a wooden chair in the middle lawn.',
- category: 'Clothing',
- location: 'Quad Lawn',
- status: 'Found',
- date: '2026-07-10',
- reporter_email: 'quad.crew@univ.edu',
- image_file: null,
- isMock: true
- },
- {
- id: 'mock-22',
- title: 'Gold Hoop Earrings',
- description: 'A pair of thin, classic gold hoop earrings. Lost somewhere near the amphitheater steps.',
- category: 'Accessories',
- location: 'Arts Amphitheater',
- status: 'Lost',
- date: '2026-07-09',
- reporter_email: 'lisa.v@univ.edu',
- image_file: null,
- isMock: true
- },
- {
- id: 'mock-23',
- title: 'Resident Parking Permit',
- description: 'Decal sticker parking permit numbered #R-8492. Dropped near the reception counter.',
- category: 'Documents',
- location: 'Admissions Office',
- status: 'Lost',
- date: '2026-07-11',
- reporter_email: 'parking.help@univ.edu',
- image_file: null,
- isMock: true
- },
- {
- id: 'mock-24',
- title: 'Keyring with 4 Keys',
- description: 'Four silver keys on a loop. Found on the shelf in the stationary aisle of the bookstore.',
- category: 'Keys',
- location: 'Bookstore checkout',
- status: 'Found',
- date: '2026-07-11',
- reporter_email: 'retail.staff@univ.edu',
- image_file: null,
- isMock: true
- },
- {
- id: 'mock-25',
- title: 'Patagonia Fleece Pullover',
- description: 'Gray synchilla snap-T fleece jacket size Large. Left in the back row of seats in the lounge.',
- category: 'Clothing',
- location: 'Student Union Lounge',
- status: 'Lost',
- date: '2026-07-10',
- reporter_email: 'student.life@univ.edu',
- image_file: null,
- isMock: true
- }
-];
 
 // Stats upward counter animation helper
 const AnimatedCounter: React.FC<{ value: number; suffix?: string }> = ({ value, suffix = '' }) => {
@@ -430,7 +128,7 @@ const Home: React.FC = () => {
  // Carousel ref
  const carouselRef = useRef<HTMLDivElement>(null);
 
- // Fetch database items and combine with mock items
+ // Fetch database items
  useEffect(() => {
  const fetchItems = async () => {
  try {
@@ -438,17 +136,16 @@ const Home: React.FC = () => {
  const data = await response.json();
  if (response.ok && data.success) {
  setDbItems(data.items);
- const combined = [...data.items, ...mockItems];
- setAllItems(combined);
- setFilteredItems(combined);
+ setAllItems(data.items);
+ setFilteredItems(data.items);
  } else {
- setAllItems(mockItems);
- setFilteredItems(mockItems);
+ setAllItems([]);
+ setFilteredItems([]);
  }
  } catch (error) {
  console.error('Error loading latest items:', error);
- setAllItems(mockItems);
- setFilteredItems(mockItems);
+ setAllItems([]);
+ setFilteredItems([]);
  } finally {
  setLoading(false);
  }
@@ -706,9 +403,9 @@ const Home: React.FC = () => {
  <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-2">
  <Link
  to="/report"
- className="px-6 py-3.5 rounded-xl btn-primary-custom text-xs sm:text-sm font-bold flex items-center gap-2"
+ className="px-6 py-3.5 rounded-xl bg-primary dark:bg-gradient-to-r dark:from-pink-500 dark:to-purple-500 text-white transition-all duration-200 ease-out hover:scale-[1.02] hover:brightness-110 shadow-md text-xs sm:text-sm font-bold flex items-center gap-2"
  >
- <PlusCircle className="w-4 h-4 text-textSecondary transition-transform duration-300 transform group-hover:scale-110" />
+ <PlusCircle className="w-4 h-4 text-white/80 transition-transform duration-300 transform group-hover:scale-110" />
  <span>Report a Lost Item</span>
  </Link>
  <Link
@@ -735,7 +432,7 @@ const Home: React.FC = () => {
  <motion.div 
  animate={{ y: [0, -10, 0], rotate: [0, 8, 0] }}
  transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
- className="absolute top-6 left-6 p-3 rounded-xl bg-white/60 border border-primary/10 shadow-md text-primary"
+ className="absolute top-6 left-6 p-3 rounded-xl glass-card shadow-md text-primary"
  >
  <Key className="w-6 h-6 transition-all duration-300 transform hover:scale-110 hover:text-accent text-primary" />
  </motion.div>
@@ -743,7 +440,7 @@ const Home: React.FC = () => {
  <motion.div 
  animate={{ y: [0, 12, 0], rotate: [0, -6, 0] }}
  transition={{ duration: 4.8, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
- className="absolute top-10 right-6 p-3 rounded-xl bg-white/60 border border-primary/10 shadow-md text-primary"
+ className="absolute top-10 right-6 p-3 rounded-xl glass-card shadow-md text-primary"
  >
  <Wallet className="w-6 h-6 transition-all duration-300 transform hover:scale-110 hover:text-accent text-primary" />
  </motion.div>
@@ -751,7 +448,7 @@ const Home: React.FC = () => {
  <motion.div 
  animate={{ y: [0, -15, 0], rotate: [0, 12, 0] }}
  transition={{ duration: 5.5, repeat: Infinity, ease: 'easeInOut', delay: 0.9 }}
- className="absolute bottom-12 left-10 p-3 rounded-xl bg-white/60 border border-primary/10 shadow-md text-primary"
+ className="absolute bottom-12 left-10 p-3 rounded-xl glass-card shadow-md text-primary"
  >
  <Smartphone className="w-6 h-6 transition-all duration-300 transform hover:scale-110 hover:text-accent text-primary" />
  </motion.div>
@@ -759,7 +456,7 @@ const Home: React.FC = () => {
  <motion.div 
  animate={{ y: [0, 8, 0], rotate: [0, -10, 0] }}
  transition={{ duration: 4.2, repeat: Infinity, ease: 'easeInOut', delay: 1.3 }}
- className="absolute bottom-6 right-12 p-3 rounded-xl bg-white/60 border border-primary/10 shadow-md text-primary"
+ className="absolute bottom-6 right-12 p-3 rounded-xl glass-card shadow-md text-primary"
  >
  <Backpack className="w-6 h-6 transition-all duration-300 transform hover:scale-110 hover:text-accent text-primary" />
  </motion.div>
@@ -809,10 +506,7 @@ const Home: React.FC = () => {
  initial={{ opacity: 0, y: 15 }}
  animate={{ opacity: 1, y: 0 }}
  transition={{ duration: 0.4, delay: idx * 0.08 }}
- className="glass-card rounded-xl p-5 border border-primary/5 flex flex-col justify-between"
- style={{ 
- background: `radial-gradient(circle at 10% 10%, rgba(92,50,30,0.02) 0%, rgba(243,231,217,0.85) 100%)` 
- }}
+ className="glass-card rounded-xl p-5 flex flex-col justify-between border border-text/15 hover:border-text/30 transition-all duration-300 shadow-md shadow-primary/5"
  >
  <div className="text-secondary text-xs sm:text-sm font-bold mb-2">{stat.title}</div>
  <div className="flex items-baseline gap-1">
@@ -820,10 +514,9 @@ const Home: React.FC = () => {
  </div>
  <div className="w-full h-1 bg-primary/10 rounded-xl mt-3 overflow-hidden">
  <div 
- className="h-full rounded-xl" 
+ className="h-full rounded-xl bg-primary-gradient" 
  style={{ 
- width: `${Math.min(stat.value / 3, 100)}%`,
- background: 'linear-gradient(90deg, #5C321E, #C9A07A)'
+ width: `${Math.min(stat.value / 3, 100)}%`
  }}
  />
  </div>
@@ -903,7 +596,7 @@ const Home: React.FC = () => {
  <div className="flex-1 space-y-6">
 
  {/* Search bar & Live dropdown filters */}
- <div className="space-y-4 glass-panel rounded-xl p-5 sm:p-6 border border-primary/10">
+ <div className="space-y-4 glass-panel rounded-xl p-5 sm:p-6 border border-text/15">
  
  {/* Search Input */}
  <div className="relative">
@@ -913,7 +606,7 @@ const Home: React.FC = () => {
  placeholder="Search by wallet, airpods, keys..."
  value={searchQuery}
  onChange={(e) => setSearchQuery(e.target.value)}
- className="w-full pl-12 pr-4 py-3 rounded-xl bg-white/70 border border-primary/12 text-sm text-text placeholder-[#927A69]/70 focus:outline-none focus:border-secondary focus:ring-4 focus:ring-secondary/15 transition-all"
+ className="w-full pl-12 pr-4 py-3 rounded-xl bg-transparent border border-text/15 text-sm text-text placeholder-[#927A69]/70 focus:outline-none focus:border-text/40 focus:bg-primary/5 focus:ring-4 focus:ring-secondary/15 transition-all"
  />
  </div>
 
@@ -926,7 +619,7 @@ const Home: React.FC = () => {
  <select
  value={selectedCategory}
  onChange={(e) => setSelectedCategory(e.target.value)}
- className="w-full text-xs bg-white/70 border border-primary/12 rounded-lg p-2 focus:outline-none focus:border-secondary text-text"
+ className="w-full text-xs bg-transparent border border-text/15 rounded-lg p-2 focus:outline-none focus:border-text/40 focus:bg-primary/5 text-text transition-colors"
  >
  <option value="All">All Categories</option>
  <option value="Electronics">Electronics</option>
@@ -946,7 +639,7 @@ const Home: React.FC = () => {
  <select
  value={selectedStatus}
  onChange={(e) => setSelectedStatus(e.target.value)}
- className="w-full text-xs bg-white/70 border border-primary/12 rounded-lg p-2 focus:outline-none focus:border-secondary text-text"
+ className="w-full text-xs bg-transparent border border-text/15 rounded-lg p-2 focus:outline-none focus:border-text/40 focus:bg-primary/5 text-text transition-colors"
  >
  <option value="All">All Statuses</option>
  <option value="Lost">Lost</option>
@@ -960,7 +653,7 @@ const Home: React.FC = () => {
  <select
  value={selectedLocation}
  onChange={(e) => setSelectedLocation(e.target.value)}
- className="w-full text-xs bg-white/70 border border-primary/12 rounded-lg p-2 focus:outline-none focus:border-secondary text-text"
+ className="w-full text-xs bg-transparent border border-text/15 rounded-lg p-2 focus:outline-none focus:border-text/40 focus:bg-primary/5 text-text transition-colors"
  >
  <option value="All">All Locations</option>
  {locationOptions.map((loc, i) => (
@@ -975,7 +668,7 @@ const Home: React.FC = () => {
  <select
  value={selectedDate}
  onChange={(e) => setSelectedDate(e.target.value)}
- className="w-full text-xs bg-white/70 border border-primary/12 rounded-lg p-2 focus:outline-none focus:border-secondary text-text"
+ className="w-full text-xs bg-transparent border border-text/15 rounded-lg p-2 focus:outline-none focus:border-text/40 focus:bg-primary/5 text-text transition-colors"
  >
  <option value="All">Any Time</option>
  <option value="Today">Last 24 Hours</option>
@@ -995,7 +688,7 @@ const Home: React.FC = () => {
  className={`flex-shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all border ${
  selectedCategory === cat 
  ? 'bg-primary text-white border-primary shadow-md shadow-primary/25' 
- : 'bg-white/60 text-secondary border-primary/10 hover:text-text hover:bg-white/80'
+ : 'bg-transparent text-secondary border-primary/20 hover:text-text hover:bg-primary/10'
  }`}
  >
  {cat}
@@ -1032,7 +725,7 @@ const Home: React.FC = () => {
  ))}
  </div>
  ) : filteredItems.length === 0 ? (
- <div className="glass-panel rounded-xl p-16 text-center text-textSecondary border border-dashed border-primary/10 bg-surface/20">
+ <div className="glass-panel rounded-xl p-16 text-center text-textSecondary border border-dashed border-text/20 bg-surface/20">
  <AlertCircle className="w-10 h-10 text-textMuted/55 mx-auto mb-3" />
  <p className="text-base font-semibold">No items match your selected filters.</p>
  <p className="text-xs text-textMuted mt-1">Try resetting parameters or search input query.</p>
@@ -1082,14 +775,14 @@ const Home: React.FC = () => {
  {/* Bookmark */}
  <motion.button variants={tapHoverVariants} whileHover="hover" whileTap="tap"
  onClick={(e) => toggleBookmark(item.id, e)}
- className="p-2 rounded-xl bg-white/80 border border-primary/10 text-secondary hover:text-primary transition-all duration-300 transform hover:scale-110"
+ className="p-2 rounded-xl bg-surface border border-primary/10 text-secondary hover:text-primary transition-all duration-300 transform hover:scale-110"
  >
  <Bookmark className={`w-4 h-4 ${bookmarkedIds.includes(item.id) ? 'fill-primary text-primary' : ''}`} />
  </motion.button>
  {/* Share */}
  <motion.button variants={tapHoverVariants} whileHover="hover" whileTap="tap"
  onClick={(e) => handleShareItem(item, e)}
- className="p-2 rounded-xl bg-white/80 border border-primary/10 text-secondary hover:text-primary transition-all duration-300 transform hover:scale-110"
+ className="p-2 rounded-xl bg-surface border border-primary/10 text-secondary hover:text-primary transition-all duration-300 transform hover:scale-110"
  >
  <Share2 className="w-4 h-4" />
  </motion.button>
@@ -1139,14 +832,14 @@ const Home: React.FC = () => {
  <aside className="w-full lg:w-80 space-y-8">
  
  {/* Interactive SVG Campus Map */}
- <div className="glass-panel rounded-xl p-5 border border-primary/10 space-y-4 bg-surface/20">
+ <div className="glass-panel rounded-xl p-5 border border-text/15 space-y-4 bg-surface/20">
  <div className="flex items-center gap-2">
  <Map className="w-5 h-5 text-primary" />
  <h4 className="font-bold text-sm text-text">Campus Location Map</h4>
  </div>
  
  {/* Campus SVG layout Map tracker container */}
- <div className="w-full h-64 rounded-xl border border-primary/10 bg-white/40 relative overflow-hidden flex items-center justify-center">
+ <div className="w-full h-64 rounded-xl border border-text/15 bg-transparent relative overflow-hidden flex items-center justify-center">
  
  {/* Styled SVG layout map grid */}
  <svg className="w-full h-full text-secondary/45 select-none" viewBox="0 0 400 300">
@@ -1228,7 +921,7 @@ const Home: React.FC = () => {
  </div>
 
  {/* Recent Activity Timeline panel */}
- <div className="glass-panel rounded-xl p-5 border border-primary/10 space-y-4 bg-surface/20">
+ <div className="glass-panel rounded-xl p-5 border border-text/15 space-y-4 bg-surface/20">
  <div className="flex items-center gap-2 pb-2 border-b border-primary/10">
  <Clock className="w-5 h-5 text-primary animate-pulse" />
  <h4 className="font-bold text-sm text-text">Recent Activity Timeline</h4>
@@ -1265,7 +958,7 @@ const Home: React.FC = () => {
  </div>
 
  {/* ── FEEDBACK & SUPPORT SECTION ── */}
- <motion.section variants={scrollRevealVariants} initial="hidden" whileInView="visible" viewport={scrollRevealViewport} className="mt-12 glass-panel rounded-xl p-8 sm:p-12 flex flex-col sm:flex-row items-center justify-between gap-6 border border-primary/20 shadow-lg">
+ <motion.section variants={scrollRevealVariants} initial="hidden" whileInView="visible" viewport={scrollRevealViewport} className="mt-12 glass-panel rounded-xl p-8 sm:p-12 flex flex-col sm:flex-row items-center justify-between gap-6 border border-text/15 shadow-lg">
  <div className="flex-1 space-y-3 text-center sm:text-left">
  <h3 className="text-2xl font-black font-heading text-text">Need Help or Have Feedback?</h3>
  <p className="text-sm text-textSecondary max-w-lg mx-auto sm:mx-0">
@@ -1342,7 +1035,7 @@ const Home: React.FC = () => {
 
  {/* ── VIEW DETAILS GLASSMORPHISM MODAL ── */}
  <AnimatePresence>
- {selectedItemModal && (
+ {selectedItemModal && createPortal(
  <div className="fixed inset-0 z-[99999] flex items-center justify-center px-4">
  
  {/* Dark blur background backdrop overlay */}
@@ -1351,7 +1044,8 @@ const Home: React.FC = () => {
  animate={{ opacity: 1 }}
  exit={{ opacity: 0 }}
  onClick={() => setSelectedItemModal(null)}
- className="absolute inset-0 bg-primary/45 backdrop-blur-sm"
+ className="absolute inset-0 bg-black/50"
+ style={{ backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}
  />
 
  {/* Glassmorphic detailed dialog modal */}
@@ -1359,13 +1053,13 @@ const Home: React.FC = () => {
  initial={{ opacity: 0, scale: 0.95, y: 20 }}
  animate={{ opacity: 1, scale: 1, y: 0 }}
  exit={{ opacity: 0, scale: 0.95, y: 20 }}
- className="w-full max-w-lg glass-panel rounded-xl overflow-hidden border border-white/15 relative z-10 bg-shade-5"
+ className="w-full max-w-lg glass-panel rounded-xl overflow-hidden border border-text/15 relative z-10 bg-shade-5"
  >
  
  {/* Close Button */}
  <motion.button variants={tapHoverVariants} whileHover="hover" whileTap="tap"
  onClick={() => setSelectedItemModal(null)}
- className="absolute top-4 right-4 p-2 rounded-xl bg-white/40 text-secondary hover:text-primary border border-primary/10 cursor-pointer z-50"
+ className="absolute top-4 right-4 p-2 rounded-xl bg-surface/50 text-secondary hover:text-primary hover:bg-surface border border-primary/20 cursor-pointer z-50 transition-colors"
  >
  <X className="w-4 h-4 text-primary transition-all duration-300 transform hover:scale-110 hover:text-accent" />
  </motion.button>
@@ -1400,10 +1094,10 @@ const Home: React.FC = () => {
  <div className="space-y-2">
  <h3 className="text-xl sm:text-2xl font-black text-text tracking-tight leading-tight">{selectedItemModal.title}</h3>
  <div className="flex flex-wrap gap-2 pt-1">
- <span className="px-2.5 py-1 rounded-lg bg-white/60 border border-primary/5 text-[10px] font-bold text-text">
+ <span className="px-2.5 py-1 rounded-lg bg-primary/10 border border-primary/5 text-[10px] font-bold text-text">
  {selectedItemModal.category}
  </span>
- <span className="px-2.5 py-1 rounded-lg bg-white/60 border border-primary/5 text-[10px] font-bold text-secondary flex items-center gap-1">
+ <span className="px-2.5 py-1 rounded-lg bg-primary/10 border border-primary/5 text-[10px] font-bold text-secondary flex items-center gap-1">
  <MapPin className="w-3 h-3 text-primary transition-all duration-300 transform hover:scale-110 hover:text-accent" />
  {selectedItemModal.location}
  </span>
@@ -1412,13 +1106,13 @@ const Home: React.FC = () => {
 
  <div className="space-y-3">
  <h4 className="text-xs uppercase font-bold text-textSecondary tracking-wider">Item Description</h4>
- <p className="text-sm text-text leading-relaxed bg-white/40 border border-primary/5 p-4 rounded-xl">
+ <p className="text-sm text-text leading-relaxed bg-surface/50 border border-primary/5 p-4 rounded-xl">
  {selectedItemModal.description}
  </p>
  </div>
 
  {/* Date & reporter meta row */}
- <div className="grid grid-cols-2 gap-4 text-xs bg-white/40 p-4 rounded-xl border border-primary/5">
+ <div className="grid grid-cols-2 gap-4 text-xs bg-surface/50 p-4 rounded-xl border border-primary/5">
  <div className="space-y-1">
  <span className="text-textSecondary font-semibold block uppercase text-[9px] tracking-wider">Reported Date</span>
  <span className="text-text font-bold">{formatDate(selectedItemModal.date)}</span>
@@ -1453,7 +1147,7 @@ const Home: React.FC = () => {
  </motion.button>
  <motion.button variants={tapHoverVariants} whileHover="hover" whileTap="tap"
  onClick={(e) => toggleBookmark(selectedItemModal.id, e)}
- className="px-4 rounded-xl bg-white/60 hover:bg-shade-5 border border-primary/10 text-secondary hover:text-primary transition-colors"
+ className="px-4 rounded-xl bg-primary/10 hover:bg-primary/20 border border-primary/10 text-secondary hover:text-primary transition-colors"
  >
  <Bookmark className={`w-5 h-5 ${bookmarkedIds.includes(selectedItemModal.id) ? 'fill-primary text-primary' : ''}`} />
  </motion.button>
@@ -1462,7 +1156,8 @@ const Home: React.FC = () => {
  </div>
 
  </motion.div>
- </div>
+ </div>,
+ document.body
  )}
  </AnimatePresence>
 

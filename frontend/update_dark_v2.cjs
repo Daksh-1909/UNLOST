@@ -14,14 +14,14 @@ let css = fs.readFileSync('frontend/src/index.css', 'utf8');
 const newDark = `.dark {
   --color-primary: 168 128 255; /* Light Purple / Violet */
   --color-secondary: 255 77 109; /* Red */
-  --color-accent: 255 210 63; /* Yellow */
+  --color-accent: 56 189 248; /* Sky Blue */
   --color-background: 0 0 0; /* Pure Black */
   --color-surface: 12 12 14; /* Very dark grey tint */
   --color-text: 245 245 250; /* Cool white */
   --color-text-secondary: 170 170 180; /* Cool grey */
   --color-text-muted: 110 110 120; /* Muted grey */
   --color-success: 80 180 120;
-  --color-warning: 255 210 63;
+  --color-warning: 245 158 11; /* Orange */
   --color-danger: 255 77 109;
   --color-border: 35 35 45; /* Subtle border */
 }`;

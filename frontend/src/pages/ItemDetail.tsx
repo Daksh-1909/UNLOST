@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { MapPin, Calendar, Tag, ShieldCheck, CheckCircle2, User, Download } from 'lucide-react';
@@ -34,14 +35,31 @@ const ItemDetail: React.FC = () => {
   const [claimResult, setClaimResult] = useState<{ success: boolean; message: string } | null>(null);
 
   useEffect(() => {
-    fetch(`/api/items/${id}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
+    let isMounted = true;
+    
+    const fetchItem = async () => {
+      try {
+        const res = await fetch(`/api/items/${id}`);
+        const data = await res.json();
+        if (data.success && isMounted) {
           setItem(data.item);
         }
-      })
-      .finally(() => setLoading(false));
+      } catch (err) {
+        console.error(err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    fetchItem();
+    
+    // Poll every 3 seconds for real-time updates
+    const intervalId = setInterval(fetchItem, 3000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(intervalId);
+    };
   }, [id]);
 
   const handleDownloadQR = () => {
@@ -250,7 +268,7 @@ const ItemDetail: React.FC = () => {
 
       {/* Claim Modal */}
       <AnimatePresence>
-        {isClaiming && (
+        {isClaiming && createPortal(
           <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-background/80 backdrop-blur-sm">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -306,7 +324,8 @@ const ItemDetail: React.FC = () => {
                 </div>
               </form>
             </motion.div>
-          </div>
+          </div>,
+          document.body
         )}
       </AnimatePresence>
     </motion.div>

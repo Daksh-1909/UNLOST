@@ -43,6 +43,26 @@ const Navbar: React.FC = () => {
     setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n));
   };
 
+  const navRef = React.useRef<HTMLElement>(null);
+
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (navRef.current && !navRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+        setIsNotificationsOpen(false);
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  React.useEffect(() => {
+    setIsDropdownOpen(false);
+    setIsNotificationsOpen(false);
+    setIsOpen(false);
+  }, [location.pathname]);
+
  const navigation = [
  { name: 'Home', href: '/', icon: Home },
  { name: 'Items', href: '/items', icon: LayoutGrid },
@@ -60,7 +80,7 @@ const Navbar: React.FC = () => {
  };
 
  return (
- <nav className="sticky top-0 z-50 glass-panel border-b-0 border-b-white/5 rounded-none">
+ <nav ref={navRef} className="sticky top-0 z-50 glass-panel border-b-0 border-b-white/5 rounded-none">
  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
  <div className="flex items-center justify-between h-16">
  <div className="flex items-center">
@@ -88,6 +108,7 @@ const Navbar: React.FC = () => {
  className={`relative py-2 text-sm font-medium transition-colors flex items-center gap-2 ${
  active ? 'text-primary' : 'text-textSecondary hover:text-text'
  }`}
+
  whileHover="hover"
  whileTap="tap"
  variants={tapHoverVariants}
@@ -97,7 +118,7 @@ const Navbar: React.FC = () => {
  {active && (
  <motion.div
  layoutId="activeNavIndicator"
- className="absolute -bottom-[2px] left-1/2 -translate-x-1/2 w-1 h-1 rounded-xl bg-primary"
+ className="absolute -bottom-[2px] left-0 right-0 h-[3px] rounded-t-full bg-primary shadow-sm shadow-primary/50"
  transition={{ duration: 0.2, ease:"easeOut" }}
  />
  )}
@@ -110,7 +131,7 @@ const Navbar: React.FC = () => {
           {/* Dark Mode Toggle */}
           <motion.button
             onClick={() => setIsDark(!isDark)}
-            className="p-2 rounded-full text-textSecondary hover:text-text hover:bg-white/10 transition-colors"
+            className="p-2 rounded-full text-textSecondary hover:text-text hover:bg-primary/10 transition-colors relative"
             whileHover="hover"
             whileTap="tap"
             variants={tapHoverVariants}
@@ -122,7 +143,7 @@ const Navbar: React.FC = () => {
           <div className="relative">
             <motion.button
               onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-              className="p-2 rounded-full text-textSecondary hover:text-text hover:bg-white/10 transition-colors relative"
+              className="p-2 rounded-full text-textSecondary hover:text-text hover:bg-primary/10 transition-colors relative"
               whileHover="hover"
               whileTap="tap"
               variants={tapHoverVariants}
@@ -208,12 +229,12 @@ const Navbar: React.FC = () => {
  <p className="text-sm font-medium text-text truncate">{user?.username}</p>
  <p className="text-xs text-textMuted truncate">{user?.email}</p>
  </div>
- <MotionLink to="/profile" onClick={() => setIsDropdownOpen(false)} className="flex items-center px-4 py-2 text-sm text-textSecondary hover:text-primary hover:bg-white/5 transition-colors" whileHover="hover" whileTap="tap" variants={tapHoverVariants}>
+ <MotionLink to="/profile" onClick={() => setIsDropdownOpen(false)} className="flex items-center px-4 py-2 text-sm text-textSecondary hover:text-primary hover:bg-primary/10 transition-colors" whileHover="hover" whileTap="tap" variants={tapHoverVariants}>
  <User className="mr-3 h-4 w-4" /> Profile
  </MotionLink>
  <motion.button
  onClick={() => { setIsDropdownOpen(false); logout(); }}
- className="flex w-full items-center px-4 py-2 text-sm text-textSecondary hover:text-danger hover:bg-white/5 transition-colors"
+ className="flex w-full items-center px-4 py-2 text-sm text-textSecondary hover:text-danger hover:bg-danger/10 transition-colors"
  whileHover="hover"
  whileTap="tap"
  variants={tapHoverVariants}
@@ -260,7 +281,7 @@ const Navbar: React.FC = () => {
  to={item.href}
  onClick={() => setIsOpen(false)}
  className={`flex items-center space-x-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors ${
- active ? 'text-primary bg-primary/10' : 'text-textSecondary hover:text-text hover:bg-white/5'
+ active ? 'text-primary bg-primary/10' : 'text-textSecondary hover:text-text hover:bg-primary/10'
  }`}
  whileHover="hover"
  whileTap="tap"
@@ -272,7 +293,7 @@ const Navbar: React.FC = () => {
  );
  })}
  <div className="border-t border-white/5 mt-4 pt-4 flex flex-col space-y-1">
- <MotionLink to="/profile" onClick={() => setIsOpen(false)} className="flex items-center px-3 py-3 rounded-lg text-sm font-medium text-textSecondary hover:text-text hover:bg-white/5 transition-colors" whileHover="hover" whileTap="tap" variants={tapHoverVariants}>
+ <MotionLink to="/profile" onClick={() => setIsOpen(false)} className="flex items-center px-3 py-3 rounded-lg text-sm font-medium text-textSecondary hover:text-text hover:bg-primary/10 transition-colors" whileHover="hover" whileTap="tap" variants={tapHoverVariants}>
  <User className="mr-3 h-4 w-4" /> Profile
  </MotionLink>
  <motion.button

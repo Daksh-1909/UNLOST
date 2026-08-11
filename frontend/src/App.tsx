@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -122,22 +122,6 @@ const AnimatedRoutes: React.FC = () => {
           </ProtectedRoute>
         } />
         
-        {/* Fallback to home */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </AnimatePresence>
-  );
-};
-
-const AppContent: React.FC = () => {
-  const { user } = useAuth();
-
-  return (
-    <Router>
-      <div className="min-h-screen bg-background text-primary flex flex-col relative overflow-hidden">
-        {/* Decorative background glow blobs */}
-        <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-primary/5 blur-[120px] pointer-events-none"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-secondary/5 blur-[120px] pointer-events-none"></div>
         
         {user && <Navbar />}
         <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 z-10">

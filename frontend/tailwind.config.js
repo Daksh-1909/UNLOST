@@ -19,7 +19,8 @@ export default {
         success: "rgb(var(--color-success) / <alpha-value>)",
         warning: "rgb(var(--color-warning) / <alpha-value>)",
         danger: "rgb(var(--color-danger) / <alpha-value>)",
-        border: "rgb(var(--color-border) / <alpha-value>)"
+        border: "rgb(var(--color-border) / <alpha-value>)",
+        white: "rgb(var(--color-white) / <alpha-value>)"
       },
       fontFamily: {
         sans: ['Inter', 'sans-serif'],

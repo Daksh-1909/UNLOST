@@ -146,7 +146,7 @@ const Report: React.FC = () => {
  {/* Title & Status */}
  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
  <div className="md:col-span-2 space-y-1.5">
- <label className="text-xs font-semibold text-[#926347] uppercase tracking-wider flex items-center gap-1">
+ <label className="text-xs font-semibold text-secondary uppercase tracking-wider flex items-center gap-1">
  <FileText className="h-3.5 w-3.5" />
  <span>Item Title <span className="text-danger">*</span></span>
  </label>
@@ -161,11 +161,11 @@ const Report: React.FC = () => {
  </div>
 
  <div className="space-y-1.5">
- <label className="text-xs font-semibold text-[#926347] uppercase tracking-wider flex items-center gap-1">
+ <label className="text-xs font-semibold text-secondary uppercase tracking-wider flex items-center gap-1">
  <Tag className="h-3.5 w-3.5" />
  <span>Status <span className="text-danger">*</span></span>
  </label>
- <div className="relative grid grid-cols-2 gap-2 bg-[#5C321E]/5 p-1.5 rounded-xl border border-[#5C321E]/15">
+ <div className="relative grid grid-cols-2 gap-2 bg-primary/5 p-1.5 rounded-xl border border-primary/20">
  {['Lost', 'Found'].map((st) => (
             <motion.button
               key={st}
@@ -177,13 +177,13 @@ const Report: React.FC = () => {
               className={`relative py-1.5 text-xs font-bold rounded-lg transition-colors z-10 ${
                 status === st
                   ? 'text-white'
-                  : 'text-[#926347] hover:text-[#5C321E] hover:bg-[#5C321E]/5'
+                  : 'text-secondary hover:text-text hover:bg-primary/5'
               }`}
             >
               {status === st && (
                 <motion.div
                   layoutId="status-toggle-indicator"
-                  className="absolute inset-0 bg-[#5C321E] rounded-lg shadow-sm -z-10"
+                  className="absolute inset-0 bg-primary rounded-lg shadow-sm -z-10"
                   transition={{ type: "spring", stiffness: 400, damping: 30 }}
                 />
               )}
@@ -196,7 +196,7 @@ const Report: React.FC = () => {
 
  {/* Description */}
  <div className="space-y-1.5">
- <label className="text-xs font-semibold text-[#926347] uppercase tracking-wider flex items-center gap-1">
+ <label className="text-xs font-semibold text-secondary uppercase tracking-wider flex items-center gap-1">
  <FileText className="h-3.5 w-3.5" />
  <span>Description <span className="text-danger">*</span></span>
  </label>
@@ -213,7 +213,7 @@ const Report: React.FC = () => {
  {/* Category, Location, Date */}
  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
  <div className="space-y-1.5">
- <label className="text-xs font-semibold text-[#926347] uppercase tracking-wider flex items-center gap-1">
+ <label className="text-xs font-semibold text-secondary uppercase tracking-wider flex items-center gap-1">
  <Tag className="h-3.5 w-3.5" />
  <span>Category <span className="text-danger">*</span></span>
  </label>
@@ -229,7 +229,7 @@ const Report: React.FC = () => {
  </div>
 
  <div className="space-y-1.5">
- <label className="text-xs font-semibold text-[#926347] uppercase tracking-wider flex items-center gap-1">
+ <label className="text-xs font-semibold text-secondary uppercase tracking-wider flex items-center gap-1">
  <MapPin className="h-3.5 w-3.5" />
  <span>Location <span className="text-danger">*</span></span>
  </label>
@@ -244,7 +244,7 @@ const Report: React.FC = () => {
  </div>
 
  <div className="space-y-1.5">
- <label className="text-xs font-semibold text-[#926347] uppercase tracking-wider flex items-center gap-1">
+ <label className="text-xs font-semibold text-secondary uppercase tracking-wider flex items-center gap-1">
  <Calendar className="h-3.5 w-3.5" />
  <span>Date <span className="text-danger">*</span></span>
  </label>
@@ -260,7 +260,7 @@ const Report: React.FC = () => {
 
  {/* Contact details */}
  <div className="space-y-1.5">
- <label className="text-xs font-semibold text-[#926347] uppercase tracking-wider flex items-center gap-1">
+ <label className="text-xs font-semibold text-secondary uppercase tracking-wider flex items-center gap-1">
  <PlusCircle className="h-3.5 w-3.5" />
  <span>Contact Information <span className="text-danger">*</span></span>
  </label>
@@ -276,11 +276,11 @@ const Report: React.FC = () => {
 
  {/* Image Upload */}
  <div className="space-y-2">
- <label className="text-xs font-semibold text-[#926347] uppercase tracking-wider flex items-center gap-1">
+ <label className="text-xs font-semibold text-secondary uppercase tracking-wider flex items-center gap-1">
  <ImageIcon className="h-3.5 w-3.5" />
  <span>Upload Image (Optional)</span>
  </label>
- <div className="flex flex-col sm:flex-row items-center gap-4 bg-[#5C321E]/5 p-4 rounded-xl border border-[#926347]/20">
+ <div className="flex flex-col sm:flex-row items-center gap-4 bg-primary/5 p-4 rounded-xl border border-text/15">
  <input
  type="file"
  accept="image/png, image/jpeg, image/gif"
@@ -290,7 +290,7 @@ const Report: React.FC = () => {
  />
  <label
  htmlFor="item-image-file"
- className="px-4 py-2.5 bg-[#5C321E] hover:bg-[#6D3D24] shadow-md shadow-[#5C321E]/20 border border-[#926347]/30 rounded-xl cursor-pointer text-xs font-semibold text-white transition-all flex items-center gap-1.5"
+ className="px-4 py-2.5 bg-primary hover:bg-primary/90 shadow-md shadow-primary/20 border border-text/15 rounded-xl cursor-pointer text-xs font-semibold text-white transition-all flex items-center gap-1.5"
  >
  <ImageIcon className="h-4 w-4 text-white/80" />
  <span>Choose Image</span>
@@ -304,7 +304,7 @@ const Report: React.FC = () => {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
               transition={TRANSITION_BASE}
-              className="relative h-20 w-20 rounded-lg overflow-hidden border border-[#926347]/30 flex-shrink-0"
+              className="relative h-20 w-20 rounded-lg overflow-hidden border border-text/15 flex-shrink-0"
             >
               <img src={imagePreview} alt="Preview" className="h-full w-full object-cover" />
               <motion.button
@@ -347,7 +347,7 @@ const Report: React.FC = () => {
 
  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
  <div className="space-y-1.5">
- <label className="text-xs font-semibold text-[#926347] uppercase tracking-wider flex items-center gap-1">
+ <label className="text-xs font-semibold text-secondary uppercase tracking-wider flex items-center gap-1">
  <HelpCircle className="h-3.5 w-3.5 text-textMuted" />
  <span>Security Question</span>
  </label>
@@ -361,7 +361,7 @@ const Report: React.FC = () => {
  </div>
 
  <div className="space-y-1.5">
- <label className="text-xs font-semibold text-[#926347] uppercase tracking-wider flex items-center gap-1">
+ <label className="text-xs font-semibold text-secondary uppercase tracking-wider flex items-center gap-1">
  <ShieldCheck className="h-3.5 w-3.5 text-textMuted" />
  <span>Expected Answer</span>
  </label>
@@ -382,7 +382,7 @@ const Report: React.FC = () => {
         variants={buttonHoverVariants}
         whileHover={!loading ? "hover" : ""}
         whileTap={!loading ? "tap" : ""}
-        className="w-full py-3.5 rounded-xl bg-[#5C321E] hover:bg-[#6D3D24] shadow-lg shadow-[#5C321E]/25 transition-colors disabled:opacity-80 text-sm font-semibold flex items-center justify-center gap-2 text-white"
+        className="w-full py-3.5 rounded-xl bg-primary dark:bg-gradient-to-r dark:from-pink-500 dark:to-purple-500 shadow-lg shadow-primary/20 transition-all duration-200 ease-out hover:scale-[1.02] disabled:opacity-80 disabled:hover:scale-100 text-sm font-semibold flex items-center justify-center gap-2 text-white"
       >
         {loading ? (
           <>
