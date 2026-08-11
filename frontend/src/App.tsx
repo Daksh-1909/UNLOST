@@ -204,10 +204,14 @@ const AppContent: React.FC = () => {
   );
 };
 
+import { TransitionProvider } from './context/TransitionContext';
+
 const App: React.FC = () => {
   return (
     <AuthProvider>
-      <AppContent />
+      <TransitionProvider>
+        <AppContent />
+      </TransitionProvider>
     </AuthProvider>
   );
 };

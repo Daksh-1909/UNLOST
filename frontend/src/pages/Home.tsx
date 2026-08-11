@@ -2,10 +2,10 @@ import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { 
- Search, Plus, PlusCircle, Calendar, MapPin, Tag, ChevronRight, Eye, Bookmark, 
+ Search, PlusCircle, Calendar, MapPin, Tag, ChevronRight, Eye, Bookmark, 
  Share2, Smartphone, Watch, Backpack, Key, Wallet, Map, 
- Activity, Clock, CheckCircle2, ChevronLeft, QrCode, PhoneCall, 
- HelpCircle, Shield, X, AlertCircle, Sparkles
+ Activity, Clock, ChevronLeft, PhoneCall, 
+ Shield, X, AlertCircle, Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { tapHoverVariants, buttonHoverVariants, scrollRevealVariants, scrollRevealViewport, staggerContainer, staggerItem } from '../utils/animations';
@@ -117,9 +117,6 @@ const Home: React.FC = () => {
  const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([]);
  const [selectedItemModal, setSelectedItemModal] = useState<Item | null>(null);
  const [toastMessage, setToastMessage] = useState<string | null>(null);
- 
- // Quick Actions Menu State
- const [fabOpen, setFabOpen] = useState(false);
  
  // Map Pin Selection State
  const [hoveredMapPin, setHoveredMapPin] = useState<Item | null>(null);
@@ -974,64 +971,6 @@ const Home: React.FC = () => {
  </Link>
  </motion.section>
 
- {/* ── EXPANDABLE QUICK ACTIONS FAB PANEL ── */}
- <div className="fixed bottom-6 right-6 z-[9999] flex flex-col items-end gap-3">
- 
- {/* Unfolded cluster sub-buttons */}
- <AnimatePresence>
- {fabOpen && (
- <motion.div 
- initial={{ opacity: 0, scale: 0.8, y: 15 }}
- animate={{ opacity: 1, scale: 1, y: 0 }}
- exit={{ opacity: 0, scale: 0.8, y: 15 }}
- className="flex flex-col gap-3 items-end"
- >
- {[
- { icon: Plus, label: 'Report Lost', path: '/report?status=lost', color: 'bg-rose-600 hover:bg-rose-500' },
- { icon: CheckCircle2, label: 'Report Found', path: '/report?status=found', color: 'bg-emerald-600 hover:bg-emerald-500' },
- { icon: QrCode, label: 'Scan QR Code', action: () => triggerToast('QR Scanner module opened!'), color: 'bg-primary hover:bg-secondary' },
- { icon: PhoneCall, label: 'Contact Admin', path: '/contact', color: 'bg-secondary hover:bg-primary' },
- { icon: HelpCircle, label: 'Help Center', action: () => triggerToast('Redirecting to Help Center...'), color: 'bg-secondary hover:bg-primary' }
- ].map((btn, idx) => (
- <div key={idx} className="flex items-center gap-2 group cursor-pointer">
- {/* Tooltip Label */}
- <span className="text-[10px] px-2.5 py-1 rounded-lg bg-shade-5 border border-primary/10 text-primary font-bold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md">
- {btn.label}
- </span>
- 
- {/* Button Circular Icon */}
- {btn.path ? (
- <Link
- to={btn.path}
- className={`w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-lg transition-transform hover:scale-110 ${btn.color}`}
- >
- <btn.icon className="w-4 h-4 transition-all duration-300 transform hover:scale-110 hover:text-accent" />
- </Link>
- ) : (
- <motion.button variants={tapHoverVariants} whileHover="hover" whileTap="tap"
- onClick={btn.action}
- className={`w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-lg transition-transform hover:scale-110 ${btn.color}`}
- >
- <btn.icon className="w-4 h-4 transition-all duration-300 transform hover:scale-110 hover:text-accent" />
- </motion.button>
- )}
- </div>
- ))}
- </motion.div>
- )}
- </AnimatePresence>
-
- {/* Master FAB Trigger Button */}
- <motion.button variants={tapHoverVariants} whileHover="hover" whileTap="tap"
- onClick={() => setFabOpen(!fabOpen)}
- className={`w-14 h-14 rounded-xl flex items-center justify-center text-white shadow-lg transition-all cursor-pointer ${
- fabOpen ? 'bg-secondary rotate-45 border border-white/10' : 'bg-gradient-to-r from-primary to-secondary hover:brightness-110 hover:scale-105'
- }`}
- >
- <Plus className="w-6 h-6 animate-pulse" />
- </motion.button>
-
- </div>
 
  {/* ── VIEW DETAILS GLASSMORPHISM MODAL ── */}
  <AnimatePresence>

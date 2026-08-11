@@ -4,12 +4,14 @@ import { useAuth } from '../context/AuthContext';
 import { Menu, X, LogOut, LayoutGrid, PlusCircle, Shield, User, Phone, Home, ChevronDown, Sun, Moon, Bell } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { tapHoverVariants, TRANSITION_BASE } from '../utils/animations';
+import { usePageTransition } from '../context/TransitionContext';
 
 const MotionLink = motion(Link);
 
 const Navbar: React.FC = () => {
  const { user, logout } = useAuth();
  const location = useLocation();
+ const { triggerTransition } = usePageTransition();
  const [isOpen, setIsOpen] = useState(false);
  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isDark, setIsDark] = useState(() => localStorage.getItem('theme') === 'dark');
@@ -74,10 +76,10 @@ const Navbar: React.FC = () => {
  navigation.push({ name: 'Admin', href: '/admin', icon: Shield });
  }
 
- const isActive = (path: string) => {
- if (path === '/') return location.pathname === '/';
- return location.pathname.startsWith(path);
- };
+  const isActive = (path: string) => {
+    if (path === '/') return location.pathname === '/';
+    return location.pathname.startsWith(path);
+  };
 
  return (
  <nav ref={navRef} className="sticky top-0 z-50 glass-panel border-b-0 border-b-white/5 rounded-none">
@@ -130,7 +132,7 @@ const Navbar: React.FC = () => {
         <div className="flex items-center space-x-4 ml-4">
           {/* Dark Mode Toggle */}
           <motion.button
-            onClick={() => setIsDark(!isDark)}
+            onClick={() => triggerTransition(() => setIsDark(!isDark))}
             className="p-2 rounded-full text-textSecondary hover:text-text hover:bg-primary/10 transition-colors relative"
             whileHover="hover"
             whileTap="tap"

@@ -90,15 +90,18 @@ const SmiloRobot: React.FC<{
  rotZ.set(mouseX * 5);
  }, [mouseX, mouseY, rotY, rotX, rotZ]);
 
+ // Read theme on render (updates often due to mouse events)
+ const isDark = document.documentElement.classList.contains('dark');
+ const themeColor = isDark ? '#a880ff' : '#5c321e';
+
  // Dynamic eye glow color by mood
  const eyeColor =
  mood === 'excited' ? '#facc15' :
- mood === 'thinking' ? '#67e8f9' :
- mood === 'happy' ? '#4ade80' : '#a3e635';
+ mood === 'thinking' ? '#67e8f9' : themeColor;
 
  const antOrb =
  mood === 'excited' ? '#facc15' :
- mood === 'thinking' ? '#67e8f9' : '#a3e635';
+ mood === 'thinking' ? '#67e8f9' : themeColor;
 
  return (
  <motion.div

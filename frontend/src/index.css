@@ -15,6 +15,7 @@
   --color-warning: 176 122 26;
   --color-danger: 180 70 58;
   --color-border: 212 183 154;
+  --color-white: 255 255 255;
 }
 
 .dark {
@@ -30,6 +31,7 @@
   --color-warning: 255 210 63;
   --color-danger: 255 77 109;
   --color-border: 35 35 45; /* Subtle border */
+  --color-white: 255 255 255;
 }
 
 @layer base {
