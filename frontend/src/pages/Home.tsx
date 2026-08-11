@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { tapHoverVariants, buttonHoverVariants, scrollRevealVariants, scrollRevealViewport, staggerContainer, staggerItem } from '../utils/animations';
+import AmbientGlowBg from '../components/AmbientGlowBg';
 
 interface Item {
  id: string;
@@ -309,7 +310,7 @@ const Home: React.FC = () => {
  const dynamicMapHotspots = getMapHotspots();
 
  return (
- <div className="space-y-10 relative pb-16">
+ <AmbientGlowBg className="space-y-10 pb-16">
  
  {/* Toast Notification */}
  <AnimatePresence>
@@ -327,7 +328,7 @@ const Home: React.FC = () => {
  </AnimatePresence>
 
  {/* Decorative Parallax / Glowing background blobs */}
- 
+
  
 
  {/* ── HERO SECTION ── */}
@@ -420,16 +421,16 @@ const Home: React.FC = () => {
  <div className="absolute inset-0 bg-secondary/15 rounded-xl blur-3xl filter animate-pulse"></div>
  
  {/* Central Radar Ring */}
- <div className="absolute w-44 h-44 rounded-xl border border-primary/20 animate-ping" style={{ animationDuration: '4s' }} />
- <div className="absolute w-28 h-28 rounded-xl border border-primary/20 flex items-center justify-center bg-surface/80 backdrop-blur-md">
- <Search className="w-10 h-10 text-primary animate-float" />
+ <div className="absolute w-44 h-44 rounded-full border border-primary/20 animate-ping" style={{ animationDuration: '4s' }} />
+ <div className="absolute w-28 h-28 rounded-full border border-primary/20 flex items-center justify-center bg-surface/80 backdrop-blur-md animate-float">
+ <Search className="w-10 h-10 text-primary" />
  </div>
 
  {/* Floating object SVGs / Lucide items */}
  <motion.div 
  animate={{ y: [0, -10, 0], rotate: [0, 8, 0] }}
  transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
- className="absolute top-6 left-6 p-3 rounded-xl glass-card shadow-md text-primary"
+ className="absolute top-6 left-6 p-3 !rounded-full glass-card shadow-md text-primary"
  >
  <Key className="w-6 h-6 transition-all duration-300 transform hover:scale-110 hover:text-accent text-primary" />
  </motion.div>
@@ -437,7 +438,7 @@ const Home: React.FC = () => {
  <motion.div 
  animate={{ y: [0, 12, 0], rotate: [0, -6, 0] }}
  transition={{ duration: 4.8, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
- className="absolute top-10 right-6 p-3 rounded-xl glass-card shadow-md text-primary"
+ className="absolute top-10 right-6 p-3 !rounded-full glass-card shadow-md text-primary"
  >
  <Wallet className="w-6 h-6 transition-all duration-300 transform hover:scale-110 hover:text-accent text-primary" />
  </motion.div>
@@ -445,7 +446,7 @@ const Home: React.FC = () => {
  <motion.div 
  animate={{ y: [0, -15, 0], rotate: [0, 12, 0] }}
  transition={{ duration: 5.5, repeat: Infinity, ease: 'easeInOut', delay: 0.9 }}
- className="absolute bottom-12 left-10 p-3 rounded-xl glass-card shadow-md text-primary"
+ className="absolute bottom-12 left-10 p-3 !rounded-full glass-card shadow-md text-primary"
  >
  <Smartphone className="w-6 h-6 transition-all duration-300 transform hover:scale-110 hover:text-accent text-primary" />
  </motion.div>
@@ -453,7 +454,7 @@ const Home: React.FC = () => {
  <motion.div 
  animate={{ y: [0, 8, 0], rotate: [0, -10, 0] }}
  transition={{ duration: 4.2, repeat: Infinity, ease: 'easeInOut', delay: 1.3 }}
- className="absolute bottom-6 right-12 p-3 rounded-xl glass-card shadow-md text-primary"
+ className="absolute bottom-6 right-12 p-3 !rounded-full glass-card shadow-md text-primary"
  >
  <Backpack className="w-6 h-6 transition-all duration-300 transform hover:scale-110 hover:text-accent text-primary" />
  </motion.div>
@@ -1100,7 +1101,7 @@ const Home: React.FC = () => {
  )}
  </AnimatePresence>
 
- </div>
+ </AmbientGlowBg>
  );
 };
 
