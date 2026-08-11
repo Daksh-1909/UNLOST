@@ -122,6 +122,77 @@ const AnimatedRoutes: React.FC = () => {
           </ProtectedRoute>
         } />
         
+        {/* Fallback to home */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </AnimatePresence>
+  );
+};
+
+const AppContent: React.FC = () => {
+  const { user } = useAuth();
+
+  useEffect(() => {
+    // 1. Prevent context menu globally to block right-click saving
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+    };
+    document.addEventListener('contextmenu', handleContextMenu);
+
+    // 2. Prevent screenshot shortcuts and common developer tools
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        e.key === 'PrintScreen' ||
+        (e.ctrlKey && e.key === 's') || 
+        (e.ctrlKey && e.key === 'p') || 
+        e.key === 'F12' || 
+        (e.ctrlKey && e.shiftKey && e.key === 'I') || 
+        (e.ctrlKey && e.key === 'u') || 
+        (e.metaKey && e.shiftKey && (e.key === '3' || e.key === '4' || e.key === '5')) 
+      ) {
+        e.preventDefault();
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText('');
+        }
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    
+    // 3. Clear clipboard on PrintScreen keyup just in case
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'PrintScreen') {
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText('');
+        }
+      }
+    };
+    document.addEventListener('keyup', handleKeyUp);
+
+    // 4. Blur screen on visibility change (deters snipping tool)
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        document.body.style.filter = 'blur(10px)';
+      } else {
+        document.body.style.filter = 'none';
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('contextmenu', handleContextMenu);
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keyup', handleKeyUp);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.body.style.filter = 'none';
+    };
+  }, []);
+
+  return (
+    <Router>
+      <div className="min-h-screen bg-background text-primary flex flex-col relative overflow-hidden">
+        {/* Decorative background glow blobs */}
+        <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-primary/5 blur-[120px] pointer-events-none"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-secondary/5 blur-[120px] pointer-events-none"></div>
         
         {user && <Navbar />}
         <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 z-10">

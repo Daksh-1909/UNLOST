@@ -455,11 +455,11 @@ const SmiloWidget: React.FC = () => {
  if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
  };
  }, []);
- const [mood, setMood] = useState<'idle'|'thinking'|'happy'|'excited'>('thinking');
- const [msgIndex, setMsgIndex] = useState(0);
- const [showMsg, setShowMsg] = useState(false);
- const [isThinking, setIsThinking] = useState(true);
- const [thinkIdx, setThinkIdx] = useState(0);
+  const [mood, setMood] = useState<'idle'|'thinking'|'happy'|'excited'>('idle');
+  const [msgIndex, setMsgIndex] = useState(0);
+  const [showMsg, setShowMsg] = useState(false);
+  const [isThinking, setIsThinking] = useState(false);
+  const [thinkIdx, setThinkIdx] = useState(0);
  const [soundActive, setSoundActive] = useState(false);
  const [particles, setParticles] = useState<{id:number;angle:number;color:string;dist:number}[]>([]);
  const [clickCount, setClickCount] = useState(0);

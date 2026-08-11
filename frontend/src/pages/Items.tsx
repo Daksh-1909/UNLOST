@@ -140,7 +140,7 @@ const Items: React.FC = () => {
             placeholder="Search items by title, description..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="glass-input pl-10 w-full"
+            className="glass-input !pl-10 w-full"
           />
         </div>
 
@@ -149,7 +149,7 @@ const Items: React.FC = () => {
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="glass-input w-full appearance-none pr-8 cursor-pointer"
+            className="glass-input w-full appearance-none !pr-8 cursor-pointer"
           >
             <option value="">All Categories</option>
             {CATEGORIES.map((cat) => (
@@ -164,7 +164,7 @@ const Items: React.FC = () => {
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value)}
-            className="glass-input w-full appearance-none pr-8 cursor-pointer"
+            className="glass-input w-full appearance-none !pr-8 cursor-pointer"
           >
             <option value="">All Statuses</option>
             {STATUSES.map((st) => (

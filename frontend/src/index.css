@@ -78,6 +78,7 @@
 /* Custom minimal buttons */
 .btn-primary-custom {
   @apply bg-primary-gradient text-white rounded-xl transition-all duration-200 ease-out;
+  color: #ffffff !important;
 }
 .btn-primary-custom:hover {
   @apply scale-[1.02] brightness-110;
