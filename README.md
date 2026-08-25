@@ -36,7 +36,7 @@
 - **Frontend**: React 18, TypeScript, Vite, Tailwind CSS, Framer Motion, Recharts, GSAP
 - **Backend**: Node.js, Express.js, MongoDB (Mongoose), Passport.js, JWT
 - **AI Integration**: Google Gen AI SDK (`@google/genai`)
-- **Deployment & Hosting**: Netlify / Vercel (Frontend), Render (Backend)
+- **Deployment & Hosting**: Netlify (Frontend), Vercel (Backend)
 
 ---
 
