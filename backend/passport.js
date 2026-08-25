@@ -62,24 +62,30 @@ passport.use(new GoogleTokenStrategy({
   try {
     const { email, name, picture } = parsedToken.payload;
     
+    const adminEmail = process.env.ADMIN_EMAIL || 'dakshp860@gmail.com';
     let user = await User.findOne({ email });
     if (user) {
       if (picture && user.profilePicture !== picture) {
         user.profilePicture = picture;
+      }
+      if (email === adminEmail) {
+        user.is_admin = true;
+        user.role = 'admin';
       }
       user.lastLogin = new Date();
       await user.save();
       return done(null, user);
     } else {
       const username = name || email.split('@')[0];
+      const isAdmin = email === adminEmail;
       user = new User({
         username,
         email,
         auth_provider: 'google',
         google_id: googleId,
         profilePicture: picture,
-        role: 'user',
-        is_admin: false,
+        role: isAdmin ? 'admin' : 'user',
+        is_admin: isAdmin,
         lastLogin: new Date()
       });
       await user.save();
