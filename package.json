@@ -2,6 +2,16 @@
   "name": "unlost-workspace",
   "version": "1.0.0",
   "private": true,
+  "description": "UNLOST - Smart Lost and Found Management System",
+  "author": "Daksh (Daksh-1909)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Daksh-1909/UNLOST.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Daksh-1909/UNLOST/issues"
+  },
+  "homepage": "https://github.com/Daksh-1909/UNLOST#readme",
   "scripts": {
     "install:all": "npm --prefix frontend install && npm --prefix backend install",
     "dev:frontend": "npm --prefix frontend run dev",

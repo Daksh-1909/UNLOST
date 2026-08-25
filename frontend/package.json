@@ -3,6 +3,12 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "author": "Daksh (Daksh-1909)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Daksh-1909/UNLOST.git",
+    "directory": "frontend"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
