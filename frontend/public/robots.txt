@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://unlost-app.netlify.app/sitemap.xml
