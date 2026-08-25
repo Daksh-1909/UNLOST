@@ -3,6 +3,18 @@
   command = "npm run build"
   publish = "dist"
 
+[build.environment]
+  NODE_VERSION = "20"
+  VITE_GOOGLE_CLIENT_ID = "your-google-client-id.apps.googleusercontent.com"
+  # VITE_API_BASE_URL = "https://unlost-backend.onrender.com"
+
+# Redirect API calls to production backend server (uncomment and replace URL when backend is deployed)
+# [[redirects]]
+#   from = "/api/*"
+#   to = "https://unlost-backend.onrender.com/api/:splat"
+#   status = 200
+
+# SPA fallback routing for React Router
 [[redirects]]
   from = "/*"
   to = "/index.html"
