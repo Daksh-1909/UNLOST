@@ -3,6 +3,7 @@
 @tailwind utilities;
 
 :root {
+  color-scheme: light;
   --color-primary: 92 50 30;
   --color-secondary: 146 99 71;
   --color-accent: 201 160 122;
@@ -19,6 +20,7 @@
 }
 
 .dark {
+  color-scheme: dark;
   --color-primary: 168 128 255; /* Light Purple / Violet */
   --color-secondary: 255 77 109; /* Red */
   --color-accent: 255 210 63; /* Yellow */
@@ -37,6 +39,16 @@
 @layer base {
   body {
     @apply bg-background text-text font-sans min-h-screen antialiased transition-colors duration-200;
+  }
+
+  /* Dark mode form control overrides for mobile browsers */
+  select option {
+    @apply bg-surface text-text;
+  }
+  
+  .dark select option {
+    background-color: #121214 !important;
+    color: #f5f5fa !important;
   }
 
   /* Custom styled scrollbars */
@@ -68,13 +80,13 @@
 }
 
 .glass-input {
-  @apply bg-background/60 border border-primary/10 text-text rounded-xl px-4 py-3 transition-all duration-200 ease-out;
+  @apply bg-background/60 border border-primary/10 text-text rounded-xl px-4 py-3 transition-all duration-200 ease-out max-w-full;
 }
 .glass-input:focus {
   @apply outline-none border-secondary bg-surface/80;
 }
 .glass-input::placeholder {
-  @apply text-textSecondary/50;
+  @apply text-textSecondary/70;
 }
 
 /* Custom minimal buttons */
@@ -98,8 +110,6 @@
   background: linear-gradient(180deg, rgba(243, 231, 217, 0.6) 0%, rgba(230, 202, 171, 0) 100%) !important;
 }
 
-/* Removed Hardcoded Fallbacks for Theme Support */
-
 /* Float animations */
 @keyframes float {
   0% { transform: translateY(0px); }
@@ -122,21 +132,4 @@
 }
 .animate-pin-pulse {
   animation: pin-pulse 2s infinite ease-out;
-}
-
-/* Anti-theft styles */
-body {
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-}
-
-img {
-  -webkit-user-drag: none;
-  -khtml-user-drag: none;
-  -moz-user-drag: none;
-  -o-user-drag: none;
-  user-drag: none;
-  pointer-events: none;
 }
