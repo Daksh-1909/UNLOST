@@ -17,6 +17,9 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Trust proxy for Vercel/Netlify HTTPS reverse proxies
+app.set('trust proxy', 1);
+
 // Enable CORS
 app.use(cors({
   origin: true,
@@ -32,23 +35,31 @@ app.use(passport.initialize());
 // Serve static uploads
 app.use('/static', express.static(path.join(__dirname, 'static')));
 
-// Connect to MongoDB
+// Connect to MongoDB (cached for serverless)
 const mongoURI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/unlost';
-console.log(`Connecting to MongoDB...`);
 
-mongoose.connect(mongoURI)
-  .then(() => console.log('MongoDB connected successfully!'))
-  .catch((err) => {
+let isConnected = false;
+async function connectDB() {
+  if (isConnected || mongoose.connection.readyState >= 1) {
+    isConnected = true;
+    return;
+  }
+  try {
+    await mongoose.connect(mongoURI);
+    isConnected = true;
+    console.log('MongoDB connected successfully!');
+  } catch (err) {
     console.error('MongoDB connection error:', err);
-    process.exit(1);
-  });
-
-const sessionSecret = process.env.SECRET_KEY;
-if (process.env.NODE_ENV === 'production' && !sessionSecret) {
-  console.error('FATAL ERROR: SECRET_KEY is not defined in production.');
-  process.exit(1);
+  }
 }
-const finalSessionSecret = sessionSecret || 'unlost_session_secret_123';
+
+// Middleware to ensure DB connection per request
+app.use(async (req, res, next) => {
+  await connectDB();
+  next();
+});
+
+const finalSessionSecret = process.env.SECRET_KEY || process.env.JWT_SECRET_KEY || 'unlost_session_secret_123';
 
 // Session configuration
 app.use(session({
@@ -64,7 +75,7 @@ app.use(session({
     maxAge: 24 * 60 * 60 * 1000, // 1 day
     httpOnly: true,
     sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production'
+    secure: false
   }
 }));
 
@@ -80,8 +91,8 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start listening
-if (process.env.NODE_ENV !== 'production' || process.env.VERCEL !== '1') {
+// Start listening for local development
+if (!process.env.VERCEL) {
   app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
   });
