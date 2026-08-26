@@ -201,6 +201,13 @@ const Admin: React.FC = () => {
 
   const statCards = [
     { 
+      title: 'Contact Messages', 
+      value: data?.stats.unread_messages ? `${data.stats.unread_messages} Unread` : (data?.contact_messages?.length ?? 0), 
+      icon: MessageSquare, 
+      color: 'text-indigo-400 border-indigo-500/20 bg-indigo-500/5 hover:border-indigo-500/50',
+      tab: 'messages' as const
+    },
+    { 
       title: 'Active Items', 
       value: data?.stats.total_items ?? 0, 
       icon: Layers, 
@@ -237,6 +244,19 @@ const Admin: React.FC = () => {
       filter: 'Security Alert'
     },
   ];
+
+  // Filtering contact messages
+  const filteredMessages = (data?.contact_messages || []).filter(m => {
+    const matchesSearch = 
+      m.name.toLowerCase().includes(msgSearchQuery.toLowerCase()) ||
+      m.email.toLowerCase().includes(msgSearchQuery.toLowerCase()) ||
+      m.subject.toLowerCase().includes(msgSearchQuery.toLowerCase()) ||
+      m.message.toLowerCase().includes(msgSearchQuery.toLowerCase());
+
+    if (msgStatusFilter === 'unread') return matchesSearch && m.status === 'Unread';
+    if (msgStatusFilter === 'read') return matchesSearch && m.status === 'Read';
+    return matchesSearch;
+  });
 
   // Filtering users
   const filteredUsers = (data?.users || []).filter(u => {
@@ -280,7 +300,7 @@ const Admin: React.FC = () => {
             <Shield className="h-8 w-8 text-primary" />
             <span>Admin Control Panel</span>
           </h1>
-          <p className="text-sm text-textSecondary">Manage system operations, view global statistics, search registered users, and moderate reported items.</p>
+          <p className="text-sm text-textSecondary">Manage system operations, view global statistics, search registered users, read contact messages, and moderate reported items.</p>
         </div>
         <motion.button
           onClick={fetchAdminStats}
@@ -328,7 +348,7 @@ const Admin: React.FC = () => {
       {/* Stat grid widgets (CLICKABLE) */}
       <motion.div 
         variants={staggerContainer} initial="hidden" animate="visible"
-        className="grid grid-cols-2 md:grid-cols-5 gap-4"
+        className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4"
       >
         {statCards.map((card) => (
           <motion.div 
@@ -343,7 +363,7 @@ const Admin: React.FC = () => {
               <card.icon className="h-5 w-5 opacity-80 group-hover:scale-110 transition-transform" />
             </div>
             <div className="flex items-baseline justify-between">
-              <span className="text-3xl font-extrabold text-text tracking-tight">{card.value}</span>
+              <span className="text-2xl font-extrabold text-text tracking-tight">{card.value}</span>
               <span className="text-[11px] font-semibold text-primary underline opacity-80 group-hover:opacity-100 flex items-center gap-0.5">
                 View &rarr;
               </span>
@@ -356,6 +376,7 @@ const Admin: React.FC = () => {
       <div className="flex border-b border-white/5 gap-2 overflow-x-auto pb-px">
         {[
           { id: 'overview', label: 'Overview' },
+          { id: 'messages', label: `Contact Messages (${data?.stats.unread_messages ? `${data.stats.unread_messages} Unread` : (data?.contact_messages?.length ?? 0)})` },
           { id: 'users', label: `Registered Users (${data?.stats.total_users ?? 0})` },
           { id: 'items', label: 'Manage Items' },
           { id: 'trash', label: 'Trash (Recovery Center)' },
@@ -428,6 +449,163 @@ const Admin: React.FC = () => {
                   ))}
                 </div>
               </div>
+            </motion.div>
+          )}
+
+          {/* CONTACT MESSAGES TAB */}
+          {activeTab === 'messages' && (
+            <motion.div 
+              key="messages"
+              initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={TRANSITION_BASE}
+              className="space-y-6"
+            >
+              {/* Header and Controls */}
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-surface/50 p-4 rounded-xl border border-primary/10">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-textSecondary" />
+                  <input
+                    type="text"
+                    value={msgSearchQuery}
+                    onChange={(e) => { setMsgSearchQuery(e.target.value); setMsgPage(1); }}
+                    placeholder="Search contact messages by sender name, email, subject, or content..."
+                    className="glass-input pl-10 pr-10 w-full text-sm"
+                  />
+                  {msgSearchQuery && (
+                    <button 
+                      onClick={() => setMsgSearchQuery('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-textSecondary hover:text-text"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2 overflow-x-auto">
+                  <Filter className="h-4 w-4 text-textSecondary flex-shrink-0" />
+                  {(['all', 'unread', 'read'] as const).map((status) => (
+                    <button
+                      key={status}
+                      onClick={() => { setMsgStatusFilter(status); setMsgPage(1); }}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all whitespace-nowrap ${
+                        msgStatusFilter === status
+                          ? 'bg-primary text-white shadow-sm'
+                          : 'bg-surface text-textSecondary hover:text-text hover:bg-surface/80 border border-primary/10'
+                      }`}
+                    >
+                      {status === 'all' ? 'All Messages' : status}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Message Cards List */}
+              {filteredMessages.length === 0 ? (
+                <div className="text-center py-12 bg-surface/30 rounded-xl border border-primary/10">
+                  <MessageSquare className="h-10 w-10 text-textSecondary mx-auto mb-3 opacity-40" />
+                  <p className="text-text font-semibold text-base">No contact messages found</p>
+                  <p className="text-textSecondary text-xs mt-1">When users submit support requests via the Contact page, they will appear here.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {filteredMessages.slice((msgPage - 1) * itemsPerPage, msgPage * itemsPerPage).map((msg) => (
+                    <div 
+                      key={msg.id} 
+                      className={`p-5 rounded-xl border transition-all ${
+                        msg.status === 'Unread'
+                          ? 'bg-indigo-500/5 border-indigo-500/30 shadow-md'
+                          : 'bg-surface/60 border-primary/10'
+                      }`}
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/5">
+                        <div className="flex items-center gap-3">
+                          <div className={`h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm ${
+                            msg.status === 'Unread' ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30' : 'bg-primary/10 text-primary'
+                          }`}>
+                            {msg.name ? msg.name.charAt(0).toUpperCase() : 'U'}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-bold text-text text-sm">{msg.name}</h4>
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
+                                msg.status === 'Unread' ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30' : 'bg-surface text-textSecondary border border-white/10'
+                              }`}>
+                                {msg.status}
+                              </span>
+                            </div>
+                            <a href={`mailto:${msg.email}`} className="text-xs text-primary hover:underline flex items-center gap-1 mt-0.5">
+                              <Mail className="h-3 w-3" />
+                              <span>{msg.email}</span>
+                            </a>
+                          </div>
+                        </div>
+
+                        <span className="text-xs text-textMuted flex items-center gap-1">
+                          <Calendar className="h-3.5 w-3.5" />
+                          {formatDate(msg.date)}
+                        </span>
+                      </div>
+
+                      <div className="py-3 space-y-1.5">
+                        <h5 className="text-sm font-bold text-text flex items-center gap-2">
+                          <span className="text-textSecondary font-normal">Subject:</span>
+                          <span>{msg.subject}</span>
+                        </h5>
+                        <p className="text-xs text-textSecondary leading-relaxed whitespace-pre-wrap bg-surface/80 p-3 rounded-lg border border-white/5">
+                          {msg.message}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center justify-end gap-2 pt-2">
+                        {msg.status === 'Unread' && (
+                          <button
+                            onClick={() => handleMarkMessageRead(msg.id)}
+                            className="px-3 py-1.5 bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors"
+                          >
+                            <Check className="h-3.5 w-3.5" />
+                            <span>Mark as Read</span>
+                          </button>
+                        )}
+                        <a
+                          href={`mailto:${msg.email}?subject=Re: ${encodeURIComponent(msg.subject)}`}
+                          className="px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary/20 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors"
+                        >
+                          <Send className="h-3.5 w-3.5" />
+                          <span>Reply via Email</span>
+                        </a>
+                        <button
+                          onClick={() => handleDeleteMessage(msg.id)}
+                          className="px-3 py-1.5 bg-danger/10 text-danger hover:bg-danger/20 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors"
+                        >
+                          <Trash className="h-3.5 w-3.5" />
+                          <span>Delete</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+
+                  {filteredMessages.length > itemsPerPage && (
+                    <div className="flex justify-between items-center py-3 text-sm">
+                      <button 
+                        disabled={msgPage === 1}
+                        onClick={() => setMsgPage(p => p - 1)}
+                        className="px-3 py-1.5 bg-primary/10 text-primary rounded hover:bg-primary/20 disabled:opacity-50"
+                      >
+                        Previous
+                      </button>
+                      <span className="text-textSecondary">
+                        Page {msgPage} of {Math.ceil(filteredMessages.length / itemsPerPage)}
+                      </span>
+                      <button 
+                        disabled={msgPage >= Math.ceil(filteredMessages.length / itemsPerPage)}
+                        onClick={() => setMsgPage(p => p + 1)}
+                        className="px-3 py-1.5 bg-primary/10 text-primary rounded hover:bg-primary/20 disabled:opacity-50"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </motion.div>
           )}
 
