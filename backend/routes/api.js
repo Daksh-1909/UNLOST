@@ -239,8 +239,7 @@ router.post('/api/login', authRateLimiter, (req, res, next) => {
         sameSite: 'lax',
         maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
       });
-      user.lastLogin = new Date();
-      await user.save();
+      User.updateOne({ _id: user._id }, { $set: { lastLogin: new Date() } }).catch(err => console.error('Error updating lastLogin:', err));
 
       return res.status(200).json({
         success: true,

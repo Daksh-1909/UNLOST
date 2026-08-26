@@ -2,8 +2,6 @@ import 'dotenv/config';
 import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
-import session from 'express-session';
-import MongoStore from 'connect-mongo';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import cookieParser from 'cookie-parser';
@@ -49,49 +47,37 @@ app.use(passport.initialize());
 // Serve static uploads
 app.use('/static', express.static(path.join(__dirname, 'static')));
 
-// Connect to MongoDB (cached for serverless)
+// Connect to MongoDB (optimized connection caching for serverless)
 const mongoURI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/unlost';
 
-let isConnected = false;
+let cachedDbPromise = null;
 async function connectDB() {
-  if (isConnected || mongoose.connection.readyState >= 1) {
-    isConnected = true;
+  if (mongoose.connection.readyState >= 1) {
     return;
   }
-  try {
-    await mongoose.connect(mongoURI);
-    isConnected = true;
-    console.log('MongoDB connected successfully!');
-  } catch (err) {
-    console.error('MongoDB connection error:', err);
+  if (!cachedDbPromise) {
+    cachedDbPromise = mongoose.connect(mongoURI, {
+      maxPoolSize: 10,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000
+    }).catch(err => {
+      cachedDbPromise = null;
+      throw err;
+    });
   }
+  await cachedDbPromise;
 }
 
 // Middleware to ensure DB connection per request
 app.use(async (req, res, next) => {
-  await connectDB();
-  next();
-});
-
-const finalSessionSecret = process.env.SECRET_KEY || process.env.JWT_SECRET_KEY || 'unlost_session_secret_123';
-
-// Session configuration
-app.use(session({
-  secret: finalSessionSecret,
-  resave: false,
-  saveUninitialized: false,
-  store: MongoStore.create({
-    mongoUrl: mongoURI,
-    collectionName: 'sessions',
-    ttl: 24 * 60 * 60 // 1 day
-  }),
-  cookie: {
-    maxAge: 24 * 60 * 60 * 1000, // 1 day
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: false
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    console.error('MongoDB connection error:', err);
+    res.status(500).json({ success: false, message: 'Database connection failed.' });
   }
-}));
+});
 
 // Route handler
 app.use('/', apiRouter);
