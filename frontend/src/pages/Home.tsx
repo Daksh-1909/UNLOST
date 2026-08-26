@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { 
  Search, PlusCircle, Calendar, MapPin, Tag, ChevronRight, Eye, Bookmark, 
  Share2, Smartphone, Watch, Backpack, Key, Wallet, Map, 
- Activity, Clock, ChevronLeft, PhoneCall, 
+ Activity, ChevronLeft, PhoneCall, 
  Shield, X, AlertCircle, Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -917,39 +917,6 @@ const Home: React.FC = () => {
  })}
  </div>
  <p className="text-[10px] text-textSecondary text-center">Hover over custom markers to reveal reported items details.</p>
- </div>
-
- {/* Recent Activity Timeline panel */}
- <div className="glass-panel rounded-xl p-5 border border-text/15 space-y-4 bg-surface/20">
- <div className="flex items-center gap-2 pb-2 border-b border-primary/10">
- <Clock className="w-5 h-5 text-primary animate-pulse" />
- <h4 className="font-bold text-sm text-text">Recent Activity Timeline</h4>
- </div>
-
- {/* Vertical Timeline entries */}
- <div className="relative pl-6 space-y-6">
- 
- {/* Vertical border timeline bar line */}
- <div className="absolute left-2.5 top-2.5 bottom-2.5 w-0.5 bg-primary/10" />
- 
- {[
- { text: 'Wallet found near Cafeteria', date: '10 mins ago', type: 'found', dot: 'bg-emerald-500' },
- { text: 'Phone claimed successfully', date: '1 hr ago', type: 'returned', dot: 'bg-indigo-500' },
- { text: 'Keys reported lost near Parking', date: '3 hrs ago', type: 'lost', dot: 'bg-rose-500' },
- { text: 'Backpack returned by Alex', date: 'Yesterday', type: 'found', dot: 'bg-emerald-500' },
- { text: 'ID card matched with Sarah', date: '2 days ago', type: 'matched', dot: 'bg-purple-500' }
- ].map((act, idx) => (
- <div key={idx} className="relative text-xs space-y-1">
- 
- {/* Timeline Node Dot */}
- <div className={`absolute -left-6 top-1 w-2.5 h-2.5 rounded-xl border border-shade-5 ring-2 ring-shade-5/50 ${act.dot}`} />
- 
- <div className="font-semibold text-primary">{act.text}</div>
- <div className="text-[9px] text-textMuted font-medium">{act.date}</div>
- </div>
- ))}
-
- </div>
  </div>
 
  </aside>
