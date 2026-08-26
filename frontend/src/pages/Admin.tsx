@@ -94,18 +94,29 @@ const Admin: React.FC = () => {
   const [logsPage, setLogsPage] = useState(1);
   const [msgPage, setMsgPage] = useState(1);
   const itemsPerPage = 10;
+  const [refreshing, setRefreshing] = useState(false);
 
-  const fetchAdminStats = async () => {
+  const fetchAdminStats = async (isManual = false) => {
+    if (isManual) setRefreshing(true);
     try {
       const response = await fetch('/api/admin/stats');
       const resData = await response.json();
       if (response.ok && resData.success) {
         setData(resData);
+        if (isManual) {
+          setActionMessage({ type: 'success', text: 'Admin panel data refreshed successfully.' });
+        }
+      } else if (isManual) {
+        setActionMessage({ type: 'error', text: resData.message || 'Failed to refresh data.' });
       }
     } catch (error) {
       console.error('Failed to load admin stats:', error);
+      if (isManual) {
+        setActionMessage({ type: 'error', text: 'Server is currently unreachable.' });
+      }
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -397,14 +408,15 @@ const Admin: React.FC = () => {
           <p className="text-sm text-textSecondary">Manage system operations, view global statistics, search registered users, read contact messages, and moderate reported items.</p>
         </div>
         <motion.button
-          onClick={fetchAdminStats}
+          onClick={() => fetchAdminStats(true)}
+          disabled={refreshing}
           variants={tapHoverVariants}
           whileHover="hover"
           whileTap="tap"
-          className="self-start sm:self-center px-4 py-2 bg-surface hover:bg-surface/80 border border-primary/20 rounded-xl text-xs font-semibold text-text flex items-center gap-1.5 transition-all shadow"
+          className="self-start sm:self-center px-4 py-2 bg-surface hover:bg-surface/80 border border-primary/20 rounded-xl text-xs font-semibold text-text flex items-center gap-1.5 transition-all shadow disabled:opacity-50 cursor-pointer"
         >
-          <RefreshCw className="h-3.5 w-3.5" />
-          <span>Refresh</span>
+          <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin text-primary' : ''}`} />
+          <span>{refreshing ? 'Refreshing...' : 'Refresh'}</span>
         </motion.button>
       </motion.div>
 
