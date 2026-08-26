@@ -514,6 +514,24 @@ const SmiloWidget: React.FC = () => {
  setTimeout(() => setParticles([]), 900);
  }, []);
 
+ const getBotResponse = async (history: Message[], text: string): Promise<{ text: string; items?: Item[] }> => {
+  try {
+  const historyPayload = history.map(m => ({ sender: m.sender, text: m.text }));
+  const response = await fetch('/api/chat', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ message: text, history: historyPayload })
+  });
+  const data = await response.json();
+  if (response.ok && data.success && data.text) {
+  return { text: data.text, items: data.items };
+  }
+  } catch (error) {
+    console.error("Chat error:", error);
+  }
+  return { text: "Hi! I'm Smilo. Ask me about latest items, or check out the [Items](/items) and [Report](/report) pages!" };
+ };
+
  const handleClick = () => {
  setClickCount(c => c + 1);
  playChime('happy');
@@ -535,27 +553,6 @@ const SmiloWidget: React.FC = () => {
  setIsThinking(true); 
  }, 2200);
  setTimeout(() => setShowMsg(false), 4000);
- };
-
- const getBotResponse = async (history: Message[], text: string): Promise<{ text: string; items?: Item[] }> => {
- try {
- const historyPayload = history.map(m => ({ sender: m.sender, text: m.text }));
- const response = await fetch('/api/chat', {
- method: 'POST',
- headers: { 'Content-Type': 'application/json' },
- body: JSON.stringify({ message: text, history: historyPayload })
- });
- const data = await response.json();
- if (response.ok && data.success) {
- return { text: data.text, items: data.items };
- } else {
- console.error("Gemini API Error:", data.message);
- return { text:"Sorry, my AI brain circuits are a bit scrambled right now! Please try again." };
- }
- } catch (error) {
- console.error("Network Error:", error);
- return { text:"I'm having trouble connecting to my central servers. Please check your connection." };
- }
  };
 
  const handleSendMessage = async (e?: React.FormEvent) => {

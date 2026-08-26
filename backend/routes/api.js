@@ -429,8 +429,6 @@ router.post('/api/chat', async (req, res) => {
   }
 
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-    
     const recentItems = await Item.find({ status: { $ne: 'Archived' } }).sort({ date: -1 }).limit(10);
     const itemsContext = recentItems.map(i => `- ID: ${i._id}, Title: ${i.title}, Category: ${i.category}, Status: ${i.status}, Location: ${i.location}`).join('\n');
 
@@ -450,35 +448,68 @@ ${itemsContext}`;
             parts: [{ text: msg.text }]
         }));
         
-        // Gemini API requires the first message in history to be from the user.
-        // If the first message is from the model (e.g., initial greeting), remove it.
         while (contents.length > 0 && contents[0].role === 'model') {
             contents.shift();
         }
         
-        // If contents is empty after filtering, just use the message
         if (contents.length === 0 && message) {
             contents = [{ role: 'user', parts: [{ text: message }] }];
         } else if (contents.length === 0) {
             contents = [{ role: 'user', parts: [{ text: "Hello" }] }];
         }
     } else {
-        contents = [{ role: 'user', parts: [{ text: message }] }];
+        contents = [{ role: 'user', parts: [{ text: message || "Hello" }] }];
     }
 
-    const response = await ai.models.generateContent({
-        model: 'gemini-flash-latest',
-        contents: contents,
-        config: {
-            systemInstruction: systemPrompt,
-            temperature: 0.7,
-        }
-    });
+    try {
+      if (process.env.GEMINI_API_KEY && !process.env.GEMINI_API_KEY.startsWith('AQ.')) {
+        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: contents,
+            config: {
+                systemInstruction: systemPrompt,
+                temperature: 0.7,
+            }
+        });
 
-    res.status(200).json({ success: true, text: response.text });
+        if (response && response.text) {
+          return res.status(200).json({ success: true, text: response.text });
+        }
+      }
+    } catch (aiErr) {
+      console.warn('Gemini API call skipped or failed, using smart fallback engine:', aiErr.message || aiErr);
+    }
+
+    // Smart Fallback Engine (when Gemini API is unavailable or rate limited)
+    const queryLower = (message || '').toLowerCase();
+    let replyText = '';
+
+    if (queryLower.includes('latest') || queryLower.includes('recent') || queryLower.includes('show') || queryLower.includes('list') || queryLower.includes('item')) {
+      if (recentItems.length > 0) {
+        replyText = `Here are the latest items reported on UNLOST:\n\n` + 
+          recentItems.map(i => `• **${i.title}** (${i.category} - ${i.status} at ${i.location})`).join('\n') +
+          `\n\nBrowse all listings on the [Items](/items) page or post a new item on the [Report Item](/report) page!`;
+      } else {
+        replyText = `There are currently no active items reported on UNLOST. You can be the first to report an item on the [Report Item](/report) page!`;
+      }
+    } else if (queryLower.includes('report') || queryLower.includes('lost') || queryLower.includes('found') || queryLower.includes('add') || queryLower.includes('submit')) {
+      replyText = `To report a lost or found item, head over to the [Report Item](/report) page. Fill in the title, description, category, location, and contact details, then submit your listing!`;
+    } else if (queryLower.includes('claim') || queryLower.includes('verify') || queryLower.includes('owner')) {
+      replyText = `To claim an item, locate the item on the [Items](/items) page and click **Claim Item**. You will be asked to verify a security question set by the reporter.`;
+    } else if (queryLower.includes('contact') || queryLower.includes('help') || queryLower.includes('admin') || queryLower.includes('support')) {
+      replyText = `You can reach out to our administration team anytime via the [Contact](/contact) page!`;
+    } else {
+      replyText = `Hi there! I'm Smilo, your UNLOST assistant. Ask me to show latest items, guide you through reporting lost items, or assist with portal features. Check out the [Items](/items) page to browse all active listings!`;
+    }
+
+    return res.status(200).json({ success: true, text: replyText });
   } catch (error) {
-    console.error('Gemini API Error:', error);
-    res.status(500).json({ success: false, message: 'Failed to communicate with AI.' });
+    console.error('Chat endpoint error:', error);
+    res.status(200).json({ 
+      success: true, 
+      text: "Hi! I'm Smilo. You can search active listings on the [Items](/items) page or submit a new report on the [Report Item](/report) page!" 
+    });
   }
 });
 
