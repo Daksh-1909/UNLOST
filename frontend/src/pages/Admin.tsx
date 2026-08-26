@@ -1,476 +1,786 @@
 import React, { useEffect, useState } from 'react';
-import { Shield, Users, Layers, AlertTriangle, Archive, RefreshCw, Trash2, Clock, CheckCircle2, AlertCircle, Calendar } from 'lucide-react';
+import { 
+  Shield, Users, Layers, AlertTriangle, Archive, RefreshCw, 
+  Trash2, Clock, CheckCircle2, AlertCircle, Calendar, Search, X, 
+  ShieldCheck, UserCheck, Filter 
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { pageVariants, staggerContainer, staggerItem, tapHoverVariants, TRANSITION_BASE } from '../utils/animations';
 
 interface AdminStats {
- total_items: number;
- total_users: number;
- archived_items: number;
- new_today: number;
- security_alerts: number;
+  total_items: number;
+  total_users: number;
+  archived_items: number;
+  new_today: number;
+  security_alerts: number;
 }
 
 interface RecentItem {
- id: string;
- title: string;
- category: string;
- status: string;
- location: string;
- date: string;
- reporter_email: string;
+  id: string;
+  title: string;
+  category: string;
+  status: string;
+  location: string;
+  date: string;
+  reporter_email: string;
 }
 
 interface TrashItem {
- id: string;
- title: string;
- previous_status: string;
- deleted_at: string;
- days_deleted: number | null;
+  id: string;
+  title: string;
+  previous_status: string;
+  deleted_at: string;
+  days_deleted: number | null;
 }
 
 interface AdminLog {
- action: string;
- item_title: string;
- timestamp: string;
- user: string;
- item_id: string;
+  action: string;
+  item_title: string;
+  timestamp: string;
+  user: string;
+  item_id: string;
+}
+
+interface UserItem {
+  id: string;
+  username: string;
+  email: string;
+  role: string;
+  is_admin: boolean;
+  auth_provider?: string;
+  profilePicture?: string | null;
+  lastLogin?: string | null;
+  date_created?: string | null;
 }
 
 interface AdminData {
- stats: AdminStats;
- recent_items: RecentItem[];
- trash_items: TrashItem[];
- logs: AdminLog[];
+  stats: AdminStats;
+  recent_items: RecentItem[];
+  trash_items: TrashItem[];
+  logs: AdminLog[];
+  users: UserItem[];
 }
 
 const Admin: React.FC = () => {
- const [data, setData] = useState<AdminData | null>(null);
- const [loading, setLoading] = useState(true);
- const [activeTab, setActiveTab] = useState<'overview' | 'items' | 'trash' | 'logs'>('overview');
- const [actionMessage, setActionMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
- const [itemsPage, setItemsPage] = useState(1);
- const [logsPage, setLogsPage] = useState(1);
- const itemsPerPage = 10;
+  const [data, setData] = useState<AdminData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'items' | 'trash' | 'logs'>('overview');
+  const [actionMessage, setActionMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
- const fetchAdminStats = async () => {
- try {
- const response = await fetch('/api/admin/stats');
- const resData = await response.json();
- if (response.ok && resData.success) {
- setData(resData);
- }
- } catch (error) {
- console.error('Failed to load admin stats:', error);
- } finally {
- setLoading(false);
- }
- };
+  // Search & Filter state
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [userRoleFilter, setUserRoleFilter] = useState<'all' | 'admin' | 'user'>('all');
+  const [itemSearchQuery, setItemSearchQuery] = useState('');
+  const [logSearchQuery, setLogSearchQuery] = useState('');
 
- useEffect(() => {
- fetchAdminStats();
- }, []);
+  // Pagination state
+  const [usersPage, setUsersPage] = useState(1);
+  const [itemsPage, setItemsPage] = useState(1);
+  const [logsPage, setLogsPage] = useState(1);
+  const itemsPerPage = 10;
 
- const handleDeleteItem = async (itemId: string) => {
- if (!window.confirm('Are you sure you want to move this item to recoverable trash?')) return;
- try {
- const response = await fetch(`/api/admin/delete/${itemId}`, { method: 'POST' });
- const resData = await response.json();
- if (response.ok && resData.success) {
- setActionMessage({ type: 'success', text: resData.message });
- fetchAdminStats();
- } else {
- setActionMessage({ type: 'error', text: resData.message || 'Failed to archive item.' });
- }
- } catch (error) {
- console.error('Delete item error:', error);
- setActionMessage({ type: 'error', text: 'Server is currently unreachable.' });
- }
- };
+  const fetchAdminStats = async () => {
+    try {
+      const response = await fetch('/api/admin/stats');
+      const resData = await response.json();
+      if (response.ok && resData.success) {
+        setData(resData);
+      }
+    } catch (error) {
+      console.error('Failed to load admin stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
- const handleRecoverItem = async (itemId: string) => {
- try {
- const response = await fetch(`/api/admin/recover/${itemId}`, { method: 'POST' });
- const resData = await response.json();
- if (response.ok && resData.success) {
- setActionMessage({ type: 'success', text: resData.message });
- fetchAdminStats();
- } else {
- setActionMessage({ type: 'error', text: resData.message || 'Failed to recover item.' });
- }
- } catch (error) {
- console.error('Recover item error:', error);
- setActionMessage({ type: 'error', text: 'Server is currently unreachable.' });
- }
- };
+  useEffect(() => {
+    fetchAdminStats();
+  }, []);
 
- const formatDate = (dateStr: string | null) => {
- if (!dateStr) return 'N/A';
- const date = new Date(dateStr);
- return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
- };
+  const handleDeleteItem = async (itemId: string) => {
+    if (!window.confirm('Are you sure you want to move this item to recoverable trash?')) return;
+    try {
+      const response = await fetch(`/api/admin/delete/${itemId}`, { method: 'POST' });
+      const resData = await response.json();
+      if (response.ok && resData.success) {
+        setActionMessage({ type: 'success', text: resData.message });
+        fetchAdminStats();
+      } else {
+        setActionMessage({ type: 'error', text: resData.message || 'Failed to archive item.' });
+      }
+    } catch (error) {
+      console.error('Delete item error:', error);
+      setActionMessage({ type: 'error', text: 'Server is currently unreachable.' });
+    }
+  };
 
- if (loading) {
- return (
- <div className="flex h-[60vh] items-center justify-center">
- <div className="relative flex items-center justify-center">
- <div className="h-12 w-12 animate-spin rounded-xl border-4 border-primary/25 border-t-primary"></div>
- <span className="absolute text-xs font-semibold text-primary">UL</span>
- </div>
- </div>
- );
- }
+  const handleRecoverItem = async (itemId: string) => {
+    try {
+      const response = await fetch(`/api/admin/recover/${itemId}`, { method: 'POST' });
+      const resData = await response.json();
+      if (response.ok && resData.success) {
+        setActionMessage({ type: 'success', text: resData.message });
+        fetchAdminStats();
+      } else {
+        setActionMessage({ type: 'error', text: resData.message || 'Failed to recover item.' });
+      }
+    } catch (error) {
+      console.error('Recover item error:', error);
+      setActionMessage({ type: 'error', text: 'Server is currently unreachable.' });
+    }
+  };
 
- const statCards = [
- { title: 'Active Items', value: data?.stats.total_items ?? 0, icon: Layers, color: 'text-primary border-primary/10 bg-primary/5' },
- { title: 'Registered Users', value: data?.stats.total_users ?? 0, icon: Users, color: 'text-success border-success/10 bg-success/5' },
- { title: 'Archived Trash', value: data?.stats.archived_items ?? 0, icon: Archive, color: 'text-textSecondary border-textSecondary/10 bg-textSecondary/5' },
- { title:"Today's Activities", value: data?.stats.new_today ?? 0, icon: Clock, color: 'text-accent border-accent/10 bg-accent/5' },
- { title: 'Security Alerts', value: data?.stats.security_alerts ?? 0, icon: AlertTriangle, color: 'text-danger border-danger/10 bg-danger/5' },
- ];
+  const formatDate = (dateStr?: string | null) => {
+    if (!dateStr) return 'N/A';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
 
- return (
- <motion.div 
-  variants={pageVariants}
-  initial="initial"
-  animate="animate"
-  exit="exit"
-  className="space-y-8"
-  >
- {/* Title */}
- <motion.div variants={staggerItem} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-white/5 pb-4">
- <div>
- <h1 className="text-3xl font-extrabold font-heading text-text tracking-tight flex items-center gap-2">
- <Shield className="h-8 w-8 text-primary" />
- <span>Admin Control Panel</span>
- </h1>
- <p className="text-sm text-textSecondary">Manage system operations, view global statistics, and moderate reported items.</p>
- </div>
- <motion.button
- onClick={fetchAdminStats}
- variants={tapHoverVariants}
- whileHover="hover"
- whileTap="tap"
- className="self-start sm:self-center px-4 py-2 bg-surface hover:bg-surface/80 border border-primary/20 rounded-xl text-xs font-semibold text-text flex items-center gap-1.5 transition-all shadow"
- >
- <RefreshCw className="h-3.5 w-3.5" />
- <span>Refresh</span>
- </motion.button>
- </motion.div>
+  const handleCardClick = (tab: 'overview' | 'users' | 'items' | 'trash' | 'logs', filterText?: string) => {
+    setActiveTab(tab);
+    if (filterText) {
+      setLogSearchQuery(filterText);
+    } else {
+      setLogSearchQuery('');
+    }
+  };
 
- {/* Action alerts */}
- <AnimatePresence>
- {actionMessage && (
- <motion.div
- initial={{ opacity: 0, y: -10 }}
- animate={{ opacity: 1, y: 0 }}
- exit={{ opacity: 0, y: -10 }}
- className={`p-4 rounded-xl border text-sm flex items-center justify-between gap-3 ${
- actionMessage.type === 'success'
- ? 'bg-success/10 border-success/20 text-success'
- : 'bg-danger/10 border-danger/20 text-danger'
- }`}
- >
- <div className="flex items-center gap-2">
- {actionMessage.type === 'success' ? (
- <CheckCircle2 className="h-5 w-5 text-success flex-shrink-0" />
- ) : (
- <AlertCircle className="h-5 w-5 text-danger flex-shrink-0" />
- )}
- <span>{actionMessage.text}</span>
- </div>
- <button
- onClick={() => setActionMessage(null)}
- className="text-xs font-semibold underline hover:text-text"
- >
- Dismiss
- </button>
- </motion.div>
- )}
- </AnimatePresence>
+  if (loading) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <div className="relative flex items-center justify-center">
+          <div className="h-12 w-12 animate-spin rounded-xl border-4 border-primary/25 border-t-primary"></div>
+          <span className="absolute text-xs font-semibold text-primary">UL</span>
+        </div>
+      </div>
+    );
+  }
 
- {/* Stat grid widgets */}
- <motion.div 
-  variants={staggerContainer} initial="hidden" animate="visible"
-  className="grid grid-cols-2 md:grid-cols-5 gap-4"
-  >
- {statCards.map((card) => (
- <motion.div variants={staggerItem} key={card.title} className={`glass-panel rounded-xl p-5 border flex flex-col justify-between space-y-3 ${card.color}`}>
- <div className="flex items-center justify-between">
- <span className="text-xs font-bold uppercase tracking-wider text-textSecondary">{card.title}</span>
- <card.icon className="h-5 w-5 opacity-80" />
- </div>
- <span className="text-3xl font-extrabold text-text tracking-tight">{card.value}</span>
- </motion.div>
- ))}
- </motion.div>
+  const statCards = [
+    { 
+      title: 'Active Items', 
+      value: data?.stats.total_items ?? 0, 
+      icon: Layers, 
+      color: 'text-primary border-primary/20 bg-primary/5 hover:border-primary/50',
+      tab: 'items' as const
+    },
+    { 
+      title: 'Registered Users', 
+      value: data?.stats.total_users ?? 0, 
+      icon: Users, 
+      color: 'text-success border-success/20 bg-success/5 hover:border-success/50',
+      tab: 'users' as const
+    },
+    { 
+      title: 'Archived Trash', 
+      value: data?.stats.archived_items ?? 0, 
+      icon: Archive, 
+      color: 'text-textSecondary border-textSecondary/20 bg-textSecondary/5 hover:border-textSecondary/50',
+      tab: 'trash' as const
+    },
+    { 
+      title: "Today's Activities", 
+      value: data?.stats.new_today ?? 0, 
+      icon: Clock, 
+      color: 'text-accent border-accent/20 bg-accent/5 hover:border-accent/50',
+      tab: 'logs' as const
+    },
+    { 
+      title: 'Security Alerts', 
+      value: data?.stats.security_alerts ?? 0, 
+      icon: AlertTriangle, 
+      color: 'text-danger border-danger/20 bg-danger/5 hover:border-danger/50',
+      tab: 'logs' as const,
+      filter: 'Security Alert'
+    },
+  ];
 
- {/* Tabs */}
- <div className="flex border-b border-white/5 gap-2 overflow-x-auto pb-px">
- {[
- { id: 'overview', label: 'Overview' },
- { id: 'items', label: 'Manage Items' },
- { id: 'trash', label: 'Trash (Recovery Center)' },
- { id: 'logs', label: 'Audit Logs' },
- ].map((tab) => (
- <button
- key={tab.id}
- onClick={() => setActiveTab(tab.id as any)}
- className={`px-4 py-2.5 text-sm font-semibold border-b-2 -mb-px transition-all flex-shrink-0 ${
- activeTab === tab.id
- ? 'border-primary text-primary'
- : 'border-transparent text-textSecondary hover:text-text'
- }`}
- >
- {tab.label}
- </button>
- ))}
- </div>
+  // Filtering users
+  const filteredUsers = (data?.users || []).filter(u => {
+    const matchesSearch = 
+      u.username.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
+      u.email.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
+      (u.role && u.role.toLowerCase().includes(userSearchQuery.toLowerCase()));
+    
+    if (userRoleFilter === 'admin') return matchesSearch && (u.is_admin || u.role === 'admin');
+    if (userRoleFilter === 'user') return matchesSearch && (!u.is_admin && u.role !== 'admin');
+    return matchesSearch;
+  });
 
- {/* Content panel */}
- <div className="glass-panel rounded-xl p-6 relative overflow-hidden min-h-[400px]">
- <AnimatePresence mode="wait">
- {/* OVERVIEW TAB */}
- {activeTab === 'overview' && (
- <motion.div 
-  key="overview"
-  initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={TRANSITION_BASE}
-  className="grid grid-cols-1 lg:grid-cols-2 gap-8"
-  >
- <div className="space-y-4">
- <h3 className="text-base font-bold text-text uppercase tracking-wider font-heading">Recent Listings</h3>
- <div className="space-y-3">
- {data?.recent_items.slice(0, 5).map((item) => (
- <div key={item.id} className="p-4 rounded-xl bg-surface border border-primary/10 shadow-sm flex items-center justify-between gap-4">
- <div>
- <h4 className="text-sm font-bold text-text">{item.title}</h4>
- <p className="text-xs text-textSecondary mt-0.5">{item.category} • {item.location}</p>
- </div>
- <span className={`px-2 py-0.5 rounded-xl text-[10px] font-extrabold uppercase ${
- item.status === 'Lost' ? 'bg-danger/10 text-danger' : 'bg-success/10 text-success'
- }`}>
- {item.status}
- </span>
- </div>
- ))}
- </div>
- </div>
+  // Filtering items
+  const filteredItems = (data?.recent_items || []).filter(i => 
+    i.title.toLowerCase().includes(itemSearchQuery.toLowerCase()) ||
+    i.category.toLowerCase().includes(itemSearchQuery.toLowerCase()) ||
+    i.location.toLowerCase().includes(itemSearchQuery.toLowerCase()) ||
+    i.reporter_email.toLowerCase().includes(itemSearchQuery.toLowerCase())
+  );
 
- <div className="space-y-4">
- <h3 className="text-base font-bold text-text uppercase tracking-wider font-heading">Security Audit Preview</h3>
- <div className="space-y-3">
- {data?.logs.slice(0, 5).map((log, i) => (
- <div key={i} className="p-4 rounded-xl bg-surface border border-primary/10 shadow-sm flex flex-col gap-1.5 text-xs">
- <div className="flex items-center justify-between text-textSecondary">
- <span className="font-semibold">{log.user}</span>
- <span>{formatDate(log.timestamp)}</span>
- </div>
- <p className={`font-medium ${
- log.action.includes('Security Alert') ? 'text-danger' : 'text-text'
- }`}>
- {log.action} {log.item_title && `• ${log.item_title}`}
- </p>
- </div>
- ))}
- </div>
- </div>
- </motion.div>
- )}
+  // Filtering logs
+  const filteredLogs = (data?.logs || []).filter(l => 
+    l.action.toLowerCase().includes(logSearchQuery.toLowerCase()) ||
+    l.user.toLowerCase().includes(logSearchQuery.toLowerCase()) ||
+    l.item_title.toLowerCase().includes(logSearchQuery.toLowerCase())
+  );
 
- {/* ITEMS TAB */}
- {activeTab === 'items' && (
- <motion.div 
-  key="items"
-  initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={TRANSITION_BASE}
-  className="overflow-x-auto -mx-6"
-  >
- <div className="inline-block min-w-full align-middle px-6">
- {data?.recent_items.length === 0 ? (
- <p className="text-center py-6 text-textSecondary text-sm">No items in the system.</p>
- ) : (
- <table className="min-w-full divide-y divide-primary/10 text-sm text-left">
- <thead>
- <tr className="text-textSecondary font-semibold text-xs uppercase tracking-wider border-b border-primary/10">
- <th className="py-3 px-4">Item Details</th>
- <th className="py-3 px-4">Category</th>
- <th className="py-3 px-4">Location</th>
- <th className="py-3 px-4">Reporter</th>
- <th className="py-3 px-4">Listed Date</th>
- <th className="py-3 px-4 text-right">Actions</th>
- </tr>
- </thead>
- <tbody className="divide-y divide-primary/10">
- {data?.recent_items.slice((itemsPage - 1) * itemsPerPage, itemsPage * itemsPerPage).map((item) => (
- <tr key={item.id} className="hover:bg-surface/80 transition-all text-text">
- <td className="py-3.5 px-4 font-bold max-w-[200px] truncate">{item.title}</td>
- <td className="py-3.5 px-4">{item.category}</td>
- <td className="py-3.5 px-4">{item.location}</td>
- <td className="py-3.5 px-4 truncate max-w-[150px]">{item.reporter_email}</td>
- <td className="py-3.5 px-4">{formatDate(item.date)}</td>
- <td className="py-3.5 px-4 text-right">
- <button
- onClick={() => handleDeleteItem(item.id)}
- className="p-1.5 rounded-lg text-textMuted hover:text-danger hover:bg-danger/5 transition-all"
- title="Soft Delete (Move to Trash)"
- >
- <Trash2 className="h-4 w-4" />
- </button>
- </td>
- </tr>
- ))}
- </tbody>
- </table>
- )}
- {data && data.recent_items.length > itemsPerPage && (
- <div className="flex justify-between items-center py-4 px-6 text-sm">
- <button 
- disabled={itemsPage === 1}
- onClick={() => setItemsPage(p => p - 1)}
- className="px-3 py-1.5 bg-primary/10 text-primary rounded hover:bg-primary/20 disabled:opacity-50"
- >Previous</button>
- <span className="text-textSecondary">Page {itemsPage} of {Math.ceil(data.recent_items.length / itemsPerPage)}</span>
- <button 
- disabled={itemsPage >= Math.ceil(data.recent_items.length / itemsPerPage)}
- onClick={() => setItemsPage(p => p + 1)}
- className="px-3 py-1.5 bg-primary/10 text-primary rounded hover:bg-primary/20 disabled:opacity-50"
- >Next</button>
- </div>
- )}
- </div>
- </motion.div>
- )}
+  return (
+    <motion.div 
+      variants={pageVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      className="space-y-8"
+    >
+      {/* Title */}
+      <motion.div variants={staggerItem} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-white/5 pb-4">
+        <div>
+          <h1 className="text-3xl font-extrabold font-heading text-text tracking-tight flex items-center gap-2">
+            <Shield className="h-8 w-8 text-primary" />
+            <span>Admin Control Panel</span>
+          </h1>
+          <p className="text-sm text-textSecondary">Manage system operations, view global statistics, search registered users, and moderate reported items.</p>
+        </div>
+        <motion.button
+          onClick={fetchAdminStats}
+          variants={tapHoverVariants}
+          whileHover="hover"
+          whileTap="tap"
+          className="self-start sm:self-center px-4 py-2 bg-surface hover:bg-surface/80 border border-primary/20 rounded-xl text-xs font-semibold text-text flex items-center gap-1.5 transition-all shadow"
+        >
+          <RefreshCw className="h-3.5 w-3.5" />
+          <span>Refresh</span>
+        </motion.button>
+      </motion.div>
 
- {/* TRASH TAB */}
- {activeTab === 'trash' && (
- <motion.div 
-  key="trash"
-  initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={TRANSITION_BASE}
-  className="overflow-x-auto -mx-6"
-  >
- <div className="inline-block min-w-full align-middle px-6">
- {data?.trash_items.length === 0 ? (
- <div className="text-center py-8 text-textSecondary text-sm">
- <Archive className="h-10 w-10 text-textMuted mx-auto mb-2" />
- <p>Trash is empty. Soft deleted listings are saved here.</p>
- </div>
- ) : (
- <div className="space-y-4">
- <div className="p-4 bg-primary/5 border border-primary/10 text-primary text-xs rounded-xl flex items-start gap-2.5">
- <AlertCircle className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
- <span>Soft deleted items are retained here for up to 10 days before automatic permanent collection purge.</span>
- </div>
+      {/* Action alerts */}
+      <AnimatePresence>
+        {actionMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className={`p-4 rounded-xl border text-sm flex items-center justify-between gap-3 ${
+              actionMessage.type === 'success'
+                ? 'bg-success/10 border-success/20 text-success'
+                : 'bg-danger/10 border-danger/20 text-danger'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              {actionMessage.type === 'success' ? (
+                <CheckCircle2 className="h-5 w-5 text-success flex-shrink-0" />
+              ) : (
+                <AlertCircle className="h-5 w-5 text-danger flex-shrink-0" />
+              )}
+              <span>{actionMessage.text}</span>
+            </div>
+            <button
+              onClick={() => setActionMessage(null)}
+              className="text-xs font-semibold underline hover:text-text"
+            >
+              Dismiss
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
- <table className="min-w-full divide-y divide-primary/10 text-sm text-left">
- <thead>
- <tr className="text-textSecondary font-semibold text-xs uppercase tracking-wider border-b border-primary/10">
- <th className="py-3 px-4">Item Title</th>
- <th className="py-3 px-4">Previous Status</th>
- <th className="py-3 px-4">Deleted On</th>
- <th className="py-3 px-4">Days in Trash</th>
- <th className="py-3 px-4 text-right">Recovery Actions</th>
- </tr>
- </thead>
- <tbody className="divide-y divide-primary/10">
- {data?.trash_items.map((item) => (
- <tr key={item.id} className="hover:bg-surface/80 transition-all text-text">
- <td className="py-3.5 px-4 font-bold">{item.title}</td>
- <td className="py-3.5 px-4">
- <span className="px-2 py-0.5 bg-primary/10 text-textSecondary rounded-xl text-xs">
- {item.previous_status}
- </span>
- </td>
- <td className="py-3.5 px-4">{formatDate(item.deleted_at)}</td>
- <td className="py-3.5 px-4 font-semibold">
- {item.days_deleted !== null ? (
- <span className={item.days_deleted >= 9 ? 'text-danger' : 'text-textSecondary'}>
- {item.days_deleted} / 10 days
- </span>
- ) : (
- 'Unknown'
- )}
- </td>
- <td className="py-3.5 px-4 text-right">
- <button
- onClick={() => handleRecoverItem(item.id)}
- className="px-3 py-1.5 bg-primary/10 border border-primary/20 text-primary hover:bg-primary hover:text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm ml-auto"
- >
- <Archive className="h-3.5 w-3.5" />
- <span>Recover Item</span>
- </button>
- </td>
- </tr>
- ))}
- </tbody>
- </table>
- </div>
- )}
- </div>
- </motion.div>
- )}
+      {/* Stat grid widgets (CLICKABLE) */}
+      <motion.div 
+        variants={staggerContainer} initial="hidden" animate="visible"
+        className="grid grid-cols-2 md:grid-cols-5 gap-4"
+      >
+        {statCards.map((card) => (
+          <motion.div 
+            variants={staggerItem} 
+            key={card.title} 
+            onClick={() => handleCardClick(card.tab, card.filter)}
+            className={`glass-panel rounded-xl p-5 border flex flex-col justify-between space-y-3 cursor-pointer transition-all hover:scale-[1.03] shadow-sm hover:shadow-lg group relative ${card.color}`}
+            title={`Click to view ${card.title}`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-textSecondary">{card.title}</span>
+              <card.icon className="h-5 w-5 opacity-80 group-hover:scale-110 transition-transform" />
+            </div>
+            <div className="flex items-baseline justify-between">
+              <span className="text-3xl font-extrabold text-text tracking-tight">{card.value}</span>
+              <span className="text-[11px] font-semibold text-primary underline opacity-80 group-hover:opacity-100 flex items-center gap-0.5">
+                View &rarr;
+              </span>
+            </div>
+          </motion.div>
+        ))}
+      </motion.div>
 
- {/* LOGS TAB */}
- {activeTab === 'logs' && (
- <motion.div 
-  key="logs"
-  initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={TRANSITION_BASE}
-  className="overflow-x-auto -mx-6"
-  >
- <div className="inline-block min-w-full align-middle px-6">
- {data?.logs.length === 0 ? (
- <p className="text-center py-6 text-textSecondary text-sm">No audit logs reported.</p>
- ) : (
- <table className="min-w-full divide-y divide-primary/10 text-sm text-left">
- <thead>
- <tr className="text-textSecondary font-semibold text-xs uppercase tracking-wider border-b border-primary/10">
- <th className="py-3 px-4">Timestamp</th>
- <th className="py-3 px-4">Action Event</th>
- <th className="py-3 px-4">Entity reference</th>
- <th className="py-3 px-4">Operator</th>
- </tr>
- </thead>
- <tbody className="divide-y divide-primary/10">
- {data?.logs.slice((logsPage - 1) * itemsPerPage, logsPage * itemsPerPage).map((log, i) => (
- <tr key={i} className="hover:bg-surface/80 transition-all text-text">
- <td className="py-3.5 px-4 font-medium flex items-center gap-1.5 text-textMuted">
- <Calendar className="h-3.5 w-3.5" />
- <span>{formatDate(log.timestamp)}</span>
- </td>
- <td className="py-3.5 px-4">
- <span className={`font-semibold ${
- log.action.includes('Security Alert') ? 'text-danger' : 'text-text'
- }`}>
- {log.action}
- </span>
- </td>
- <td className="py-3.5 px-4">{log.item_title || 'N/A'}</td>
- <td className="py-3.5 px-4 truncate max-w-[150px] font-semibold text-primary">{log.user}</td>
- </tr>
- ))}
- </tbody>
- </table>
- )}
- {data && data.logs.length > itemsPerPage && (
- <div className="flex justify-between items-center py-4 px-6 text-sm">
- <button 
- disabled={logsPage === 1}
- onClick={() => setLogsPage(p => p - 1)}
- className="px-3 py-1.5 bg-primary/10 text-primary rounded hover:bg-primary/20 disabled:opacity-50"
- >Previous</button>
- <span className="text-textSecondary">Page {logsPage} of {Math.ceil(data.logs.length / itemsPerPage)}</span>
- <button 
- disabled={logsPage >= Math.ceil(data.logs.length / itemsPerPage)}
- onClick={() => setLogsPage(p => p + 1)}
- className="px-3 py-1.5 bg-primary/10 text-primary rounded hover:bg-primary/20 disabled:opacity-50"
- >Next</button>
- </div>
- )}
- </div>
- </motion.div>
- )}
- </AnimatePresence>
- </div>
- </motion.div>
- );
+      {/* Tabs */}
+      <div className="flex border-b border-white/5 gap-2 overflow-x-auto pb-px">
+        {[
+          { id: 'overview', label: 'Overview' },
+          { id: 'users', label: `Registered Users (${data?.stats.total_users ?? 0})` },
+          { id: 'items', label: 'Manage Items' },
+          { id: 'trash', label: 'Trash (Recovery Center)' },
+          { id: 'logs', label: 'Audit Logs' },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id as any)}
+            className={`px-4 py-2.5 text-sm font-semibold border-b-2 -mb-px transition-all flex-shrink-0 ${
+              activeTab === tab.id
+                ? 'border-primary text-primary'
+                : 'border-transparent text-textSecondary hover:text-text'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Content panel */}
+      <div className="glass-panel rounded-xl p-6 relative overflow-hidden min-h-[400px]">
+        <AnimatePresence mode="wait">
+          {/* OVERVIEW TAB */}
+          {activeTab === 'overview' && (
+            <motion.div 
+              key="overview"
+              initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={TRANSITION_BASE}
+              className="grid grid-cols-1 lg:grid-cols-2 gap-8"
+            >
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-base font-bold text-text uppercase tracking-wider font-heading">Recent Listings</h3>
+                  <button onClick={() => setActiveTab('items')} className="text-xs font-semibold text-primary hover:underline">View All &rarr;</button>
+                </div>
+                <div className="space-y-3">
+                  {data?.recent_items.slice(0, 5).map((item) => (
+                    <div key={item.id} className="p-4 rounded-xl bg-surface border border-primary/10 shadow-sm flex items-center justify-between gap-4">
+                      <div>
+                        <h4 className="text-sm font-bold text-text">{item.title}</h4>
+                        <p className="text-xs text-textSecondary mt-0.5">{item.category} • {item.location}</p>
+                      </div>
+                      <span className={`px-2 py-0.5 rounded-xl text-[10px] font-extrabold uppercase ${
+                        item.status === 'Lost' ? 'bg-danger/10 text-danger' : 'bg-success/10 text-success'
+                      }`}>
+                        {item.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-base font-bold text-text uppercase tracking-wider font-heading">Security Audit Preview</h3>
+                  <button onClick={() => setActiveTab('logs')} className="text-xs font-semibold text-primary hover:underline">View Logs &rarr;</button>
+                </div>
+                <div className="space-y-3">
+                  {data?.logs.slice(0, 5).map((log, i) => (
+                    <div key={i} className="p-4 rounded-xl bg-surface border border-primary/10 shadow-sm flex flex-col gap-1.5 text-xs">
+                      <div className="flex items-center justify-between text-textSecondary">
+                        <span className="font-semibold">{log.user}</span>
+                        <span>{formatDate(log.timestamp)}</span>
+                      </div>
+                      <p className={`font-medium ${
+                        log.action.includes('Security Alert') ? 'text-danger' : 'text-text'
+                      }`}>
+                        {log.action} {log.item_title && `• ${log.item_title}`}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* REGISTERED USERS TAB */}
+          {activeTab === 'users' && (
+            <motion.div 
+              key="users"
+              initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={TRANSITION_BASE}
+              className="space-y-6"
+            >
+              {/* Header and Search Controls */}
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-surface/50 p-4 rounded-xl border border-primary/10">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-textSecondary" />
+                  <input
+                    type="text"
+                    value={userSearchQuery}
+                    onChange={(e) => { setUserSearchQuery(e.target.value); setUsersPage(1); }}
+                    placeholder="Search users by name, email, or role..."
+                    className="glass-input pl-10 pr-10 w-full text-sm"
+                  />
+                  {userSearchQuery && (
+                    <button 
+                      onClick={() => setUserSearchQuery('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-textSecondary hover:text-text"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2 self-start md:self-auto">
+                  <Filter className="h-4 w-4 text-textSecondary hidden sm:block" />
+                  <div className="flex bg-surface border border-primary/10 rounded-xl p-1 text-xs">
+                    {(['all', 'admin', 'user'] as const).map((role) => (
+                      <button
+                        key={role}
+                        onClick={() => { setUserRoleFilter(role); setUsersPage(1); }}
+                        className={`px-3 py-1.5 rounded-lg font-semibold capitalize transition-all ${
+                          userRoleFilter === role
+                            ? 'bg-primary text-white shadow'
+                            : 'text-textSecondary hover:text-text'
+                        }`}
+                      >
+                        {role === 'all' ? 'All Roles' : role === 'admin' ? 'Admins' : 'Users'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Users List / Table */}
+              <div className="overflow-x-auto -mx-6">
+                <div className="inline-block min-w-full align-middle px-6">
+                  {filteredUsers.length === 0 ? (
+                    <div className="text-center py-12 text-textSecondary text-sm space-y-3">
+                      <Users className="h-10 w-10 text-textMuted mx-auto" />
+                      <p>No registered users found matching "{userSearchQuery}".</p>
+                      {userSearchQuery && (
+                        <button 
+                          onClick={() => { setUserSearchQuery(''); setUserRoleFilter('all'); }}
+                          className="px-3 py-1.5 bg-primary/10 text-primary rounded-lg text-xs font-semibold hover:bg-primary/20"
+                        >
+                          Clear Search Filter
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <table className="min-w-full divide-y divide-primary/10 text-sm text-left">
+                      <thead>
+                        <tr className="text-textSecondary font-semibold text-xs uppercase tracking-wider border-b border-primary/10">
+                          <th className="py-3 px-4">User</th>
+                          <th className="py-3 px-4">Email</th>
+                          <th className="py-3 px-4">Role</th>
+                          <th className="py-3 px-4">Auth Method</th>
+                          <th className="py-3 px-4">Last Active</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-primary/10">
+                        {filteredUsers.slice((usersPage - 1) * itemsPerPage, usersPage * itemsPerPage).map((user) => (
+                          <tr key={user.id} className="hover:bg-surface/80 transition-all text-text">
+                            <td className="py-3.5 px-4 font-bold flex items-center gap-3">
+                              {user.profilePicture ? (
+                                <img src={user.profilePicture} alt={user.username} className="h-8 w-8 rounded-full object-cover border border-primary/20" />
+                              ) : (
+                                <div className="h-8 w-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-extrabold text-xs">
+                                  {user.username ? user.username.charAt(0).toUpperCase() : 'U'}
+                                </div>
+                              )}
+                              <span>{user.username}</span>
+                            </td>
+                            <td className="py-3.5 px-4 text-textSecondary font-mono text-xs">{user.email}</td>
+                            <td className="py-3.5 px-4">
+                              {user.is_admin || user.role === 'admin' ? (
+                                <span className="px-2.5 py-1 bg-primary/15 text-primary border border-primary/20 rounded-lg text-xs font-bold inline-flex items-center gap-1">
+                                  <ShieldCheck className="h-3.5 w-3.5" />
+                                  Admin
+                                </span>
+                              ) : (
+                                <span className="px-2.5 py-1 bg-surface border border-primary/10 text-textSecondary rounded-lg text-xs font-medium inline-flex items-center gap-1">
+                                  <UserCheck className="h-3.5 w-3.5 text-textMuted" />
+                                  Student / User
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-3.5 px-4">
+                              <span className="px-2 py-0.5 bg-surface/80 border border-primary/10 text-textSecondary rounded-md text-xs font-semibold capitalize">
+                                {user.auth_provider === 'google' ? 'Google OAuth' : 'Local Auth'}
+                              </span>
+                            </td>
+                            <td className="py-3.5 px-4 text-textSecondary text-xs">{formatDate(user.lastLogin || user.date_created)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+
+                  {/* Pagination */}
+                  {filteredUsers.length > itemsPerPage && (
+                    <div className="flex justify-between items-center py-4 px-6 text-sm">
+                      <button 
+                        disabled={usersPage === 1}
+                        onClick={() => setUsersPage(p => p - 1)}
+                        className="px-3 py-1.5 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 disabled:opacity-50 text-xs font-semibold"
+                      >
+                        Previous
+                      </button>
+                      <span className="text-textSecondary text-xs">
+                        Page {usersPage} of {Math.ceil(filteredUsers.length / itemsPerPage)}
+                      </span>
+                      <button 
+                        disabled={usersPage >= Math.ceil(filteredUsers.length / itemsPerPage)}
+                        onClick={() => setUsersPage(p => p + 1)}
+                        className="px-3 py-1.5 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 disabled:opacity-50 text-xs font-semibold"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* ITEMS TAB */}
+          {activeTab === 'items' && (
+            <motion.div 
+              key="items"
+              initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={TRANSITION_BASE}
+              className="space-y-4"
+            >
+              {/* Item Search Bar */}
+              <div className="relative">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-textSecondary" />
+                <input
+                  type="text"
+                  value={itemSearchQuery}
+                  onChange={(e) => { setItemSearchQuery(e.target.value); setItemsPage(1); }}
+                  placeholder="Search items by title, category, location, or reporter..."
+                  className="glass-input pl-10 pr-10 w-full text-sm"
+                />
+                {itemSearchQuery && (
+                  <button 
+                    onClick={() => setItemSearchQuery('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-textSecondary hover:text-text"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+
+              <div className="overflow-x-auto -mx-6">
+                <div className="inline-block min-w-full align-middle px-6">
+                  {filteredItems.length === 0 ? (
+                    <p className="text-center py-6 text-textSecondary text-sm">No items matching "{itemSearchQuery}".</p>
+                  ) : (
+                    <table className="min-w-full divide-y divide-primary/10 text-sm text-left">
+                      <thead>
+                        <tr className="text-textSecondary font-semibold text-xs uppercase tracking-wider border-b border-primary/10">
+                          <th className="py-3 px-4">Item Details</th>
+                          <th className="py-3 px-4">Category</th>
+                          <th className="py-3 px-4">Location</th>
+                          <th className="py-3 px-4">Reporter</th>
+                          <th className="py-3 px-4">Listed Date</th>
+                          <th className="py-3 px-4 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-primary/10">
+                        {filteredItems.slice((itemsPage - 1) * itemsPerPage, itemsPage * itemsPerPage).map((item) => (
+                          <tr key={item.id} className="hover:bg-surface/80 transition-all text-text">
+                            <td className="py-3.5 px-4 font-bold max-w-[200px] truncate">{item.title}</td>
+                            <td className="py-3.5 px-4">{item.category}</td>
+                            <td className="py-3.5 px-4">{item.location}</td>
+                            <td className="py-3.5 px-4 truncate max-w-[150px]">{item.reporter_email}</td>
+                            <td className="py-3.5 px-4">{formatDate(item.date)}</td>
+                            <td className="py-3.5 px-4 text-right">
+                              <button
+                                onClick={() => handleDeleteItem(item.id)}
+                                className="p-1.5 rounded-lg text-textMuted hover:text-danger hover:bg-danger/5 transition-all"
+                                title="Soft Delete (Move to Trash)"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+
+                  {filteredItems.length > itemsPerPage && (
+                    <div className="flex justify-between items-center py-4 px-6 text-sm">
+                      <button 
+                        disabled={itemsPage === 1}
+                        onClick={() => setItemsPage(p => p - 1)}
+                        className="px-3 py-1.5 bg-primary/10 text-primary rounded hover:bg-primary/20 disabled:opacity-50"
+                      >
+                        Previous
+                      </button>
+                      <span className="text-textSecondary">
+                        Page {itemsPage} of {Math.ceil(filteredItems.length / itemsPerPage)}
+                      </span>
+                      <button 
+                        disabled={itemsPage >= Math.ceil(filteredItems.length / itemsPerPage)}
+                        onClick={() => setItemsPage(p => p + 1)}
+                        className="px-3 py-1.5 bg-primary/10 text-primary rounded hover:bg-primary/20 disabled:opacity-50"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* TRASH TAB */}
+          {activeTab === 'trash' && (
+            <motion.div 
+              key="trash"
+              initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={TRANSITION_BASE}
+              className="overflow-x-auto -mx-6"
+            >
+              <div className="inline-block min-w-full align-middle px-6">
+                {data?.trash_items.length === 0 ? (
+                  <div className="text-center py-8 text-textSecondary text-sm">
+                    <Archive className="h-10 w-10 text-textMuted mx-auto mb-2" />
+                    <p>Trash is empty. Soft deleted listings are saved here.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="p-4 bg-primary/5 border border-primary/10 text-primary text-xs rounded-xl flex items-start gap-2.5">
+                      <AlertCircle className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                      <span>Soft deleted items are retained here for up to 10 days before automatic permanent collection purge.</span>
+                    </div>
+
+                    <table className="min-w-full divide-y divide-primary/10 text-sm text-left">
+                      <thead>
+                        <tr className="text-textSecondary font-semibold text-xs uppercase tracking-wider border-b border-primary/10">
+                          <th className="py-3 px-4">Item Title</th>
+                          <th className="py-3 px-4">Previous Status</th>
+                          <th className="py-3 px-4">Deleted On</th>
+                          <th className="py-3 px-4">Days in Trash</th>
+                          <th className="py-3 px-4 text-right">Recovery Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-primary/10">
+                        {data?.trash_items.map((item) => (
+                          <tr key={item.id} className="hover:bg-surface/80 transition-all text-text">
+                            <td className="py-3.5 px-4 font-bold">{item.title}</td>
+                            <td className="py-3.5 px-4">
+                              <span className="px-2 py-0.5 bg-primary/10 text-textSecondary rounded-xl text-xs">
+                                {item.previous_status}
+                              </span>
+                            </td>
+                            <td className="py-3.5 px-4">{formatDate(item.deleted_at)}</td>
+                            <td className="py-3.5 px-4 font-semibold">
+                              {item.days_deleted !== null ? (
+                                <span className={item.days_deleted >= 9 ? 'text-danger' : 'text-textSecondary'}>
+                                  {item.days_deleted} / 10 days
+                                </span>
+                              ) : (
+                                'Unknown'
+                              )}
+                            </td>
+                            <td className="py-3.5 px-4 text-right">
+                              <button
+                                onClick={() => handleRecoverItem(item.id)}
+                                className="px-3 py-1.5 bg-primary/10 border border-primary/20 text-primary hover:bg-primary hover:text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm ml-auto"
+                              >
+                                <Archive className="h-3.5 w-3.5" />
+                                <span>Recover Item</span>
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          {/* LOGS TAB */}
+          {activeTab === 'logs' && (
+            <motion.div 
+              key="logs"
+              initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={TRANSITION_BASE}
+              className="space-y-4"
+            >
+              {/* Log Search Bar */}
+              <div className="relative">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-textSecondary" />
+                <input
+                  type="text"
+                  value={logSearchQuery}
+                  onChange={(e) => { setLogSearchQuery(e.target.value); setLogsPage(1); }}
+                  placeholder="Search logs by action event, user, or entity reference..."
+                  className="glass-input pl-10 pr-10 w-full text-sm"
+                />
+                {logSearchQuery && (
+                  <button 
+                    onClick={() => setLogSearchQuery('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-textSecondary hover:text-text"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+
+              <div className="overflow-x-auto -mx-6">
+                <div className="inline-block min-w-full align-middle px-6">
+                  {filteredLogs.length === 0 ? (
+                    <p className="text-center py-6 text-textSecondary text-sm">No audit logs matching "{logSearchQuery}".</p>
+                  ) : (
+                    <table className="min-w-full divide-y divide-primary/10 text-sm text-left">
+                      <thead>
+                        <tr className="text-textSecondary font-semibold text-xs uppercase tracking-wider border-b border-primary/10">
+                          <th className="py-3 px-4">Timestamp</th>
+                          <th className="py-3 px-4">Action Event</th>
+                          <th className="py-3 px-4">Entity reference</th>
+                          <th className="py-3 px-4">Operator</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-primary/10">
+                        {filteredLogs.slice((logsPage - 1) * itemsPerPage, logsPage * itemsPerPage).map((log, i) => (
+                          <tr key={i} className="hover:bg-surface/80 transition-all text-text">
+                            <td className="py-3.5 px-4 font-medium flex items-center gap-1.5 text-textMuted">
+                              <Calendar className="h-3.5 w-3.5" />
+                              <span>{formatDate(log.timestamp)}</span>
+                            </td>
+                            <td className="py-3.5 px-4">
+                              <span className={`font-semibold ${
+                                log.action.includes('Security Alert') ? 'text-danger' : 'text-text'
+                              }`}>
+                                {log.action}
+                              </span>
+                            </td>
+                            <td className="py-3.5 px-4">{log.item_title || 'N/A'}</td>
+                            <td className="py-3.5 px-4 truncate max-w-[150px] font-semibold text-primary">{log.user}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+
+                  {filteredLogs.length > itemsPerPage && (
+                    <div className="flex justify-between items-center py-4 px-6 text-sm">
+                      <button 
+                        disabled={logsPage === 1}
+                        onClick={() => setLogsPage(p => p - 1)}
+                        className="px-3 py-1.5 bg-primary/10 text-primary rounded hover:bg-primary/20 disabled:opacity-50"
+                      >
+                        Previous
+                      </button>
+                      <span className="text-textSecondary">
+                        Page {logsPage} of {Math.ceil(filteredLogs.length / itemsPerPage)}
+                      </span>
+                      <button 
+                        disabled={logsPage >= Math.ceil(filteredLogs.length / itemsPerPage)}
+                        onClick={() => setLogsPage(p => p + 1)}
+                        className="px-3 py-1.5 bg-primary/10 text-primary rounded hover:bg-primary/20 disabled:opacity-50"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </motion.div>
+  );
 };
 
 export default Admin;

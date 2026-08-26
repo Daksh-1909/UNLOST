@@ -535,6 +535,7 @@ router.get('/api/admin/stats', adminRequired, async (req, res) => {
     const recentItems = await Item.find({ status: { $ne: 'Archived' } }).sort({ date: -1 }).limit(20);
     const trashItems = await Item.find({ status: 'Archived' }).sort({ date: -1 }).limit(20);
     const logs = await Log.find().sort({ timestamp: -1 }).limit(20);
+    const users = await User.find({}, '-password').sort({ date_created: -1, _id: -1 });
 
     res.status(200).json({
       success: true,
@@ -569,10 +570,44 @@ router.get('/api/admin/stats', adminRequired, async (req, res) => {
         timestamp: l.timestamp || new Date(),
         user: l.admin || 'System',
         item_id: 'N/A'
+      })),
+      users: users.map(u => ({
+        id: u._id.toString(),
+        username: u.username,
+        email: u.email,
+        role: u.role || (u.is_admin ? 'admin' : 'user'),
+        is_admin: u.is_admin || false,
+        auth_provider: u.auth_provider || 'local',
+        profilePicture: u.profilePicture || null,
+        lastLogin: u.lastLogin || null,
+        date_created: u.date_created || null
       }))
     });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Failed to fetch admin stats.' });
+  }
+});
+
+// GET /api/admin/users
+router.get('/api/admin/users', adminRequired, async (req, res) => {
+  try {
+    const users = await User.find({}, '-password').sort({ date_created: -1, _id: -1 });
+    res.status(200).json({
+      success: true,
+      users: users.map(u => ({
+        id: u._id.toString(),
+        username: u.username,
+        email: u.email,
+        role: u.role || (u.is_admin ? 'admin' : 'user'),
+        is_admin: u.is_admin || false,
+        auth_provider: u.auth_provider || 'local',
+        profilePicture: u.profilePicture || null,
+        lastLogin: u.lastLogin || null,
+        date_created: u.date_created || null
+      }))
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to fetch users.' });
   }
 });
 
