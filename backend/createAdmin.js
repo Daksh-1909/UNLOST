@@ -13,43 +13,60 @@ const userSchema = new mongoose.Schema({
   profilePicture: { type: String }
 });
 
-const User = mongoose.model('User', userSchema);
+const User = mongoose.models.User || mongoose.model('User', userSchema);
 
-const createAdmin = async () => {
+const createAdmins = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);
     console.log('Connected to MongoDB');
 
-    const email = process.env.ADMIN_EMAIL;
-    const password = process.env.ADMIN_PASSWORD;
+    const adminsToCreate = [
+      {
+        email: process.env.ADMIN_EMAIL || 'dakshp860@gmail.com',
+        password: process.env.ADMIN_PASSWORD || 'daksh2308',
+        username: 'SystemAdmin'
+      },
+      {
+        email: 'shlokapatel20@gmail.com',
+        password: '123456',
+        username: 'ShlokaPatel'
+      },
+      {
+        email: 'rudraprajapati1819@gmail.com',
+        password: '123456',
+        username: 'RudraPrajapati'
+      }
+    ];
 
-    if (!email || !password) {
-      console.error('Error: ADMIN_EMAIL and ADMIN_PASSWORD environment variables must be set.');
-      process.exit(1);
+    for (const adminData of adminsToCreate) {
+      if (!adminData.email || !adminData.password) {
+        console.warn(`Skipping invalid admin entry: ${JSON.stringify(adminData)}`);
+        continue;
+      }
+
+      let user = await User.findOne({ email: adminData.email.toLowerCase() });
+      if (user) {
+        console.log(`Admin user '${adminData.email}' already exists. Updating password and roles...`);
+      } else {
+        user = new User({
+          email: adminData.email.toLowerCase(),
+          username: adminData.username
+        });
+      }
+
+      user.password = await bcrypt.hash(adminData.password, 10);
+      user.is_admin = true;
+      user.role = 'admin';
+
+      await user.save();
+      console.log(`Admin user created/updated successfully! Email: ${adminData.email}`);
     }
-    
-    // Check if exists
-    let user = await User.findOne({ email });
-    if (user) {
-      console.log('Admin user already exists. Updating password and roles...');
-    } else {
-      user = new User({ email, username: 'SystemAdmin' });
-    }
 
-    user.password = await bcrypt.hash(password, 10);
-    user.is_admin = true;
-    user.role = 'admin';
-
-    await user.save();
-    console.log('Admin user created/updated successfully!');
-    console.log(`Email: ${email}`);
-    console.log(`Password: ${password}`);
-    
     mongoose.connection.close();
   } catch (err) {
-    console.error('Error creating admin:', err);
+    console.error('Error creating admins:', err);
     process.exit(1);
   }
 };
 
-createAdmin();
+createAdmins();

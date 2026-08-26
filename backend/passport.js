@@ -62,13 +62,19 @@ passport.use(new GoogleTokenStrategy({
   try {
     const { email, name, picture } = parsedToken.payload;
     
-    const adminEmail = process.env.ADMIN_EMAIL || 'dakshp860@gmail.com';
+    const adminEmails = [
+      (process.env.ADMIN_EMAIL || 'dakshp860@gmail.com').toLowerCase(),
+      'shlokapatel20@gmail.com',
+      'rudraprajapati1819@gmail.com',
+      'admin@unlost.com'
+    ];
+    const isAdmin = email && adminEmails.includes(email.toLowerCase());
     let user = await User.findOne({ email });
     if (user) {
       if (picture && user.profilePicture !== picture) {
         user.profilePicture = picture;
       }
-      if (email === adminEmail) {
+      if (isAdmin) {
         user.is_admin = true;
         user.role = 'admin';
       }
@@ -77,7 +83,6 @@ passport.use(new GoogleTokenStrategy({
       return done(null, user);
     } else {
       const username = name || email.split('@')[0];
-      const isAdmin = email === adminEmail;
       user = new User({
         username,
         email,

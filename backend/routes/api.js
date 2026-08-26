@@ -34,8 +34,17 @@ const verifyRateLimiter = rateLimit({
   message: { success: false, message: 'Too many verification attempts, please try again later.' }
 });
 
+const ADMIN_EMAILS = [
+  (process.env.ADMIN_EMAIL || 'dakshp860@gmail.com').toLowerCase(),
+  'shlokapatel20@gmail.com',
+  'rudraprajapati1819@gmail.com',
+  'admin@unlost.com'
+];
+
 const validateParulEmail = (email) => {
-  return email.endsWith('@paruluniversity.ac.in') || email === (process.env.ADMIN_EMAIL || 'admin@unlost.com');
+  if (!email) return false;
+  const lower = email.toLowerCase();
+  return lower.endsWith('@paruluniversity.ac.in') || ADMIN_EMAILS.includes(lower);
 };
 
 const router = express.Router();
