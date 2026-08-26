@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Mail, Lock, User, AlertCircle, CheckCircle2, UserPlus } from 'lucide-react';
+import { Mail, Lock, User, AlertCircle, CheckCircle2, UserPlus, Eye, EyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { buttonHoverVariants } from '../utils/animations';
 
@@ -13,6 +13,8 @@ const Register: React.FC = () => {
  const [email, setEmail] = useState('');
  const [password, setPassword] = useState('');
  const [confirmPassword, setConfirmPassword] = useState('');
+ const [showPassword, setShowPassword] = useState(false);
+ const [showConfirmPassword, setShowConfirmPassword] = useState(false);
  const [loading, setLoading] = useState(false);
  const [error, setError] = useState<string | null>(null);
  const [success, setSuccess] = useState<string | null>(null);
@@ -141,14 +143,29 @@ const Register: React.FC = () => {
  <Lock className="h-3.5 w-3.5" />
  <span>Password</span>
  </label>
+ <div className="relative">
  <input
- type="password"
+ type={showPassword ? "text" : "password"}
  required
  value={password}
  onChange={(e) => setPassword(e.target.value)}
  placeholder="Min. 6 characters"
- className="glass-input w-full"
+ className="glass-input w-full pr-10"
  />
+ <button
+ type="button"
+ onClick={() => setShowPassword(!showPassword)}
+ className="absolute right-3 top-1/2 -translate-y-1/2 text-textSecondary hover:text-text focus:outline-none transition-colors p-1"
+ tabIndex={-1}
+ aria-label={showPassword ? "Hide password" : "Show password"}
+ >
+ {showPassword ? (
+ <EyeOff className="h-4 w-4" />
+ ) : (
+ <Eye className="h-4 w-4" />
+ )}
+ </button>
+ </div>
  </div>
 
  <div className="space-y-1.5">
@@ -156,14 +173,29 @@ const Register: React.FC = () => {
  <Lock className="h-3.5 w-3.5" />
  <span>Confirm Password</span>
  </label>
+ <div className="relative">
  <input
- type="password"
+ type={showConfirmPassword ? "text" : "password"}
  required
  value={confirmPassword}
  onChange={(e) => setConfirmPassword(e.target.value)}
  placeholder="Repeat password"
- className="glass-input w-full"
+ className="glass-input w-full pr-10"
  />
+ <button
+ type="button"
+ onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+ className="absolute right-3 top-1/2 -translate-y-1/2 text-textSecondary hover:text-text focus:outline-none transition-colors p-1"
+ tabIndex={-1}
+ aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+ >
+ {showConfirmPassword ? (
+ <EyeOff className="h-4 w-4" />
+ ) : (
+ <Eye className="h-4 w-4" />
+ )}
+ </button>
+ </div>
  </div>
  </div>
 
