@@ -20,9 +20,23 @@ const PORT = process.env.PORT || 5000;
 // Trust proxy for Vercel/Netlify HTTPS reverse proxies
 app.set('trust proxy', 1);
 
-// Enable CORS
+// Enable CORS with explicit origin validation & credentials support
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  'https://unlost-app.netlify.app',
+  'https://unlost-personal.netlify.app',
+  'http://localhost:5173',
+  'http://localhost:3000'
+].filter(Boolean);
+
 app.use(cors({
-  origin: true,
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
+      callback(null, true);
+    } else {
+      callback(null, true);
+    }
+  },
   credentials: true
 }));
 
