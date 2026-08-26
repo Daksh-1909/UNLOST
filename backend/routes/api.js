@@ -265,6 +265,33 @@ router.get('/api/logout', (req, res) => {
   res.status(200).json({ success: true, message: 'Logged out successfully.' });
 });
 
+// POST /api/forgot-password
+router.post('/api/forgot-password', authRateLimiter, async (req, res) => {
+  const { email, newPassword } = req.body;
+  if (!email || !newPassword) {
+    return res.status(400).json({ success: false, message: 'Email and new password are required.' });
+  }
+
+  if (newPassword.length < 6) {
+    return res.status(400).json({ success: false, message: 'Password must be at least 6 characters long.' });
+  }
+
+  try {
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'No registered account found with this email.' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    return res.status(200).json({ success: true, message: 'Password updated successfully! You can now log in with your new password.' });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Failed to reset password.' });
+  }
+});
+
 // --- Items and Claims ---
 
 const buildItemsFilter = (query) => {
@@ -839,9 +866,16 @@ router.post('/api/items/:id/claim', loginRequired, async (req, res) => {
     const item = await Item.findById(req.params.id);
     if (!item) return res.status(404).json({ success: false, message: 'Item not found' });
     
+    const user = await User.findById(req.userId);
+    if (!user) return res.status(401).json({ success: false, message: 'User authenticated session missing' });
+
+    // Block user from claiming their own reported item
+    if (item.reporter_email && item.reporter_email.toLowerCase() === user.email.toLowerCase()) {
+      return res.status(400).json({ success: false, message: 'You cannot submit a claim on an item you reported yourself.' });
+    }
+
     item.status = 'Claimed';
     item.claim_answers = { answer, timestamp: new Date() };
-    const user = await User.findById(req.userId);
     item.claimant_email = user.email;
     await item.save();
     
@@ -851,6 +885,33 @@ router.post('/api/items/:id/claim', loginRequired, async (req, res) => {
     res.json({ success: true, message: 'Claim submitted successfully for admin review.' });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Error submitting claim' });
+  }
+});
+
+// DELETE /api/items/:id (User delete own reported item)
+router.delete('/api/items/:id', loginRequired, async (req, res) => {
+  try {
+    const item = await Item.findById(req.params.id);
+    if (!item) return res.status(404).json({ success: false, message: 'Item not found' });
+    
+    const user = await User.findById(req.userId);
+    if (!user) return res.status(401).json({ success: false, message: 'User session invalid' });
+
+    const isOwner = item.reporter_email && item.reporter_email.toLowerCase() === user.email.toLowerCase();
+    const isAdmin = user.is_admin || user.role === 'admin';
+
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ success: false, message: 'Forbidden. You can only delete items that you reported.' });
+    }
+
+    item.status = 'Archived';
+    await item.save();
+
+    await new Log({ action: `User deleted item ${item.title}`, user: user.email }).save();
+
+    res.json({ success: true, message: 'Item archived successfully.' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Error deleting item' });
   }
 });
 

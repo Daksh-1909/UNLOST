@@ -7,6 +7,13 @@
   NODE_VERSION = "20"
   VITE_GOOGLE_CLIENT_ID = "1046058827384-b9vgggfg7pg36uso4255eabi51gleoqm.apps.googleusercontent.com"
 
+# Domain canonical redirect from legacy Netlify hostnames
+[[redirects]]
+  from = "https://unlost-personal.netlify.app/*"
+  to = "https://unlost-app.netlify.app/:splat"
+  status = 301
+  force = true
+
 # Serve static SEO files directly without hitting SPA catch-all
 [[redirects]]
   from = "/robots.txt"
