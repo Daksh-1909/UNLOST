@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { 
  Search, PlusCircle, Calendar, MapPin, Tag, ChevronRight, Eye, Bookmark, 
  Share2, Smartphone, Watch, Backpack, Key, Wallet, Map, 
- Activity, ChevronLeft, PhoneCall, 
+ Activity, ChevronLeft, 
  Shield, X, AlertCircle, Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -922,23 +922,6 @@ const Home: React.FC = () => {
  </aside>
 
  </div>
-
- {/* ── FEEDBACK & SUPPORT SECTION ── */}
- <motion.section variants={scrollRevealVariants} initial="hidden" whileInView="visible" viewport={scrollRevealViewport} className="mt-12 glass-panel rounded-xl p-8 sm:p-12 flex flex-col sm:flex-row items-center justify-between gap-6 border border-text/15 shadow-lg">
- <div className="flex-1 space-y-3 text-center sm:text-left">
- <h3 className="text-2xl font-black font-heading text-text">Need Help or Have Feedback?</h3>
- <p className="text-sm text-textSecondary max-w-lg mx-auto sm:mx-0">
- Encountering issues with a claim? Need assistance navigating the portal? Reach out to our administrative support team to get your questions answered.
- </p>
- </div>
- <Link 
- to="/contact" 
- className="px-8 py-4 rounded-xl btn-primary-custom font-bold text-sm flex items-center gap-2 flex-shrink-0"
- >
- <PhoneCall className="w-4 h-4 text-textSecondary" />
- <span>Contact Support</span>
- </Link>
- </motion.section>
 
 
  {/* ── VIEW DETAILS GLASSMORPHISM MODAL ── */}
