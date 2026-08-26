@@ -114,62 +114,156 @@ const Admin: React.FC = () => {
   }, []);
 
   const handleMarkMessageRead = async (msgId: string) => {
+    setData(prev => {
+      if (!prev) return prev;
+      const updatedMessages = (prev.contact_messages || []).map(m =>
+        m.id === msgId ? { ...m, status: 'read' } : m
+      );
+      const unreadCount = updatedMessages.filter(m => m.status === 'unread').length;
+      return {
+        ...prev,
+        contact_messages: updatedMessages,
+        stats: {
+          ...prev.stats,
+          unread_messages: unreadCount
+        }
+      };
+    });
+
     try {
       const response = await fetch(`/api/admin/messages/${msgId}/mark-read`, { method: 'POST' });
       const resData = await response.json();
       if (response.ok && resData.success) {
         setActionMessage({ type: 'success', text: 'Message marked as read.' });
+      } else {
         fetchAdminStats();
       }
     } catch (error) {
       console.error('Mark read error:', error);
+      fetchAdminStats();
     }
   };
 
   const handleDeleteMessage = async (msgId: string) => {
     if (!window.confirm('Are you sure you want to delete this contact message?')) return;
+    
+    setData(prev => {
+      if (!prev) return prev;
+      const updatedMessages = (prev.contact_messages || []).filter(m => m.id !== msgId);
+      const unreadCount = updatedMessages.filter(m => m.status === 'unread').length;
+      return {
+        ...prev,
+        contact_messages: updatedMessages,
+        stats: {
+          ...prev.stats,
+          unread_messages: unreadCount
+        }
+      };
+    });
+
     try {
       const response = await fetch(`/api/admin/messages/${msgId}/delete`, { method: 'POST' });
       const resData = await response.json();
       if (response.ok && resData.success) {
         setActionMessage({ type: 'success', text: 'Message deleted successfully.' });
+      } else {
         fetchAdminStats();
       }
     } catch (error) {
       console.error('Delete message error:', error);
+      fetchAdminStats();
     }
   };
 
   const handleDeleteItem = async (itemId: string) => {
     if (!window.confirm('Are you sure you want to move this item to recoverable trash?')) return;
+    
+    setData(prev => {
+      if (!prev) return prev;
+      const targetItem = prev.recent_items.find(i => i.id === itemId);
+      const updatedRecent = prev.recent_items.filter(i => i.id !== itemId);
+      const updatedTrash = targetItem ? [
+        {
+          id: targetItem.id,
+          title: targetItem.title,
+          previous_status: targetItem.status,
+          deleted_at: new Date().toISOString(),
+          days_deleted: 0
+        },
+        ...prev.trash_items
+      ] : prev.trash_items;
+
+      return {
+        ...prev,
+        recent_items: updatedRecent,
+        trash_items: updatedTrash,
+        stats: {
+          ...prev.stats,
+          total_items: Math.max(0, prev.stats.total_items - 1),
+          archived_items: prev.stats.archived_items + 1
+        }
+      };
+    });
+
     try {
       const response = await fetch(`/api/admin/delete/${itemId}`, { method: 'POST' });
       const resData = await response.json();
       if (response.ok && resData.success) {
         setActionMessage({ type: 'success', text: resData.message });
-        fetchAdminStats();
       } else {
         setActionMessage({ type: 'error', text: resData.message || 'Failed to archive item.' });
+        fetchAdminStats();
       }
     } catch (error) {
       console.error('Delete item error:', error);
       setActionMessage({ type: 'error', text: 'Server is currently unreachable.' });
+      fetchAdminStats();
     }
   };
 
   const handleRecoverItem = async (itemId: string) => {
+    setData(prev => {
+      if (!prev) return prev;
+      const targetTrash = prev.trash_items.find(i => i.id === itemId);
+      const updatedTrash = prev.trash_items.filter(i => i.id !== itemId);
+      const updatedRecent = targetTrash ? [
+        {
+          id: targetTrash.id,
+          title: targetTrash.title,
+          category: 'Recovered',
+          status: targetTrash.previous_status || 'Active',
+          location: 'Recovered',
+          date: new Date().toISOString(),
+          reporter_email: 'Admin'
+        },
+        ...prev.recent_items
+      ] : prev.recent_items;
+
+      return {
+        ...prev,
+        trash_items: updatedTrash,
+        recent_items: updatedRecent,
+        stats: {
+          ...prev.stats,
+          total_items: prev.stats.total_items + 1,
+          archived_items: Math.max(0, prev.stats.archived_items - 1)
+        }
+      };
+    });
+
     try {
       const response = await fetch(`/api/admin/recover/${itemId}`, { method: 'POST' });
       const resData = await response.json();
       if (response.ok && resData.success) {
         setActionMessage({ type: 'success', text: resData.message });
-        fetchAdminStats();
       } else {
         setActionMessage({ type: 'error', text: resData.message || 'Failed to recover item.' });
+        fetchAdminStats();
       }
     } catch (error) {
       console.error('Recover item error:', error);
       setActionMessage({ type: 'error', text: 'Server is currently unreachable.' });
+      fetchAdminStats();
     }
   };
 
