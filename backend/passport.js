@@ -63,7 +63,6 @@ passport.use(new GoogleTokenStrategy({
     const { email, name, picture } = parsedToken.payload;
     
     const adminEmails = [
-      (process.env.ADMIN_EMAIL || 'dakshp860@gmail.com').toLowerCase(),
       'shlokapatel20@gmail.com',
       'rudraprajapati1819@gmail.com',
       'admin@unlost.com'

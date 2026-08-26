@@ -35,7 +35,6 @@ const verifyRateLimiter = rateLimit({
 });
 
 const ADMIN_EMAILS = [
-  (process.env.ADMIN_EMAIL || 'dakshp860@gmail.com').toLowerCase(),
   'shlokapatel20@gmail.com',
   'rudraprajapati1819@gmail.com',
   'admin@unlost.com'

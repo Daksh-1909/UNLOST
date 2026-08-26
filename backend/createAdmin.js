@@ -22,11 +22,6 @@ const createAdmins = async () => {
 
     const adminsToCreate = [
       {
-        email: process.env.ADMIN_EMAIL || 'dakshp860@gmail.com',
-        password: process.env.ADMIN_PASSWORD || 'daksh2308',
-        username: 'SystemAdmin'
-      },
-      {
         email: 'shlokapatel20@gmail.com',
         password: '123456',
         username: 'ShlokaPatel'
