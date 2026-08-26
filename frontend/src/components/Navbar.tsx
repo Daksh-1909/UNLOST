@@ -66,16 +66,15 @@ const Navbar: React.FC = () => {
     setIsOpen(false);
   }, [location.pathname]);
 
+  const isAdmin = Boolean(user?.is_admin || user?.role === 'admin');
+
   const navigation = [
     { name: 'Home', href: '/', icon: Home },
     { name: 'Items', href: '/items', icon: LayoutGrid },
     { name: 'Report', href: '/report', icon: PlusCircle },
-    { name: 'Contact', href: '/contact', icon: Phone },
+    ...(!isAdmin ? [{ name: 'Contact', href: '/contact', icon: Phone }] : []),
+    ...(isAdmin ? [{ name: 'Admin', href: '/admin', icon: Shield }] : []),
   ];
-
-  if (user?.is_admin) {
-    navigation.push({ name: 'Admin', href: '/admin', icon: Shield });
-  }
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/';
