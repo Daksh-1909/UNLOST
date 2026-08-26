@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { 
   Shield, Users, Layers, AlertTriangle, Archive, RefreshCw, 
   Trash2, Clock, CheckCircle2, AlertCircle, Calendar, Search, X, 
-  ShieldCheck, UserCheck, Filter 
+  ShieldCheck, UserCheck, Filter, MessageSquare, Mail, Send, Check, Trash 
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { pageVariants, staggerContainer, staggerItem, tapHoverVariants, TRANSITION_BASE } from '../utils/animations';
@@ -13,6 +13,18 @@ interface AdminStats {
   archived_items: number;
   new_today: number;
   security_alerts: number;
+  unread_messages?: number;
+}
+
+interface ContactMessage {
+  id: string;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  date: string;
+  status: string;
+  user_email?: string;
 }
 
 interface RecentItem {
@@ -59,6 +71,7 @@ interface AdminData {
   trash_items: TrashItem[];
   logs: AdminLog[];
   users: UserItem[];
+  contact_messages?: ContactMessage[];
 }
 
 const Admin: React.FC = () => {
