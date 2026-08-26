@@ -585,6 +585,9 @@ router.get('/api/admin/stats', adminRequired, async (req, res) => {
     const logs = await Log.find().sort({ timestamp: -1 }).limit(20);
     const users = await User.find({}, '-password').sort({ date_created: -1, _id: -1 });
 
+    const unreadMessages = await ContactMessage.countDocuments({ status: 'Unread' });
+    const contactMessages = await ContactMessage.find({}).sort({ date: -1 });
+
     res.status(200).json({
       success: true,
       stats: {
@@ -593,6 +596,7 @@ router.get('/api/admin/stats', adminRequired, async (req, res) => {
         lost_items: lostItems,
         found_items: foundItems,
         archived_items: archivedItems,
+        unread_messages: unreadMessages,
         new_today: 0,
         security_alerts: 0
       },
@@ -618,6 +622,16 @@ router.get('/api/admin/stats', adminRequired, async (req, res) => {
         timestamp: l.timestamp || new Date(),
         user: l.admin || 'System',
         item_id: 'N/A'
+      })),
+      contact_messages: contactMessages.map(m => ({
+        id: m._id.toString(),
+        name: m.name,
+        email: m.email,
+        subject: m.subject,
+        message: m.message,
+        date: m.date,
+        status: m.status,
+        user_email: m.user_email
       })),
       users: users.map(u => ({
         id: u._id.toString(),
