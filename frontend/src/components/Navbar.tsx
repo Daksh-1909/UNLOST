@@ -84,10 +84,10 @@ const Navbar: React.FC = () => {
   return (
     <nav ref={navRef} className="sticky top-0 z-50 glass-panel border-b-0 border-b-white/5 rounded-none">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="relative flex items-center justify-between h-16">
           
           {/* Brand Logo */}
-          <div className="flex items-center">
+          <div className="flex items-center z-10">
             <MotionLink 
               to="/" 
               className="flex-shrink-0 flex items-center space-x-2"
@@ -101,8 +101,8 @@ const Navbar: React.FC = () => {
             </MotionLink>
           </div>
           
-          {/* Desktop Navigation Links */}
-          <div className="hidden md:flex items-center space-x-6">
+          {/* Desktop Navigation Links (PERFECTLY CENTERED) */}
+          <div className="hidden md:flex items-center justify-center space-x-6 absolute left-1/2 -translate-x-1/2 z-0">
             {navigation.map((item) => {
               const active = isActive(item.href);
               return (
@@ -131,7 +131,7 @@ const Navbar: React.FC = () => {
           </div>
 
           {/* Right Action Icons (Dark Mode, Notifications, User Profile / Mobile Toggle) */}
-          <div className="flex items-center space-x-2 sm:space-x-3">
+          <div className="flex items-center space-x-2 sm:space-x-3 z-10">
             
             {/* Dark Mode Toggle (Visible on Mobile & Desktop) */}
             <motion.button
