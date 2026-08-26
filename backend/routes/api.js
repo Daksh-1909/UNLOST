@@ -461,6 +461,7 @@ ${itemsContext}`;
         contents = [{ role: 'user', parts: [{ text: message || "Hello" }] }];
     }
 
+    // Attempt Gemini Generative AI call if key is available
     try {
       if (process.env.GEMINI_API_KEY && !process.env.GEMINI_API_KEY.startsWith('AQ.')) {
         const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
@@ -478,29 +479,54 @@ ${itemsContext}`;
         }
       }
     } catch (aiErr) {
-      console.warn('Gemini API call skipped or failed, using smart fallback engine:', aiErr.message || aiErr);
+      console.warn('Gemini API call skipped or failed, using smart engine:', aiErr.message || aiErr);
     }
 
-    // Smart Fallback Engine (when Gemini API is unavailable or rate limited)
-    const queryLower = (message || '').toLowerCase();
+    // --- Enhanced Smart Conversational & Search Engine ---
+    const queryLower = (message || '').toLowerCase().trim();
     let replyText = '';
 
-    if (queryLower.includes('latest') || queryLower.includes('recent') || queryLower.includes('show') || queryLower.includes('list') || queryLower.includes('item')) {
+    // 1. Check for specific search terms in user message
+    const keywords = queryLower.replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(w => w.length > 2 && !['show', 'latest', 'items', 'have', 'seen', 'find', 'found', 'lost', 'what', 'where', 'there', 'does', 'anyone', 'which', 'with'].includes(w));
+    
+    let searchResults = [];
+    if (keywords.length > 0) {
+      const searchRegex = new RegExp(keywords.join('|'), 'i');
+      searchResults = await Item.find({
+        status: { $ne: 'Archived' },
+        $or: [
+          { title: searchRegex },
+          { description: searchRegex },
+          { category: searchRegex },
+          { location: searchRegex }
+        ]
+      }).limit(5);
+    }
+
+    if (searchResults.length > 0) {
+      replyText = `🔍 **I found ${searchResults.length} matching item(s) in our database:**\n\n` + 
+        searchResults.map(i => `• **${i.title}** (${i.category} — *${i.status}* at ${i.location})`).join('\n') +
+        `\n\nView details or claim items on the [Items](/items) page!`;
+    } else if (queryLower.includes('latest') || queryLower.includes('recent') || queryLower.includes('show') || queryLower.includes('list') || (queryLower.includes('item') && !keywords.length)) {
       if (recentItems.length > 0) {
-        replyText = `Here are the latest items reported on UNLOST:\n\n` + 
-          recentItems.map(i => `• **${i.title}** (${i.category} - ${i.status} at ${i.location})`).join('\n') +
-          `\n\nBrowse all listings on the [Items](/items) page or post a new item on the [Report Item](/report) page!`;
+        replyText = `📋 **Here are the latest active items reported on UNLOST:**\n\n` + 
+          recentItems.map(i => `• **${i.title}** (${i.category} — *${i.status}* at ${i.location})`).join('\n') +
+          `\n\nBrowse all listings on the [Items](/items) page or submit a report on the [Report Item](/report) page!`;
       } else {
-        replyText = `There are currently no active items reported on UNLOST. You can be the first to report an item on the [Report Item](/report) page!`;
+        replyText = `There are currently no active items reported on UNLOST. You can be the first to report a lost/found item on the [Report Item](/report) page!`;
       }
     } else if (queryLower.includes('report') || queryLower.includes('lost') || queryLower.includes('found') || queryLower.includes('add') || queryLower.includes('submit')) {
-      replyText = `To report a lost or found item, head over to the [Report Item](/report) page. Fill in the title, description, category, location, and contact details, then submit your listing!`;
+      replyText = `📝 **How to Report an Item:**\n1. Go to the [Report Item](/report) page.\n2. Fill in the item title, description, category, location, and contact details.\n3. Add a security question & optional image to verify claims.\n4. Click **Submit Report**!`;
     } else if (queryLower.includes('claim') || queryLower.includes('verify') || queryLower.includes('owner')) {
-      replyText = `To claim an item, locate the item on the [Items](/items) page and click **Claim Item**. You will be asked to verify a security question set by the reporter.`;
+      replyText = `🔐 **How to Claim a Found Item:**\n1. Browse active listings on the [Items](/items) page.\n2. Click on the item you own and press **Claim Item**.\n3. Answer the security question set by the reporter.\n4. Once verified, the reporter will coordinate returning your item!`;
     } else if (queryLower.includes('contact') || queryLower.includes('help') || queryLower.includes('admin') || queryLower.includes('support')) {
-      replyText = `You can reach out to our administration team anytime via the [Contact](/contact) page!`;
+      replyText = `📬 Need help or administrative assistance? Reach out directly to our team via the [Contact](/contact) page!`;
+    } else if (queryLower.includes('hi') || queryLower.includes('hello') || queryLower.includes('hey') || queryLower.includes('start')) {
+      replyText = `👋 Hi! I'm Smilo, your UNLOST assistant. Ask me to search for lost items (e.g., "AirPods" or "Wallet"), show recent listings, or guide you through reporting & claiming items!`;
+    } else if (queryLower.includes('thank')) {
+      replyText = `You're very welcome! 😊 Let me know if you need help finding anything else on UNLOST!`;
     } else {
-      replyText = `Hi there! I'm Smilo, your UNLOST assistant. Ask me to show latest items, guide you through reporting lost items, or assist with portal features. Check out the [Items](/items) page to browse all active listings!`;
+      replyText = `I checked our records! You can search active listings on the [Items](/items) page, or submit a new listing on the [Report Item](/report) page!`;
     }
 
     return res.status(200).json({ success: true, text: replyText });
