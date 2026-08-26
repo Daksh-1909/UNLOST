@@ -10,6 +10,7 @@ import Item from '../models/Item.js';
 import Notification from '../models/Notification.js';
 import { findMatchesAndNotify } from '../utils/matcher.js';
 import Log from '../models/Log.js';
+import ContactMessage from '../models/ContactMessage.js';
 import jwt from 'jsonwebtoken';
 import passport from 'passport';
 import { GoogleGenAI } from '@google/genai';
@@ -721,16 +722,72 @@ router.post('/api/contact', loginRequired, async (req, res) => {
   }
 
   try {
+    const contactMsg = new ContactMessage({
+      name,
+      email,
+      subject,
+      message,
+      date: new Date(),
+      status: 'Unread',
+      user_email: req.user ? req.user.email : email
+    });
+    await contactMsg.save();
+
     const newLog = new Log({
-      action: `Contact Form Submission: ${subject}`,
-      user: req.user.email
+      action: `Contact Form Submission from ${name}: ${subject}`,
+      user: req.user ? req.user.email : email
     });
     await newLog.save();
-    
-    // In a real app, this would dispatch an email via SendGrid, NodeMailer, etc.
-    res.status(200).json({ success: true, message: 'Message sent successfully.' });
+
+    res.status(200).json({ success: true, message: 'Message sent successfully to support administrators.' });
   } catch (err) {
+    console.error('Contact submit error:', err);
     res.status(500).json({ success: false, message: 'Failed to send message.' });
+  }
+});
+
+// GET /api/admin/messages
+router.get('/api/admin/messages', adminRequired, async (req, res) => {
+  try {
+    const messages = await ContactMessage.find({}).sort({ date: -1 });
+    res.status(200).json({
+      success: true,
+      messages: messages.map(m => ({
+        id: m._id.toString(),
+        name: m.name,
+        email: m.email,
+        subject: m.subject,
+        message: m.message,
+        date: m.date,
+        status: m.status,
+        user_email: m.user_email
+      }))
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to fetch contact messages.' });
+  }
+});
+
+// POST /api/admin/messages/:id/mark-read
+router.post('/api/admin/messages/:id/mark-read', adminRequired, async (req, res) => {
+  try {
+    const msg = await ContactMessage.findById(req.params.id);
+    if (!msg) return res.status(404).json({ success: false, message: 'Message not found' });
+    msg.status = 'Read';
+    await msg.save();
+    res.status(200).json({ success: true, message: 'Message marked as read.' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to update message status.' });
+  }
+});
+
+// POST /api/admin/messages/:id/delete
+router.post('/api/admin/messages/:id/delete', adminRequired, async (req, res) => {
+  try {
+    await ContactMessage.findByIdAndDelete(req.params.id);
+    res.status(200).json({ success: true, message: 'Message deleted successfully.' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to delete message.' });
   }
 });
 
