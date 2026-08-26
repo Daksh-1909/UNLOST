@@ -1009,7 +1009,7 @@ const Home: React.FC = () => {
  <div className="h-48 w-full relative border-b border-primary/10">
  {selectedItemModal.image_file ? (
  <img 
- src={`/static/uploads/${selectedItemModal.image_file}`} 
+ src={selectedItemModal.image_file.startsWith('data:') || selectedItemModal.image_file.startsWith('http') ? selectedItemModal.image_file : `/static/uploads/${selectedItemModal.image_file}`} 
  alt={selectedItemModal.title} 
  className="w-full h-full object-cover"
  />

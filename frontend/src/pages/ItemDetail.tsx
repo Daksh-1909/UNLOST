@@ -166,7 +166,7 @@ const ItemDetail: React.FC = () => {
           <div className="glass-card overflow-hidden">
             {item.image_file ? (
               <img
-                src={`/static/uploads/${item.image_file}`}
+                src={item.image_file.startsWith('data:') || item.image_file.startsWith('http') ? item.image_file : `/static/uploads/${item.image_file}`}
                 alt={item.title}
                 className="w-full h-80 object-cover"
                 onError={(e) => {

@@ -53,38 +53,19 @@ const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Configure multer file upload
-const uploadFolder = path.join(__dirname, '..', 'static', 'uploads');
-if (!fs.existsSync(uploadFolder)) {
-  fs.mkdirSync(uploadFolder, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadFolder);
-  },
-  filename: (req, file, cb) => {
-    const now = new Date();
-    const timestamp = now.getFullYear().toString() +
-      (now.getMonth() + 1).toString().padStart(2, '0') +
-      now.getDate().toString().padStart(2, '0') +
-      now.getHours().toString().padStart(2, '0') +
-      now.getMinutes().toString().padStart(2, '0') +
-      now.getSeconds().toString().padStart(2, '0');
-    cb(null, `${timestamp}_${file.originalname}`);
-  }
-});
+// Configure multer memory storage for serverless/local cross-platform compatibility
+const storage = multer.memoryStorage();
 
 const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB limit
   fileFilter: (req, file, cb) => {
-    const allowedExts = ['.png', '.jpg', '.jpeg', '.gif'];
+    const allowedExts = ['.png', '.jpg', '.jpeg', '.gif', '.webp'];
     const ext = path.extname(file.originalname).toLowerCase();
-    if (allowedExts.includes(ext)) {
+    if (allowedExts.includes(ext) || (file.mimetype && file.mimetype.startsWith('image/'))) {
       cb(null, true);
     } else {
-      cb(new Error('Only images (png, jpg, jpeg, gif) are allowed'));
+      cb(new Error('Only images (png, jpg, jpeg, gif, webp) are allowed'));
     }
   }
 });
@@ -366,6 +347,16 @@ router.post('/api/report', loginRequired, uploadMiddleware, async (req, res) => 
     const currentUser = await User.findById(req.userId);
     const dateObj = date ? new Date(date) : new Date();
 
+    let imageFileValue = null;
+    if (req.file) {
+      if (req.file.buffer) {
+        const mimeType = req.file.mimetype || 'image/jpeg';
+        imageFileValue = `data:${mimeType};base64,${req.file.buffer.toString('base64')}`;
+      } else if (req.file.filename) {
+        imageFileValue = req.file.filename;
+      }
+    }
+
     const newItem = new Item({
       title,
       description,
@@ -374,7 +365,7 @@ router.post('/api/report', loginRequired, uploadMiddleware, async (req, res) => 
       status,
       contact_info,
       date: isNaN(dateObj.getTime()) ? new Date() : dateObj,
-      image_file: req.file ? req.file.filename : null,
+      image_file: imageFileValue,
       security_question: req.body.security_question,
       security_answer: req.body.security_answer,
       reporter_email: currentUser.email

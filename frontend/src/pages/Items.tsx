@@ -226,7 +226,7 @@ const Items: React.FC = () => {
                 <div className="h-44 w-full bg-surface/50 relative overflow-hidden flex items-center justify-center border-b border-primary/10">
                   {item.image_file ? (
                     <img 
-                      src={`/static/uploads/${item.image_file}`} 
+                      src={item.image_file.startsWith('data:') || item.image_file.startsWith('http') ? item.image_file : `/static/uploads/${item.image_file}`} 
                       alt={item.title} 
                       className="w-full h-full object-cover transition-transform duration-500"
                     />
