@@ -77,7 +77,7 @@ interface AdminData {
 const Admin: React.FC = () => {
   const [data, setData] = useState<AdminData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'items' | 'trash' | 'logs'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'messages' | 'users' | 'items' | 'trash' | 'logs'>('overview');
   const [actionMessage, setActionMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Search & Filter state
@@ -85,11 +85,14 @@ const Admin: React.FC = () => {
   const [userRoleFilter, setUserRoleFilter] = useState<'all' | 'admin' | 'user'>('all');
   const [itemSearchQuery, setItemSearchQuery] = useState('');
   const [logSearchQuery, setLogSearchQuery] = useState('');
+  const [msgSearchQuery, setMsgSearchQuery] = useState('');
+  const [msgStatusFilter, setMsgStatusFilter] = useState<'all' | 'unread' | 'read'>('all');
 
   // Pagination state
   const [usersPage, setUsersPage] = useState(1);
   const [itemsPage, setItemsPage] = useState(1);
   const [logsPage, setLogsPage] = useState(1);
+  const [msgPage, setMsgPage] = useState(1);
   const itemsPerPage = 10;
 
   const fetchAdminStats = async () => {
@@ -109,6 +112,33 @@ const Admin: React.FC = () => {
   useEffect(() => {
     fetchAdminStats();
   }, []);
+
+  const handleMarkMessageRead = async (msgId: string) => {
+    try {
+      const response = await fetch(`/api/admin/messages/${msgId}/mark-read`, { method: 'POST' });
+      const resData = await response.json();
+      if (response.ok && resData.success) {
+        setActionMessage({ type: 'success', text: 'Message marked as read.' });
+        fetchAdminStats();
+      }
+    } catch (error) {
+      console.error('Mark read error:', error);
+    }
+  };
+
+  const handleDeleteMessage = async (msgId: string) => {
+    if (!window.confirm('Are you sure you want to delete this contact message?')) return;
+    try {
+      const response = await fetch(`/api/admin/messages/${msgId}/delete`, { method: 'POST' });
+      const resData = await response.json();
+      if (response.ok && resData.success) {
+        setActionMessage({ type: 'success', text: 'Message deleted successfully.' });
+        fetchAdminStats();
+      }
+    } catch (error) {
+      console.error('Delete message error:', error);
+    }
+  };
 
   const handleDeleteItem = async (itemId: string) => {
     if (!window.confirm('Are you sure you want to move this item to recoverable trash?')) return;
@@ -149,7 +179,7 @@ const Admin: React.FC = () => {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
-  const handleCardClick = (tab: 'overview' | 'users' | 'items' | 'trash' | 'logs', filterText?: string) => {
+  const handleCardClick = (tab: 'overview' | 'messages' | 'users' | 'items' | 'trash' | 'logs', filterText?: string) => {
     setActiveTab(tab);
     if (filterText) {
       setLogSearchQuery(filterText);
