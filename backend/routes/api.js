@@ -882,11 +882,6 @@ router.post('/api/items/:id/claim', loginRequired, async (req, res) => {
     const user = await User.findById(req.userId);
     if (!user) return res.status(401).json({ success: false, message: 'User authenticated session missing' });
 
-    // Block user from claiming their own reported item
-    if (item.reporter_email && item.reporter_email.toLowerCase() === user.email.toLowerCase()) {
-      return res.status(400).json({ success: false, message: 'You cannot submit a claim on an item you reported yourself.' });
-    }
-
     item.status = 'Claimed';
     item.claim_answers = { answer, timestamp: new Date() };
     item.claimant_email = user.email;

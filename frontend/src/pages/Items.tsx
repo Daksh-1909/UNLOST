@@ -220,63 +220,70 @@ const Items: React.FC = () => {
           <AnimatePresence>
             {items.map((item) => (
               <motion.div
-                key={item.id}
+                key={(item as any)._id || item.id}
                 layout
                 variants={{ ...staggerItem, ...tapHoverVariants }}
                 whileHover="hover"
-                whileTap="tap"
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="glass-card rounded-xl flex flex-col overflow-hidden group cursor-pointer"
-                onClick={() => navigate(`/item/${(item as any)._id || item.id}`)}
+                className="glass-card rounded-xl flex flex-col overflow-hidden group"
               >
-                {/* Image Placeholder */}
-                <div className="h-44 w-full bg-surface/50 relative overflow-hidden flex items-center justify-center border-b border-primary/10">
-                  {item.image_file ? (
-                    <img 
-                      src={item.image_file.startsWith('data:') || item.image_file.startsWith('http') ? item.image_file : `/static/uploads/${item.image_file}`} 
-                      alt={item.title} 
-                      className="w-full h-full object-cover transition-transform duration-500"
-                    />
-                  ) : (
-                    <div className="flex flex-col items-center gap-2 text-textMuted">
-                      <Tag className="h-10 w-10 text-primary/40" />
-                      <span className="text-xs uppercase tracking-wider">{item.category}</span>
+                {/* Clickable Image & Content Details */}
+                <div 
+                  className="cursor-pointer flex-1 flex flex-col"
+                  onClick={() => navigate(`/item/${(item as any)._id || item.id}`)}
+                >
+                  {/* Image Placeholder */}
+                  <div className="h-44 w-full bg-surface/50 relative overflow-hidden flex items-center justify-center border-b border-primary/10">
+                    {item.image_file ? (
+                      <img 
+                        src={item.image_file.startsWith('data:') || item.image_file.startsWith('http') ? item.image_file : `/static/uploads/${item.image_file}`} 
+                        alt={item.title} 
+                        className="w-full h-full object-cover transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center gap-2 text-textMuted">
+                        <Tag className="h-10 w-10 text-primary/40" />
+                        <span className="text-xs uppercase tracking-wider">{item.category}</span>
+                      </div>
+                    )}
+                    {/* Status Badge */}
+                    <span className={`absolute top-3 right-3 px-3 py-1 text-xs font-bold rounded-xl shadow-md select-none ${
+                      item.status === 'Lost' 
+                        ? 'bg-danger/10 text-danger border border-danger/20' 
+                        : item.status === 'Claimed'
+                        ? 'bg-textMuted/10 text-textSecondary border border-textMuted/20'
+                        : 'bg-success/10 text-success border border-success/20'
+                    }`}>
+                      {item.status}
+                    </span>
+                  </div>
+
+                  {/* Content details */}
+                  <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                    <div className="space-y-2">
+                      <h3 className="font-bold text-lg text-text transition-colors line-clamp-1 group-hover:text-primary">
+                        {item.title}
+                      </h3>
+                      <p className="text-sm text-textSecondary line-clamp-2">
+                        {item.description}
+                      </p>
                     </div>
-                  )}
-                  {/* Status Badge */}
-                  <span className={`absolute top-3 right-3 px-3 py-1 text-xs font-bold rounded-xl shadow-md select-none ${
-                    item.status === 'Lost' 
-                      ? 'bg-danger/10 text-danger border border-danger/20' 
-                      : item.status === 'Claimed'
-                      ? 'bg-textMuted/10 text-textSecondary border border-textMuted/20'
-                      : 'bg-success/10 text-success border border-success/20'
-                  }`}>
-                    {item.status}
-                  </span>
+
+                    <div className="space-y-2 text-xs text-textSecondary pt-2 border-t border-primary/10">
+                      <div className="flex items-center gap-1.5">
+                        <MapPin className="h-3.5 w-3.5 text-textMuted" />
+                        <span>{item.location}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Calendar className="h-3.5 w-3.5 text-textMuted" />
+                        <span>{formatDate(item.date)}</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Content details */}
-                <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-                  <div className="space-y-2">
-                    <h3 className="font-bold text-lg text-text transition-colors line-clamp-1">
-                      {item.title}
-                    </h3>
-                    <p className="text-sm text-textSecondary line-clamp-2">
-                      {item.description}
-                    </p>
-                  </div>
-
-                  <div className="space-y-2 text-xs text-textSecondary pt-2 border-t border-primary/10">
-                    <div className="flex items-center gap-1.5">
-                      <MapPin className="h-3.5 w-3.5 text-textMuted" />
-                      <span>{item.location}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Calendar className="h-3.5 w-3.5 text-textMuted" />
-                      <span>{formatDate(item.date)}</span>
-                    </div>
-                  </div>
-
+                {/* Claim Button Footer */}
+                <div className="p-5 pt-0">
                   {item.status !== 'Claimed' && (
                     <motion.button
                       onClick={(e) => {
@@ -290,7 +297,7 @@ const Items: React.FC = () => {
                       variants={buttonHoverVariants}
                       whileHover="hover"
                       whileTap="tap"
-                      className="w-full py-2.5 rounded-xl btn-primary-custom transition-all text-xs font-semibold flex items-center justify-center gap-1.5"
+                      className="w-full py-2.5 rounded-xl btn-primary-custom transition-all text-xs font-semibold flex items-center justify-center gap-1.5 shadow-md"
                     >
                       <ShieldCheck className="h-4 w-4" />
                       <span>{user ? 'Claim Item' : 'Log In to Claim'}</span>
