@@ -4,9 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import { Search as SearchIcon, MapPin, Calendar, Tag, Filter, ShieldCheck, CheckCircle2, AlertCircle, X, HelpCircle, Mail } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { tapHoverVariants, buttonHoverVariants, scrollRevealVariants, scrollRevealViewport, staggerContainer, staggerItem, TRANSITION_BASE } from '../utils/animations';
+import { useAuth } from '../context/AuthContext';
 
 interface Item {
-  id: string;
+  _id?: string;
+  id?: string;
   title: string;
   description: string;
   category: string;
@@ -24,6 +26,7 @@ const STATUSES = ['Lost', 'Found', 'Claimed'];
 
 const Items: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -71,23 +74,27 @@ const Items: React.FC = () => {
     e.preventDefault();
     if (!claimingItem || !claimAnswer.trim()) return;
 
+    const targetId = (claimingItem as any)._id || claimingItem.id;
+    if (!targetId) return;
+
     setVerifying(true);
     setVerificationResult(null);
     try {
       const response = await fetch('/api/verify_claim', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ item_id: claimingItem.id, answer: claimAnswer }),
+        body: JSON.stringify({ item_id: targetId, answer: claimAnswer }),
       });
       const data = await response.json();
       if (data.success) {
-        setVerificationResult({ success: true, data: data.contact_info });
+        setVerificationResult({ success: true, data: data.contact_info || data.message });
+        setItems(prev => prev.map(i => (((i as any)._id === targetId || i.id === targetId) ? { ...i, status: 'Claimed' } : i)));
       } else {
         setVerificationResult({ success: false, message: data.message || 'Verification failed.' });
       }
     } catch (error) {
       console.error('Claim verification error:', error);
-      setVerificationResult({ success: false, message: 'Server is currently unreachable.' });
+      setVerificationResult({ success: false, message: 'Server error while verifying claim.' });
     } finally {
       setVerifying(false);
     }
@@ -274,6 +281,10 @@ const Items: React.FC = () => {
                     <motion.button
                       onClick={(e) => {
                         e.stopPropagation();
+                        if (!user) {
+                          navigate('/login');
+                          return;
+                        }
                         setClaimingItem(item);
                       }}
                       variants={buttonHoverVariants}
@@ -282,7 +293,7 @@ const Items: React.FC = () => {
                       className="w-full py-2.5 rounded-xl btn-primary-custom transition-all text-xs font-semibold flex items-center justify-center gap-1.5"
                     >
                       <ShieldCheck className="h-4 w-4" />
-                      <span>Claim Item</span>
+                      <span>{user ? 'Claim Item' : 'Log In to Claim'}</span>
                     </motion.button>
                   )}
                 </div>

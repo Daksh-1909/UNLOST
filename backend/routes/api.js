@@ -417,28 +417,42 @@ router.post('/api/report', loginRequired, uploadMiddleware, async (req, res) => 
 
 // POST /api/verify_claim
 router.post('/api/verify_claim', loginRequired, verifyRateLimiter, async (req, res) => {
-  const { item_id, answer } = req.body;
-  if (!item_id || !answer) {
-    return res.status(400).json({ success: false, message: 'Missing item_id or answer' });
+  const targetId = req.body.item_id || req.body.id;
+  const { answer } = req.body;
+  if (!targetId || !answer) {
+    return res.status(400).json({ success: false, message: 'Missing item ID or verification answer' });
   }
 
   try {
-    const item = await Item.findById(item_id);
+    const item = await Item.findById(targetId);
     if (!item) {
       return res.status(404).json({ success: false, message: 'Item not found' });
     }
 
+    const user = await User.findById(req.userId);
+
     const cleanInput = answer.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "").replace(/\s+/g, " ").toLowerCase().trim();
     const cleanDb = item.security_answer ? item.security_answer.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "").replace(/\s+/g, " ").toLowerCase().trim() : "";
 
-    if (cleanInput === cleanDb) {
+    const isMatch = !item.security_answer || cleanDb === "" || cleanInput === cleanDb;
+
+    if (isMatch) {
+      item.status = 'Claimed';
+      item.claimant_email = user?.email || 'authenticated_user';
+      item.claim_answers = { answer, timestamp: new Date() };
+      await item.save();
+
+      if (user) {
+        await new Log({ action: `Claim verified for ${item.title}`, user: user.email }).save();
+      }
+
       res.status(200).json({
         success: true,
-        message: 'Security check passed! Please use the contact details below to claim the item.',
-        contact_info: item.contact_info
+        message: 'Security check passed! Claim submitted successfully for admin review.',
+        contact_info: item.contact_info || item.reporter_email
       });
     } else {
-      res.status(200).json({ success: false, message: 'Incorrect answer. Please try again.' });
+      res.status(200).json({ success: false, message: 'Incorrect answer. Please check your verification detail and try again.' });
     }
   } catch (err) {
     if (err.name === 'CastError') {
