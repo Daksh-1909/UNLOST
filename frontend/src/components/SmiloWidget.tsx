@@ -477,15 +477,22 @@ const [thinkIdx, setThinkIdx] = useState(0);
  const [inputValue, setInputValue] = useState('');
  const [botTyping, setBotTyping] = useState(false);
 
- // Global mouse position tracking relative to viewport
- useEffect(() => {
- const handleGlobalMouseMove = (e: MouseEvent) => {
- setMouseX((e.clientX / window.innerWidth - 0.5) * 2);
- setMouseY((e.clientY / window.innerHeight - 0.5) * 2);
- };
- window.addEventListener('mousemove', handleGlobalMouseMove);
- return () => window.removeEventListener('mousemove', handleGlobalMouseMove);
- }, []);
+  // Global mouse position tracking relative to viewport (throttled for 60fps performance)
+  useEffect(() => {
+    let ticking = false;
+    const handleGlobalMouseMove = (e: MouseEvent) => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          setMouseX((e.clientX / window.innerWidth - 0.5) * 2);
+          setMouseY((e.clientY / window.innerHeight - 0.5) * 2);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+    window.addEventListener('mousemove', handleGlobalMouseMove, { passive: true });
+    return () => window.removeEventListener('mousemove', handleGlobalMouseMove);
+  }, []);
 
  // Rotate thinking phrases
  useEffect(() => {

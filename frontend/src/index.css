@@ -69,10 +69,14 @@
 /* Glassmorphism minimal utility classes */
 .glass-panel {
   @apply bg-surface/40 border border-primary/10 backdrop-blur-md rounded-xl shadow-sm;
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 .glass-card {
   @apply bg-surface/50 border border-primary/10 rounded-xl backdrop-blur-md transition-all duration-200 ease-out;
+  will-change: transform, opacity;
+  transform: translateZ(0);
 }
 
 .glass-card:hover {
