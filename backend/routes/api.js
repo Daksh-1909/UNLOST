@@ -332,6 +332,8 @@ const buildItemsFilter = (query) => {
 // GET /api/items
 router.get('/api/items', loginRequired, async (req, res) => {
   try {
+    await Item.deleteMany({ title: { $regex: /Parul Student ID Card|Daksh Patel/i } });
+
     const filter = buildItemsFilter(req.query);
     const limit = parseInt(req.query.limit, 10) || 0; // 0 means no limit
     
@@ -614,6 +616,9 @@ router.get('/api/profile', loginRequired, async (req, res) => {
 // GET /api/admin/stats
 router.get('/api/admin/stats', adminRequired, async (req, res) => {
   try {
+    // Purge unwanted items matching Parul Student ID Card from MongoDB
+    await Item.deleteMany({ title: { $regex: /Parul Student ID Card|Daksh Patel/i } });
+
     const totalItems = await Item.countDocuments({});
     const lostItems = await Item.countDocuments({ status: 'Lost' });
     const foundItems = await Item.countDocuments({ status: 'Found' });
@@ -765,6 +770,26 @@ router.post('/api/admin/recover/:item_id', adminRequired, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid item ID format' });
     }
     res.status(500).json({ success: false, message: 'Failed to recover item.' });
+  }
+});
+
+// POST /api/admin/permanent-delete/:item_id
+router.post('/api/admin/permanent-delete/:item_id', adminRequired, async (req, res) => {
+  const { item_id } = req.params;
+  try {
+    const deletedItem = await Item.findByIdAndDelete(item_id);
+    if (deletedItem) {
+      const user = await User.findById(req.userId);
+      await new Log({
+        action: `Permanently deleted item ${deletedItem.title} (ID: ${item_id})`,
+        admin: user ? user.email : 'Admin'
+      }).save();
+      res.status(200).json({ success: true, message: 'Item permanently deleted from database.' });
+    } else {
+      res.status(404).json({ success: false, message: 'Item not found.' });
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to permanently delete item.' });
   }
 });
 

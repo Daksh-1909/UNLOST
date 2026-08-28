@@ -306,6 +306,41 @@ const Admin: React.FC = () => {
     }
   };
 
+  const handlePermanentDeleteItem = async (itemId: string) => {
+    if (!window.confirm('Are you sure you want to permanently delete this item from the database? This action cannot be undone.')) {
+      return;
+    }
+
+    setData(prev => {
+      if (!prev) return prev;
+      const updatedTrash = prev.trash_items.filter(i => i.id !== itemId);
+      return {
+        ...prev,
+        trash_items: updatedTrash,
+        stats: {
+          ...prev.stats,
+          archived_items: Math.max(0, prev.stats.archived_items - 1)
+        }
+      };
+    });
+
+    try {
+      const response = await fetch(`/api/admin/permanent-delete/${itemId}`, { method: 'POST' });
+      const resData = await response.json();
+      if (response.ok && resData.success) {
+        setActionMessage({ type: 'success', text: resData.message });
+        window.dispatchEvent(new Event('unlost:item_updated'));
+      } else {
+        setActionMessage({ type: 'error', text: resData.message || 'Failed to permanently delete item.' });
+        fetchAdminStats();
+      }
+    } catch (error) {
+      console.error('Permanent delete item error:', error);
+      setActionMessage({ type: 'error', text: 'Server is currently unreachable.' });
+      fetchAdminStats();
+    }
+  };
+
   const formatDate = (dateStr?: string | null) => {
     if (!dateStr) return 'N/A';
     const date = new Date(dateStr);
@@ -1026,13 +1061,23 @@ const Admin: React.FC = () => {
                               )}
                             </td>
                             <td className="py-3.5 px-4 text-right">
-                              <button
-                                onClick={() => handleRecoverItem(item.id)}
-                                className="px-3 py-1.5 bg-primary/10 border border-primary/20 text-primary hover:bg-primary hover:text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm ml-auto"
-                              >
-                                <Archive className="h-3.5 w-3.5" />
-                                <span>Recover Item</span>
-                              </button>
+                              <div className="flex items-center justify-end gap-2">
+                                <button
+                                  onClick={() => handleRecoverItem(item.id)}
+                                  className="px-3 py-1.5 bg-primary/10 border border-primary/20 text-primary hover:bg-primary hover:text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm"
+                                >
+                                  <Archive className="h-3.5 w-3.5" />
+                                  <span>Recover</span>
+                                </button>
+                                <button
+                                  onClick={() => handlePermanentDeleteItem(item.id)}
+                                  className="px-3 py-1.5 bg-danger/10 border border-danger/20 text-danger hover:bg-danger hover:text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm"
+                                  title="Permanently remove from database"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                  <span>Delete Permanently</span>
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         ))}
