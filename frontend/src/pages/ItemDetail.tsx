@@ -220,20 +220,38 @@ const ItemDetail: React.FC = () => {
           {/* Actions */}
           <div className="glass-card p-6 space-y-4">
             <h3 className="font-bold text-lg border-b border-border/30 pb-2">Actions</h3>
-            {user && item.status === 'Found' && user.email !== item.reporter_email && (
-              <motion.button
-                onClick={() => setIsClaiming(true)}
-                className="w-full flex items-center justify-center py-3 bg-primary-gradient text-white rounded-xl font-medium shadow-lg"
-                variants={buttonHoverVariants}
-                whileHover="hover"
-                whileTap="tap"
-              >
-                Claim this item
-              </motion.button>
-            )}
-            
-            {(!user || item.status !== 'Found' || user.email === item.reporter_email) && (
-               <p className="text-sm text-textSecondary text-center">No actions available.</p>
+            {item.status === 'Found' || item.status === 'Lost' ? (
+              user ? (
+                <motion.button
+                  onClick={() => setIsClaiming(true)}
+                  className="w-full flex items-center justify-center py-3 bg-primary-gradient text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all"
+                  variants={buttonHoverVariants}
+                  whileHover="hover"
+                  whileTap="tap"
+                >
+                  <ShieldCheck className="w-5 h-5 mr-2" /> Claim This Item
+                </motion.button>
+              ) : (
+                <motion.button
+                  onClick={() => navigate('/login')}
+                  className="w-full flex items-center justify-center py-3 bg-primary-gradient text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all"
+                  variants={buttonHoverVariants}
+                  whileHover="hover"
+                  whileTap="tap"
+                >
+                  <User className="w-5 h-5 mr-2" /> Log In to Claim Item
+                </motion.button>
+              )
+            ) : item.status === 'Claimed' ? (
+              <div className="p-3 rounded-xl bg-warning/20 text-warning text-sm font-semibold text-center flex items-center justify-center gap-2">
+                <CheckCircle2 className="w-4 h-4" /> Claim Pending Verification
+              </div>
+            ) : item.status === 'Returned' ? (
+              <div className="p-3 rounded-xl bg-success/20 text-success text-sm font-semibold text-center flex items-center justify-center gap-2">
+                <CheckCircle2 className="w-4 h-4" /> Item Returned to Owner
+              </div>
+            ) : (
+              <p className="text-sm text-textSecondary text-center">No actions available.</p>
             )}
           </div>
 
