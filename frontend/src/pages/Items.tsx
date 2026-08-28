@@ -311,74 +311,71 @@ const Items: React.FC = () => {
       )}
 
       {/* Claim Modal overlay */}
-      <AnimatePresence>
-        {claimingItem && createPortal(
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={TRANSITION_BASE}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-md"
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+      {createPortal(
+        <AnimatePresence>
+          {claimingItem && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               transition={TRANSITION_BASE}
-              className="glass-panel w-full max-w-lg rounded-xl overflow-hidden shadow-lg border border-primary/10"
+              className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/75 backdrop-blur-md"
+              onClick={closeClaimModal}
             >
-              {/* Modal header */}
-              <div className="border-b border-primary/10 p-5 flex items-center justify-between bg-surface/80">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <ShieldCheck className="h-5 w-5 text-primary" />
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                transition={TRANSITION_BASE}
+                className="glass-panel w-full max-w-lg rounded-xl overflow-hidden shadow-2xl border border-primary/20 bg-surface/95"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Modal header */}
+                <div className="border-b border-primary/10 p-5 flex items-center justify-between bg-surface/80">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <ShieldCheck className="h-5 w-5 text-primary" />
+                    </div>
+                    <h3 className="font-extrabold font-heading text-lg text-text tracking-tight">Security Claim Verification</h3>
                   </div>
-                  <h3 className="font-extrabold font-heading text-lg text-text tracking-tight">Security Claim Verification</h3>
-                </div>
-                <motion.button
-                  onClick={closeClaimModal}
-                  variants={tapHoverVariants}
-                  whileHover="hover"
-                  whileTap="tap"
-                  className="p-1.5 rounded-lg text-textMuted hover:text-text hover:bg-primary/5 transition-colors"
-                >
-                  <X className="h-5 w-5" />
-                </motion.button>
-              </div>
-
-              {/* Modal body */}
-              <div className="p-6 space-y-6">
-                <div className="space-y-2">
-                  <h4 className="font-bold text-text text-base">{claimingItem.title}</h4>
-                  <p className="text-sm text-textSecondary">{claimingItem.description}</p>
+                  <motion.button
+                    onClick={closeClaimModal}
+                    variants={tapHoverVariants}
+                    whileHover="hover"
+                    whileTap="tap"
+                    className="p-1.5 rounded-lg text-textMuted hover:text-text hover:bg-primary/5 transition-colors"
+                  >
+                    <X className="h-5 w-5" />
+                  </motion.button>
                 </div>
 
-                {!claimingItem.has_security_answer ? (
-                  <div className="p-4 bg-danger/10 border border-danger/20 text-danger text-sm rounded-xl flex items-start gap-2.5">
-                    <AlertCircle className="h-5 w-5 text-danger flex-shrink-0 mt-0.5" />
-                    <span>This item does not have a claim verification question configured. Please reach out to administration to verify identity.</span>
+                {/* Modal body */}
+                <div className="p-6 space-y-6">
+                  <div className="space-y-2">
+                    <h4 className="font-bold text-text text-base">{claimingItem.title}</h4>
+                    <p className="text-sm text-textSecondary">{claimingItem.description}</p>
                   </div>
-                ) : (
+
                   <form onSubmit={handleClaimSubmit} className="space-y-4">
                     <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 space-y-2">
                       <div className="flex items-center gap-1.5 text-primary font-semibold text-xs uppercase tracking-wider">
                         <HelpCircle className="h-4 w-4" />
-                        <span>Security Question</span>
+                        <span>Verification Detail / Security Question</span>
                       </div>
                       <p className="text-sm text-text">
-                        {claimingItem.security_question || 'Describe ownership characteristics of this item.'}
+                        {claimingItem.security_question || 'Describe a unique mark, scratch, serial number, or exact contents inside this item.'}
                       </p>
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-textSecondary uppercase tracking-wider">Your Answer</label>
-                      <input
-                        type="text"
+                      <label className="text-xs font-semibold text-textSecondary uppercase tracking-wider">Your Answer / Proof of Ownership</label>
+                      <textarea
                         required
+                        rows={3}
                         value={claimAnswer}
                         onChange={(e) => setClaimAnswer(e.target.value)}
                         placeholder="Provide details to verify your claim..."
-                        className="glass-input w-full"
+                        className="glass-input w-full resize-none"
                         disabled={verifying || (verificationResult?.success ?? false)}
                       />
                     </div>
@@ -414,40 +411,50 @@ const Items: React.FC = () => {
                       </motion.div>
                     )}
 
-                    {!verificationResult?.success && (
-                      <motion.button
-                        type="submit"
-                        disabled={verifying}
-                        variants={buttonHoverVariants}
-                        whileHover={!verifying ? "hover" : ""}
-                        whileTap={!verifying ? "tap" : ""}
-                        className="w-full py-3 rounded-xl btn-primary-custom disabled:opacity-50 text-sm font-semibold flex items-center justify-center gap-2"
+                    <div className="flex items-center gap-3 pt-2">
+                      <button
+                        type="button"
+                        onClick={closeClaimModal}
+                        className="flex-1 py-3 rounded-xl border border-primary/20 text-textSecondary hover:bg-primary/5 transition-all text-sm font-semibold"
                       >
-                        {verifying ? (
-                          <>
-                            <motion.div 
-                              animate={{ rotate: 360 }} 
-                              transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-                              className="h-4 w-4 rounded-xl border-2 border-white/30 border-t-white"
-                            />
-                            <span>Verifying Claim Answer...</span>
-                          </>
-                        ) : (
-                          <>
-                            <ShieldCheck className="h-4 w-4" />
-                            <span>Verify Ownership</span>
-                          </>
-                        )}
-                      </motion.button>
-                    )}
+                        Cancel
+                      </button>
+
+                      {!verificationResult?.success && (
+                        <motion.button
+                          type="submit"
+                          disabled={verifying}
+                          variants={buttonHoverVariants}
+                          whileHover={!verifying ? "hover" : ""}
+                          whileTap={!verifying ? "tap" : ""}
+                          className="flex-1 py-3 rounded-xl btn-primary-custom disabled:opacity-50 text-sm font-semibold flex items-center justify-center gap-2"
+                        >
+                          {verifying ? (
+                            <>
+                              <motion.div 
+                                animate={{ rotate: 360 }} 
+                                transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                                className="h-4 w-4 rounded-xl border-2 border-white/30 border-t-white"
+                              />
+                              <span>Verifying...</span>
+                            </>
+                          ) : (
+                            <>
+                              <ShieldCheck className="h-4 w-4" />
+                              <span>Submit Claim</span>
+                            </>
+                          )}
+                        </motion.button>
+                      )}
+                    </div>
                   </form>
-                )}
-              </div>
+                </div>
+              </motion.div>
             </motion.div>
-          </motion.div>,
-          document.body
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </motion.div>
   );
 };
