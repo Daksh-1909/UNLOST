@@ -122,6 +122,32 @@ const Admin: React.FC = () => {
 
   useEffect(() => {
     fetchAdminStats();
+
+    const handleItemUpdate = () => {
+      fetchAdminStats();
+    };
+
+    // 1. Listen for custom item creation/deletion/recovery events
+    window.addEventListener('unlost:item_updated', handleItemUpdate);
+
+    // 2. Refresh stats when window gains focus or tab becomes visible
+    const handleFocus = () => {
+      fetchAdminStats();
+    };
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleFocus);
+
+    // 3. Periodic 5-second polling for real-time dashboard updates
+    const intervalId = setInterval(() => {
+      fetchAdminStats();
+    }, 5000);
+
+    return () => {
+      window.removeEventListener('unlost:item_updated', handleItemUpdate);
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleFocus);
+      clearInterval(intervalId);
+    };
   }, []);
 
   const handleMarkMessageRead = async (msgId: string) => {
@@ -221,6 +247,7 @@ const Admin: React.FC = () => {
       const resData = await response.json();
       if (response.ok && resData.success) {
         setActionMessage({ type: 'success', text: resData.message });
+        window.dispatchEvent(new Event('unlost:item_updated'));
       } else {
         setActionMessage({ type: 'error', text: resData.message || 'Failed to archive item.' });
         fetchAdminStats();
@@ -267,6 +294,7 @@ const Admin: React.FC = () => {
       const resData = await response.json();
       if (response.ok && resData.success) {
         setActionMessage({ type: 'success', text: resData.message });
+        window.dispatchEvent(new Event('unlost:item_updated'));
       } else {
         setActionMessage({ type: 'error', text: resData.message || 'Failed to recover item.' });
         fetchAdminStats();

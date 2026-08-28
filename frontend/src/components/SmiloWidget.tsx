@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useCallback, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, useMotionValue, useSpring } from 'framer-motion';
 
 /* ══════════════════════════════════════════════════════ */
@@ -462,10 +462,12 @@ const SmiloWidget: React.FC = () => {
   const [msgIndex, setMsgIndex] = useState(0);
   const [showMsg, setShowMsg] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
-  const [thinkIdx, setThinkIdx] = useState(0);
+const [thinkIdx, setThinkIdx] = useState(0);
  const [soundActive, setSoundActive] = useState(false);
  const [particles, setParticles] = useState<{id:number;angle:number;color:string;dist:number}[]>([]);
  const [clickCount, setClickCount] = useState(0);
+
+ const navigate = useNavigate();
 
  // Chat Panel State
  const [chatOpen, setChatOpen] = useState(false);
@@ -600,14 +602,29 @@ const SmiloWidget: React.FC = () => {
  if (match.index > lastIndex) {
  parts.push(text.substring(lastIndex, match.index));
  }
+ const label = match[1];
+ const targetUrl = match[2];
+ const isInternal = targetUrl.startsWith('/') || targetUrl.startsWith(window.location.origin);
  parts.push(
+ isInternal ? (
+ <button 
+ key={match.index} 
+ onClick={() => navigate(targetUrl)}
+ className="text-emerald-400 hover:underline hover:text-emerald-300 font-semibold cursor-pointer border-none bg-transparent p-0 inline text-left"
+ >
+ {label}
+ </button>
+ ) : (
  <a 
  key={match.index} 
- href={match[2]} 
+ href={targetUrl} 
+ target="_blank"
+ rel="noopener noreferrer"
  className="text-emerald-400 hover:underline hover:text-emerald-300 font-semibold"
  >
- {match[1]}
+ {label}
  </a>
+ )
  );
  lastIndex = regex.lastIndex;
  }

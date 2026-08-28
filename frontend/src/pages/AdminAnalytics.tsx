@@ -17,13 +17,32 @@ const AdminAnalytics: React.FC = () => {
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchAnalytics = () => {
     fetch('/api/admin/analytics')
       .then(res => res.json())
       .then(data => {
         if (data.success) setAnalytics(data.analytics);
         setLoading(false);
-      });
+      })
+      .catch(err => console.error(err));
+  };
+
+  useEffect(() => {
+    fetchAnalytics();
+
+    const handleUpdate = () => fetchAnalytics();
+    window.addEventListener('unlost:item_updated', handleUpdate);
+    window.addEventListener('focus', handleUpdate);
+    document.addEventListener('visibilitychange', handleUpdate);
+
+    const interval = setInterval(fetchAnalytics, 5000);
+
+    return () => {
+      window.removeEventListener('unlost:item_updated', handleUpdate);
+      window.removeEventListener('focus', handleUpdate);
+      document.removeEventListener('visibilitychange', handleUpdate);
+      clearInterval(interval);
+    };
   }, []);
 
   const handleApprove = async (id: string) => {
@@ -35,6 +54,7 @@ const AdminAnalytics: React.FC = () => {
           ...prev,
           claimsPending: prev.claimsPending.filter(c => c._id !== id)
         } : null);
+        window.dispatchEvent(new Event('unlost:item_updated'));
       }
     } catch (err) {
       console.error(err);

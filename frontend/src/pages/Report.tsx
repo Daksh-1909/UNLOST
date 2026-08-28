@@ -70,6 +70,7 @@ const Report: React.FC = () => {
  });
  const data = await response.json();
  if (response.ok && data.success) {
+ window.dispatchEvent(new Event('unlost:item_updated'));
  setSuccess(true);
  setTimeout(() => {
  navigate('/items');
