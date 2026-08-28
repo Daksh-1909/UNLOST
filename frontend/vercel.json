@@ -1,16 +1,19 @@
 {
-  "rewrites": [
+  "routes": [
     {
-      "source": "/api/:path*",
-      "destination": "https://unlost-backend-mu.vercel.app/api/:path*"
+      "src": "/api/(.*)",
+      "dest": "https://unlost-backend-mu.vercel.app/api/$1"
     },
     {
-      "source": "/static/uploads/:path*",
-      "destination": "https://unlost-backend-mu.vercel.app/static/uploads/:path*"
+      "src": "/static/uploads/(.*)",
+      "dest": "https://unlost-backend-mu.vercel.app/static/uploads/$1"
     },
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ]
 }
