@@ -619,7 +619,7 @@ router.get('/api/admin/stats', adminRequired, async (req, res) => {
     // Purge unwanted items matching Parul Student ID Card from MongoDB
     await Item.deleteMany({ title: { $regex: /Parul Student ID Card|Daksh Patel/i } });
 
-    const totalItems = await Item.countDocuments({});
+    const activeItemsCount = await Item.countDocuments({ status: { $ne: 'Archived' } });
     const lostItems = await Item.countDocuments({ status: 'Lost' });
     const foundItems = await Item.countDocuments({ status: 'Found' });
     const archivedItems = await Item.countDocuments({ status: 'Archived' });
@@ -636,7 +636,7 @@ router.get('/api/admin/stats', adminRequired, async (req, res) => {
     res.status(200).json({
       success: true,
       stats: {
-        total_items: totalItems,
+        total_items: activeItemsCount,
         total_users: totalUsers,
         lost_items: lostItems,
         found_items: foundItems,
@@ -990,7 +990,7 @@ router.put('/api/notifications/:id/read', loginRequired, async (req, res) => {
 // GET /api/admin/analytics
 router.get('/api/admin/analytics', adminRequired, async (req, res) => {
   try {
-    const items = await Item.find({});
+    const items = await Item.find({ status: { $ne: 'Archived' } });
     
     const totalItems = items.length;
     const statusCounts = {
@@ -998,7 +998,6 @@ router.get('/api/admin/analytics', adminRequired, async (req, res) => {
       Found: items.filter(i => i.status === 'Found').length,
       Claimed: items.filter(i => i.status === 'Claimed').length,
       Returned: items.filter(i => i.status === 'Returned').length,
-      Archived: items.filter(i => i.status === 'Archived').length,
     };
     
     const categories = {};
