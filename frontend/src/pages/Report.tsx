@@ -280,6 +280,9 @@ const Report: React.FC = () => {
  placeholder="e.g. Library 2nd Floor, Cafeteria"
  className="glass-input w-full"
  />
+ <p className="text-[11px] text-textSecondary/80 font-medium leading-tight">
+   *If you don't know the location, write "Don't know" or "N/A"
+ </p>
  </div>
 
  <div className="space-y-1.5">
