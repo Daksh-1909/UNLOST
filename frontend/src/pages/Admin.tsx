@@ -347,6 +347,18 @@ const Admin: React.FC = () => {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
+  const formatDateTime = (dateStr?: string | null) => {
+    if (!dateStr) return 'N/A';
+    const date = new Date(dateStr);
+    return date.toLocaleString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric', 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+  };
+
   const handleCardClick = (tab: 'overview' | 'messages' | 'users' | 'items' | 'trash' | 'logs', filterText?: string) => {
     setActiveTab(tab);
     if (filterText) {
@@ -603,15 +615,20 @@ const Admin: React.FC = () => {
                 </div>
                 <div className="space-y-3">
                   {data?.logs.slice(0, 5).map((log, i) => (
-                    <div key={i} className="p-4 rounded-xl bg-surface border border-primary/10 shadow-sm flex flex-col gap-1.5 text-xs">
+                    <div key={i} className={`p-4 rounded-xl border shadow-sm flex flex-col gap-1.5 text-xs transition-all ${
+                      log.action.includes('Security Alert') ? 'bg-danger/10 border-danger/30' : 'bg-surface border-primary/10'
+                    }`}>
                       <div className="flex items-center justify-between text-textSecondary">
-                        <span className="font-semibold">{log.user}</span>
-                        <span>{formatDate(log.timestamp)}</span>
+                        <span className="font-semibold text-primary">{log.user}</span>
+                        <span className="text-[11px] text-textMuted">{formatDateTime(log.timestamp)}</span>
                       </div>
-                      <p className={`font-medium ${
-                        log.action.includes('Security Alert') ? 'text-danger' : 'text-text'
+                      <p className={`font-medium flex items-center gap-1.5 ${
+                        log.action.includes('Security Alert') ? 'text-danger font-bold' : 'text-text'
                       }`}>
-                        {log.action} {log.item_title && `• ${log.item_title}`}
+                        {log.action.includes('Security Alert') && (
+                          <AlertTriangle className="h-4 w-4 text-danger flex-shrink-0" />
+                        )}
+                        <span>{log.action} {log.item_title && `• ${log.item_title}`}</span>
                       </p>
                     </div>
                   ))}
@@ -1125,24 +1142,31 @@ const Admin: React.FC = () => {
                         <tr className="text-textSecondary font-semibold text-xs uppercase tracking-wider border-b border-primary/10">
                           <th className="py-3 px-4">Timestamp</th>
                           <th className="py-3 px-4">Action Event</th>
-                          <th className="py-3 px-4">Operator</th>
+                          <th className="py-3 px-4">Operator / User</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-primary/10">
                         {filteredLogs.slice((logsPage - 1) * itemsPerPage, logsPage * itemsPerPage).map((log, i) => (
-                          <tr key={i} className="hover:bg-surface/80 transition-all text-text">
-                            <td className="py-3.5 px-4 font-medium flex items-center gap-1.5 text-textMuted">
-                              <Calendar className="h-3.5 w-3.5" />
-                              <span>{formatDate(log.timestamp)}</span>
+                          <tr key={i} className={`hover:bg-surface/80 transition-all text-text ${
+                            log.action.includes('Security Alert') ? 'bg-danger/5 hover:bg-danger/10' : ''
+                          }`}>
+                            <td className="py-3.5 px-4 font-medium text-textMuted whitespace-nowrap">
+                              <div className="flex items-center gap-1.5">
+                                <Calendar className="h-3.5 w-3.5 flex-shrink-0" />
+                                <span>{formatDateTime(log.timestamp)}</span>
+                              </div>
                             </td>
                             <td className="py-3.5 px-4">
-                              <span className={`font-semibold ${
+                              <span className={`font-semibold flex items-center gap-1.5 ${
                                 log.action.includes('Security Alert') ? 'text-danger' : 'text-text'
                               }`}>
-                                {log.action}
+                                {log.action.includes('Security Alert') && (
+                                  <AlertTriangle className="h-4 w-4 text-danger flex-shrink-0" />
+                                )}
+                                <span>{log.action}</span>
                               </span>
                             </td>
-                            <td className="py-3.5 px-4 truncate max-w-[150px] font-semibold text-primary">{log.user}</td>
+                            <td className="py-3.5 px-4 truncate max-w-[200px] font-semibold text-primary">{log.user}</td>
                           </tr>
                         ))}
                       </tbody>

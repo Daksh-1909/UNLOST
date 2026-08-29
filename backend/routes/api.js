@@ -444,7 +444,7 @@ router.post('/api/verify_claim', loginRequired, verifyRateLimiter, async (req, r
       await item.save();
 
       if (user) {
-        await new Log({ action: `Claim verified for ${item.title}`, user: user.email }).save();
+        await new Log({ action: `Claim verified for "${item.title}"`, user: user.email }).save();
       }
 
       res.status(200).json({
@@ -453,6 +453,13 @@ router.post('/api/verify_claim', loginRequired, verifyRateLimiter, async (req, r
         contact_info: item.contact_info || item.reporter_email
       });
     } else {
+      const userEmail = user?.email || req.user?.email || 'authenticated_user';
+      const fakeAttemptLog = new Log({
+        action: `Security Alert: Fake/Incorrect claim attempt for "${item.title}" (Entered: "${answer}")`,
+        user: userEmail
+      });
+      await fakeAttemptLog.save();
+
       res.status(200).json({ success: false, message: 'Incorrect answer. Please check your verification detail and try again.' });
     }
   } catch (err) {
@@ -623,11 +630,17 @@ router.get('/api/admin/stats', adminRequired, async (req, res) => {
 
     const recentItems = await Item.find({ status: { $ne: 'Archived' } }).sort({ date: -1 }).limit(20);
     const trashItems = await Item.find({ status: 'Archived' }).sort({ date: -1 }).limit(20);
-    const logs = await Log.find().sort({ timestamp: -1 }).limit(20);
+    const logs = await Log.find().sort({ timestamp: -1 }).limit(100);
     const users = await User.find({}, '-password').sort({ date_created: -1, _id: -1 });
 
     const unreadMessages = await ContactMessage.countDocuments({ status: 'Unread' });
     const contactMessages = await ContactMessage.find({}).sort({ date: -1 });
+
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const securityAlerts = await Log.countDocuments({ action: { $regex: /Security Alert/i } });
+    const newToday = await Log.countDocuments({ timestamp: { $gte: startOfToday } });
 
     res.status(200).json({
       success: true,
@@ -638,8 +651,8 @@ router.get('/api/admin/stats', adminRequired, async (req, res) => {
         found_items: foundItems,
         archived_items: archivedItems,
         unread_messages: unreadMessages,
-        new_today: 0,
-        security_alerts: 0
+        new_today: newToday,
+        security_alerts: securityAlerts
       },
       recent_items: recentItems.map(i => ({
         id: i._id.toString(),
@@ -648,20 +661,20 @@ router.get('/api/admin/stats', adminRequired, async (req, res) => {
         status: i.status,
         location: i.location,
         date: i.date,
-        reporter_email: 'Anonymous'
+        reporter_email: i.reporter_email || 'Anonymous'
       })),
       trash_items: trashItems.map(i => ({
         id: i._id.toString(),
         title: i.title,
-        previous_status: 'Unknown',
+        previous_status: 'Archived',
         deleted_at: i.date,
         days_deleted: 0
       })),
       logs: logs.map(l => ({
         action: l.action,
-        item_title: l.item_title || 'N/A',
+        item_title: l.item_title || '',
         timestamp: l.timestamp || new Date(),
-        user: l.admin || 'System',
+        user: l.user || l.admin || 'System',
         item_id: 'N/A'
       })),
       contact_messages: contactMessages.map(m => ({
@@ -904,13 +917,28 @@ router.post('/api/items/:id/claim', loginRequired, async (req, res) => {
     const user = await User.findById(req.userId);
     if (!user) return res.status(401).json({ success: false, message: 'User authenticated session missing' });
 
+    // Validate security answer if configured on the item
+    if (item.security_answer && item.security_answer.trim() !== '') {
+      const cleanInput = (answer || "").replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "").replace(/\s+/g, " ").toLowerCase().trim();
+      const cleanDb = item.security_answer.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "").replace(/\s+/g, " ").toLowerCase().trim();
+
+      if (cleanInput !== cleanDb) {
+        await new Log({
+          action: `Security Alert: Fake/Incorrect claim attempt for "${item.title}" (Entered: "${answer || 'None'}")`,
+          user: user.email
+        }).save();
+
+        return res.status(400).json({ success: false, message: 'Incorrect verification answer. Claim attempt flagged.' });
+      }
+    }
+
     item.status = 'Claimed';
     item.claim_answers = { answer, timestamp: new Date() };
     item.claimant_email = user.email;
     await item.save();
     
     // Log
-    await new Log({ action: `Claim submitted for ${item.title}`, user: user.email }).save();
+    await new Log({ action: `Claim submitted for "${item.title}"`, user: user.email }).save();
     
     res.json({ success: true, message: 'Claim submitted successfully for admin review.' });
   } catch (err) {
