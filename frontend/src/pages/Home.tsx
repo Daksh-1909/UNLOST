@@ -317,7 +317,7 @@ const Home: React.FC = () => {
   const returnedPercentage = platformStats.total > 0
     ? platformStats.returnedPercentage
     : (allItems.length > 0 ? Math.round((allItems.filter(i => i.status === 'Claimed' || i.status === 'Returned').length / allItems.length) * 100) : 0);
-  const activeReportsCount = platformStats.total > 0 ? platformStats.activeReports : (lostItemsCount + foundItemsCount);
+  const totalReportsCount = platformStats.total > 0 ? platformStats.total : allItems.length;
   
   const statsList = [
     { 
@@ -345,10 +345,10 @@ const Home: React.FC = () => {
       glow: 'rgba(92,50,30,0.04)' 
     },
     { 
-      title: 'Active Reports', 
-      value: activeReportsCount, 
+      title: 'Total Reports', 
+      value: totalReportsCount, 
       suffix: '', 
-      percentage: Math.min(100, Math.max(8, Math.round((activeReportsCount / total) * 100))),
+      percentage: totalReportsCount > 0 ? 100 : 0,
       labelColor: 'text-secondary', 
       glow: 'rgba(92,50,30,0.04)' 
     }
