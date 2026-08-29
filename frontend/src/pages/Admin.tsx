@@ -449,8 +449,7 @@ const Admin: React.FC = () => {
   // Filtering logs
   const filteredLogs = (data?.logs || []).filter(l => 
     l.action.toLowerCase().includes(logSearchQuery.toLowerCase()) ||
-    l.user.toLowerCase().includes(logSearchQuery.toLowerCase()) ||
-    l.item_title.toLowerCase().includes(logSearchQuery.toLowerCase())
+    l.user.toLowerCase().includes(logSearchQuery.toLowerCase())
   );
 
   return (
@@ -637,7 +636,7 @@ const Admin: React.FC = () => {
                     value={msgSearchQuery}
                     onChange={(e) => { setMsgSearchQuery(e.target.value); setMsgPage(1); }}
                     placeholder="Search contact messages by sender name, email, subject, or content..."
-                    className="glass-input pl-10 pr-10 w-full text-sm"
+                    className="glass-input !pl-10 !pr-10 w-full text-sm"
                   />
                   {msgSearchQuery && (
                     <button 
@@ -794,7 +793,7 @@ const Admin: React.FC = () => {
                     value={userSearchQuery}
                     onChange={(e) => { setUserSearchQuery(e.target.value); setUsersPage(1); }}
                     placeholder="Search users by name, email, or role..."
-                    className="glass-input pl-10 pr-10 w-full text-sm"
+                    className="glass-input !pl-10 !pr-10 w-full text-sm"
                   />
                   {userSearchQuery && (
                     <button 
@@ -934,7 +933,7 @@ const Admin: React.FC = () => {
                   value={itemSearchQuery}
                   onChange={(e) => { setItemSearchQuery(e.target.value); setItemsPage(1); }}
                   placeholder="Search items by title, category, location, or reporter..."
-                  className="glass-input pl-10 pr-10 w-full text-sm"
+                  className="glass-input !pl-10 !pr-10 w-full text-sm"
                 />
                 {itemSearchQuery && (
                   <button 
@@ -1103,8 +1102,8 @@ const Admin: React.FC = () => {
                   type="text"
                   value={logSearchQuery}
                   onChange={(e) => { setLogSearchQuery(e.target.value); setLogsPage(1); }}
-                  placeholder="Search logs by action event, user, or entity reference..."
-                  className="glass-input pl-10 pr-10 w-full text-sm"
+                  placeholder="Search logs by action event or operator..."
+                  className="glass-input !pl-10 !pr-10 w-full text-sm"
                 />
                 {logSearchQuery && (
                   <button 
@@ -1126,7 +1125,6 @@ const Admin: React.FC = () => {
                         <tr className="text-textSecondary font-semibold text-xs uppercase tracking-wider border-b border-primary/10">
                           <th className="py-3 px-4">Timestamp</th>
                           <th className="py-3 px-4">Action Event</th>
-                          <th className="py-3 px-4">Entity reference</th>
                           <th className="py-3 px-4">Operator</th>
                         </tr>
                       </thead>
@@ -1144,7 +1142,6 @@ const Admin: React.FC = () => {
                                 {log.action}
                               </span>
                             </td>
-                            <td className="py-3.5 px-4">{log.item_title || 'N/A'}</td>
                             <td className="py-3.5 px-4 truncate max-w-[150px] font-semibold text-primary">{log.user}</td>
                           </tr>
                         ))}
