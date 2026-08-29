@@ -2,9 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
-import { MapPin, Calendar, Tag, ShieldCheck, CheckCircle2, User, Download } from 'lucide-react';
+import { MapPin, Calendar, Tag, ShieldCheck, CheckCircle2, User, Download, AlertCircle, Mail, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { scrollRevealVariants, buttonHoverVariants } from '../utils/animations';
+import { scrollRevealVariants, buttonHoverVariants, TRANSITION_BASE } from '../utils/animations';
 import { useAuth } from '../context/AuthContext';
 
 interface Item {
@@ -19,6 +19,7 @@ interface Item {
   security_question: string | null;
   has_security_answer: boolean;
   reporter_email: string;
+  contact_info?: string;
 }
 
 const ItemDetail: React.FC = () => {
@@ -32,7 +33,7 @@ const ItemDetail: React.FC = () => {
   const [isClaiming, setIsClaiming] = useState(false);
   const [claimAnswer, setClaimAnswer] = useState('');
   const [submittingClaim, setSubmittingClaim] = useState(false);
-  const [claimResult, setClaimResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [claimResult, setClaimResult] = useState<{ success: boolean; message?: string; data?: string } | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -58,6 +59,17 @@ const ItemDetail: React.FC = () => {
     };
   }, [id]);
 
+  useEffect(() => {
+    if (isClaiming) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [isClaiming]);
+
   const handleDownloadQR = () => {
     const svg = document.getElementById('item-qr-code');
     if (!svg) return;
@@ -74,7 +86,7 @@ const ItemDetail: React.FC = () => {
         ctx.drawImage(img, 0, 0);
         const pngFile = canvas.toDataURL('image/png');
         const downloadLink = document.createElement('a');
-        downloadLink.download = `qr-${item?.title.replace(/\\s+/g, '-')}.png`;
+        downloadLink.download = `qr-${item?.title.replace(/\s+/g, '-')}.png`;
         downloadLink.href = `${pngFile}`;
         downloadLink.click();
       }
@@ -89,22 +101,38 @@ const ItemDetail: React.FC = () => {
     setSubmittingClaim(true);
     setClaimResult(null);
     try {
-      const response = await fetch(`/api/items/${id}/claim`, {
+      const response = await fetch('/api/verify_claim', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ answer: claimAnswer }),
+        body: JSON.stringify({ item_id: id, answer: claimAnswer }),
       });
       const data = await response.json();
-      setClaimResult(data);
       if (data.success) {
+        setClaimResult({
+          success: true,
+          message: data.message || 'Security check passed! Claim submitted successfully.',
+          data: data.contact_info
+        });
         setItem(prev => prev ? { ...prev, status: 'Claimed' } : null);
-        setTimeout(() => setIsClaiming(false), 2000);
+        window.dispatchEvent(new Event('unlost:item_updated'));
+      } else {
+        setClaimResult({
+          success: false,
+          message: data.message || 'Incorrect verification answer. Please try again.'
+        });
       }
     } catch (error) {
-      setClaimResult({ success: false, message: 'Server error' });
+      console.error('Claim verification error:', error);
+      setClaimResult({ success: false, message: 'Server error while verifying claim.' });
     } finally {
       setSubmittingClaim(false);
     }
+  };
+
+  const closeClaimModal = () => {
+    setIsClaiming(false);
+    setClaimAnswer('');
+    setClaimResult(null);
   };
 
   if (loading) {
@@ -131,7 +159,7 @@ const ItemDetail: React.FC = () => {
       animate="visible"
       className="max-w-4xl mx-auto space-y-8"
     >
-      <button onClick={() => navigate(-1)} className="text-sm text-textSecondary hover:text-text">&larr; Back</button>
+      <button onClick={() => navigate(-1)} className="text-sm text-textSecondary hover:text-text cursor-pointer">&larr; Back</button>
 
       {/* Progress Tracker / Timeline */}
       <div className="glass-panel p-6 mb-8">
@@ -221,8 +249,12 @@ const ItemDetail: React.FC = () => {
             {item.status === 'Found' || item.status === 'Lost' ? (
               user ? (
                 <motion.button
-                  onClick={() => setIsClaiming(true)}
-                  className="w-full flex items-center justify-center py-3 bg-primary-gradient text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all"
+                  type="button"
+                  onClick={() => {
+                    setIsClaiming(true);
+                    setClaimResult(null);
+                  }}
+                  className="w-full flex items-center justify-center py-3 bg-primary-gradient text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all cursor-pointer"
                   variants={buttonHoverVariants}
                   whileHover="hover"
                   whileTap="tap"
@@ -231,8 +263,9 @@ const ItemDetail: React.FC = () => {
                 </motion.button>
               ) : (
                 <motion.button
+                  type="button"
                   onClick={() => navigate('/login')}
-                  className="w-full flex items-center justify-center py-3 bg-primary-gradient text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all"
+                  className="w-full flex items-center justify-center py-3 bg-primary-gradient text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all cursor-pointer"
                   variants={buttonHoverVariants}
                   whileHover="hover"
                   whileTap="tap"
@@ -269,8 +302,9 @@ const ItemDetail: React.FC = () => {
                 />
               </div>
               <motion.button
+                type="button"
                 onClick={handleDownloadQR}
-                className="flex items-center text-sm font-medium text-primary hover:text-secondary transition-colors"
+                className="flex items-center text-sm font-medium text-primary hover:text-secondary transition-colors cursor-pointer"
                 variants={buttonHoverVariants}
                 whileHover="hover"
                 whileTap="tap"
@@ -283,27 +317,51 @@ const ItemDetail: React.FC = () => {
       </div>
 
       {/* Claim Modal */}
-      <AnimatePresence>
-        {isClaiming && createPortal(
-          <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-background/80 backdrop-blur-sm">
+      {createPortal(
+        <AnimatePresence>
+          {isClaiming && (
+            <motion.div
+              key="item-detail-claim-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-background/80 backdrop-blur-sm"
+              onClick={(e) => {
+                if (e.target === e.currentTarget) {
+                  closeClaimModal();
+                }
+              }}
+            >
               <motion.div
+                key="item-detail-claim-content"
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                transition={TRANSITION_BASE}
                 className="w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl border border-primary/20 bg-surface text-text backdrop-blur-xl p-6 md:p-8 space-y-6"
+                onClick={(e) => e.stopPropagation()}
               >
-                <div className="space-y-1.5">
-                  <h2 className="text-2xl font-bold font-heading text-text">Verify Your Claim</h2>
-                  <p className="text-textSecondary text-sm">
-                    To claim this item, please answer the security question provided by the finder.
-                  </p>
+                <div className="flex items-start justify-between">
+                  <div className="space-y-1">
+                    <h2 className="text-2xl font-bold font-heading text-text">Verify Your Claim</h2>
+                    <p className="text-textSecondary text-sm">
+                      To claim this item, please answer the security question provided by the finder.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={closeClaimModal}
+                    className="p-1 rounded-lg text-textMuted hover:text-text hover:bg-primary/10 transition-colors"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
                 </div>
 
                 <form onSubmit={handleClaimSubmit} className="space-y-4">
                   <div className="p-4 rounded-xl bg-primary/10 border border-primary/20 space-y-2">
                     <label className="block text-xs font-bold text-primary uppercase tracking-wider">Security Question / Verification Detail</label>
                     <p className="text-sm font-medium text-text">
-                      {item.security_question || "Describe a unique mark, scratch, or the exact contents of this item."}
+                      {item.security_question || "Describe a unique mark, scratch, serial number, or exact contents of this item."}
                     </p>
                   </div>
 
@@ -313,43 +371,88 @@ const ItemDetail: React.FC = () => {
                       required
                       value={claimAnswer}
                       onChange={(e) => setClaimAnswer(e.target.value)}
-                      className="w-full resize-none bg-background border border-primary/20 text-text placeholder-textMuted focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-xl p-3.5 text-sm transition-all min-h-[100px]"
-                      placeholder="Your detailed answer..."
+                      disabled={submittingClaim || (claimResult?.success ?? false)}
+                      className="w-full resize-none bg-background border border-primary/20 text-text placeholder-textMuted focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-xl p-3.5 text-sm transition-all min-h-[100px] disabled:opacity-50"
+                      placeholder="Type your verification answer here..."
                     />
                   </div>
 
                   {claimResult && (
-                    <div className={`p-4 rounded-xl text-sm font-medium flex items-center gap-2 ${claimResult.success ? 'bg-success/15 text-success border border-success/30' : 'bg-danger/15 text-danger border border-danger/30'}`}>
-                      {claimResult.success ? <CheckCircle2 className="w-5 h-5 shrink-0" /> : <div className="w-5 h-5 shrink-0 bg-danger/50 rounded-full" />}
-                      {claimResult.message}
-                    </div>
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={TRANSITION_BASE}
+                      className={`p-4 rounded-xl border text-sm flex items-start gap-2.5 ${
+                        claimResult.success
+                          ? 'bg-success/15 border-success/30 text-success'
+                          : 'bg-danger/15 border-danger/30 text-danger'
+                      }`}
+                    >
+                      {claimResult.success ? (
+                        <>
+                          <CheckCircle2 className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
+                          <div className="space-y-1">
+                            <span className="font-bold">{claimResult.message}</span>
+                            {claimResult.data && (
+                              <div className="flex items-center gap-1.5 text-text font-medium bg-success/20 p-2 rounded-lg border border-success/10 mt-1">
+                                <Mail className="h-4 w-4 text-success flex-shrink-0" />
+                                <span>{claimResult.data}</span>
+                              </div>
+                            )}
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <AlertCircle className="h-5 w-5 text-danger flex-shrink-0 mt-0.5" />
+                          <span>{claimResult.message}</span>
+                        </>
+                      )}
+                    </motion.div>
                   )}
 
                   <div className="flex gap-3 pt-2">
                     <button
                       type="button"
-                      onClick={() => {
-                        setIsClaiming(false);
-                        setClaimResult(null);
-                      }}
-                      className="flex-1 py-3 rounded-xl border border-primary/25 text-text hover:bg-primary/10 transition-all text-sm font-bold"
+                      onClick={closeClaimModal}
+                      className="flex-1 py-3 rounded-xl border border-primary/25 text-text hover:bg-primary/10 transition-all text-sm font-bold cursor-pointer"
                     >
-                      Cancel
+                      {claimResult?.success ? 'Close' : 'Cancel'}
                     </button>
-                    <button
-                      type="submit"
-                      disabled={submittingClaim}
-                      className="flex-1 py-3 rounded-xl btn-primary-custom disabled:opacity-50 text-sm font-semibold flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
-                    >
-                      {submittingClaim ? 'Submitting...' : 'Submit Claim'}
-                    </button>
+
+                    {!claimResult?.success && (
+                      <motion.button
+                        type="submit"
+                        disabled={submittingClaim}
+                        variants={buttonHoverVariants}
+                        whileHover={!submittingClaim ? "hover" : ""}
+                        whileTap={!submittingClaim ? "tap" : ""}
+                        className="flex-1 py-3 rounded-xl btn-primary-custom disabled:opacity-50 text-sm font-semibold flex items-center justify-center gap-2 shadow-lg shadow-primary/20 cursor-pointer"
+                      >
+                        {submittingClaim ? (
+                          <>
+                            <motion.div 
+                              animate={{ rotate: 360 }} 
+                              transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                              className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white"
+                            />
+                            <span>Verifying...</span>
+                          </>
+                        ) : (
+                          <>
+                            <ShieldCheck className="h-4 w-4" />
+                            <span>Submit Claim</span>
+                          </>
+                        )}
+                      </motion.button>
+                    )}
                   </div>
                 </form>
               </motion.div>
-          </div>,
-          document.body
-        )}
-      </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </motion.div>
   );
 };
