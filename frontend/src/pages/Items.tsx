@@ -331,11 +331,11 @@ const Items: React.FC = () => {
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.95, opacity: 0, y: 20 }}
                 transition={TRANSITION_BASE}
-                className="glass-panel w-full max-w-lg rounded-xl overflow-hidden shadow-2xl border border-primary/20 bg-surface/95"
+                className="w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl border border-primary/20 bg-surface text-text backdrop-blur-xl"
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* Modal header */}
-                <div className="border-b border-primary/10 p-5 flex items-center justify-between bg-surface/80">
+                <div className="border-b border-primary/15 p-5 flex items-center justify-between bg-surface">
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-primary/10 rounded-lg">
                       <ShieldCheck className="h-5 w-5 text-primary" />
@@ -347,39 +347,39 @@ const Items: React.FC = () => {
                     variants={tapHoverVariants}
                     whileHover="hover"
                     whileTap="tap"
-                    className="p-1.5 rounded-lg text-textMuted hover:text-text hover:bg-primary/5 transition-colors"
+                    className="p-1.5 rounded-lg text-textSecondary hover:text-text hover:bg-primary/10 transition-colors"
                   >
                     <X className="h-5 w-5" />
                   </motion.button>
                 </div>
 
                 {/* Modal body */}
-                <div className="p-6 space-y-6">
-                  <div className="space-y-2">
+                <div className="p-6 space-y-6 bg-surface">
+                  <div className="space-y-1.5 p-3.5 rounded-xl bg-background/50 border border-primary/10">
                     <h4 className="font-bold text-text text-base">{claimingItem.title}</h4>
                     <p className="text-sm text-textSecondary">{claimingItem.description}</p>
                   </div>
 
                   <form onSubmit={handleClaimSubmit} className="space-y-4">
-                    <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 space-y-2">
-                      <div className="flex items-center gap-1.5 text-primary font-semibold text-xs uppercase tracking-wider">
+                    <div className="p-4 rounded-xl bg-primary/10 border border-primary/20 space-y-2">
+                      <div className="flex items-center gap-1.5 text-primary font-bold text-xs uppercase tracking-wider">
                         <HelpCircle className="h-4 w-4" />
                         <span>Verification Detail / Security Question</span>
                       </div>
-                      <p className="text-sm text-text">
+                      <p className="text-sm font-medium text-text">
                         {claimingItem.security_question || 'Describe a unique mark, scratch, serial number, or exact contents inside this item.'}
                       </p>
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-textSecondary uppercase tracking-wider">Your Answer / Proof of Ownership</label>
+                      <label className="text-xs font-bold text-textSecondary uppercase tracking-wider">Your Answer / Proof of Ownership</label>
                       <textarea
                         required
                         rows={3}
                         value={claimAnswer}
                         onChange={(e) => setClaimAnswer(e.target.value)}
                         placeholder="Provide details to verify your claim..."
-                        className="glass-input w-full resize-none"
+                        className="w-full resize-none bg-background border border-primary/20 text-text placeholder-textMuted focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-xl p-3.5 text-sm transition-all"
                         disabled={verifying || (verificationResult?.success ?? false)}
                       />
                     </div>
@@ -391,8 +391,8 @@ const Items: React.FC = () => {
                         transition={TRANSITION_BASE}
                         className={`p-4 rounded-xl border text-sm flex items-start gap-2.5 ${
                           verificationResult.success
-                            ? 'bg-success/10 border-success/20 text-success'
-                            : 'bg-danger/10 border-danger/20 text-danger'
+                            ? 'bg-success/15 border-success/30 text-success'
+                            : 'bg-danger/15 border-danger/30 text-danger'
                         }`}
                       >
                         {verificationResult.success ? (
@@ -419,7 +419,7 @@ const Items: React.FC = () => {
                       <button
                         type="button"
                         onClick={closeClaimModal}
-                        className="flex-1 py-3 rounded-xl border border-primary/20 text-textSecondary hover:bg-primary/5 transition-all text-sm font-semibold"
+                        className="flex-1 py-3 rounded-xl border border-primary/25 text-text hover:bg-primary/10 transition-all text-sm font-bold"
                       >
                         Cancel
                       </button>
@@ -431,7 +431,7 @@ const Items: React.FC = () => {
                           variants={buttonHoverVariants}
                           whileHover={!verifying ? "hover" : ""}
                           whileTap={!verifying ? "tap" : ""}
-                          className="flex-1 py-3 rounded-xl btn-primary-custom disabled:opacity-50 text-sm font-semibold flex items-center justify-center gap-2"
+                          className="flex-1 py-3 rounded-xl btn-primary-custom disabled:opacity-50 text-sm font-semibold flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
                         >
                           {verifying ? (
                             <>

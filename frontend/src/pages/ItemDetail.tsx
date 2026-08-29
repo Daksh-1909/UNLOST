@@ -286,60 +286,66 @@ const ItemDetail: React.FC = () => {
       <AnimatePresence>
         {isClaiming && createPortal(
           <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-background/80 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="w-full max-w-lg glass-card bg-surface/95 p-6 md:p-8"
-            >
-              <h2 className="text-2xl font-bold font-heading mb-2 text-text">Verify Your Claim</h2>
-              <p className="text-textSecondary mb-6 text-sm">
-                To claim this item, please answer the security question provided by the finder. An admin will review your answer.
-              </p>
-
-              <form onSubmit={handleClaimSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-semibold mb-2">Security Question / Verification Detail</label>
-                  <p className="text-sm text-text bg-primary/5 p-3 rounded-xl border border-primary/10 italic mb-4">
-                    {item.security_question || "Describe a unique mark, scratch, or the exact contents of this item."}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                className="w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl border border-primary/20 bg-surface text-text backdrop-blur-xl p-6 md:p-8 space-y-6"
+              >
+                <div className="space-y-1.5">
+                  <h2 className="text-2xl font-bold font-heading text-text">Verify Your Claim</h2>
+                  <p className="text-textSecondary text-sm">
+                    To claim this item, please answer the security question provided by the finder.
                   </p>
-                  <textarea
-                    required
-                    value={claimAnswer}
-                    onChange={(e) => setClaimAnswer(e.target.value)}
-                    className="w-full glass-input min-h-[100px]"
-                    placeholder="Your detailed answer..."
-                  />
                 </div>
 
-                {claimResult && (
-                  <div className={`p-4 rounded-xl text-sm font-medium flex items-center gap-2 ${claimResult.success ? 'bg-success/20 text-success' : 'bg-danger/20 text-danger'}`}>
-                    {claimResult.success ? <CheckCircle2 className="w-5 h-5 shrink-0" /> : <div className="w-5 h-5 shrink-0 bg-danger/50 rounded-full" />}
-                    {claimResult.message}
+                <form onSubmit={handleClaimSubmit} className="space-y-4">
+                  <div className="p-4 rounded-xl bg-primary/10 border border-primary/20 space-y-2">
+                    <label className="block text-xs font-bold text-primary uppercase tracking-wider">Security Question / Verification Detail</label>
+                    <p className="text-sm font-medium text-text">
+                      {item.security_question || "Describe a unique mark, scratch, or the exact contents of this item."}
+                    </p>
                   </div>
-                )}
 
-                <div className="flex gap-4 pt-4">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsClaiming(false);
-                      setClaimResult(null);
-                    }}
-                    className="flex-1 py-3 px-4 rounded-xl font-medium btn-secondary-custom"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={submittingClaim}
-                    className="flex-1 py-3 px-4 rounded-xl font-medium btn-primary-custom disabled:opacity-50"
-                  >
-                    {submittingClaim ? 'Submitting...' : 'Submit Claim'}
-                  </button>
-                </div>
-              </form>
-            </motion.div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-textSecondary uppercase tracking-wider">Your Answer / Proof of Ownership</label>
+                    <textarea
+                      required
+                      value={claimAnswer}
+                      onChange={(e) => setClaimAnswer(e.target.value)}
+                      className="w-full resize-none bg-background border border-primary/20 text-text placeholder-textMuted focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-xl p-3.5 text-sm transition-all min-h-[100px]"
+                      placeholder="Your detailed answer..."
+                    />
+                  </div>
+
+                  {claimResult && (
+                    <div className={`p-4 rounded-xl text-sm font-medium flex items-center gap-2 ${claimResult.success ? 'bg-success/15 text-success border border-success/30' : 'bg-danger/15 text-danger border border-danger/30'}`}>
+                      {claimResult.success ? <CheckCircle2 className="w-5 h-5 shrink-0" /> : <div className="w-5 h-5 shrink-0 bg-danger/50 rounded-full" />}
+                      {claimResult.message}
+                    </div>
+                  )}
+
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsClaiming(false);
+                        setClaimResult(null);
+                      }}
+                      className="flex-1 py-3 rounded-xl border border-primary/25 text-text hover:bg-primary/10 transition-all text-sm font-bold"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={submittingClaim}
+                      className="flex-1 py-3 rounded-xl btn-primary-custom disabled:opacity-50 text-sm font-semibold flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
+                    >
+                      {submittingClaim ? 'Submitting...' : 'Submit Claim'}
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
           </div>,
           document.body
         )}
