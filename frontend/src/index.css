@@ -51,6 +51,27 @@
     color: #f5f5fa !important;
   }
 
+  /* Prevent mobile browser unwanted auto-zoom on input focus */
+  input, select, textarea {
+    font-size: 16px;
+    touch-action: manipulation;
+  }
+  @screen sm {
+    input, select, textarea {
+      font-size: inherit;
+    }
+  }
+
+  /* Fast responsive taps on mobile touch screens */
+  button, a, input, select, textarea {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Momentum smooth scrolling on iOS and Android */
+  .overflow-x-auto, .overflow-y-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+
   /* Custom styled scrollbars */
   ::-webkit-scrollbar {
     width: 6px;

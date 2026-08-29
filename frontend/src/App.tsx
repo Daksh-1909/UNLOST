@@ -168,22 +168,10 @@ const AppContent: React.FC = () => {
     };
     document.addEventListener('keyup', handleKeyUp);
 
-    // 4. Blur screen on visibility change (deters snipping tool)
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        document.body.style.filter = 'blur(10px)';
-      } else {
-        document.body.style.filter = 'none';
-      }
-    };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
     return () => {
       document.removeEventListener('contextmenu', handleContextMenu);
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('keyup', handleKeyUp);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      document.body.style.filter = 'none';
     };
   }, []);
 

@@ -329,6 +329,38 @@ const buildItemsFilter = (query) => {
   return filter;
 };
 
+// GET /api/stats (Public live platform counters)
+router.get('/api/stats', async (req, res) => {
+  try {
+    const lostCount = await Item.countDocuments({ status: 'Lost' });
+    const foundCount = await Item.countDocuments({ status: 'Found' });
+    const claimedCount = await Item.countDocuments({ status: 'Claimed' });
+    const returnedCount = await Item.countDocuments({ status: 'Returned' });
+    const totalReports = lostCount + foundCount + claimedCount + returnedCount;
+
+    const resolvedCount = claimedCount + returnedCount;
+    const returnedPercentage = totalReports > 0 ? Math.round((resolvedCount / totalReports) * 100) : 0;
+    const activeReports = lostCount + foundCount;
+
+    res.setHeader('Cache-Control', 'public, max-age=5, stale-while-revalidate=20');
+    res.status(200).json({
+      success: true,
+      stats: {
+        lost: lostCount,
+        found: foundCount,
+        claimed: claimedCount,
+        returned: returnedCount,
+        resolved: resolvedCount,
+        activeReports,
+        total: totalReports,
+        returnedPercentage
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to retrieve stats.' });
+  }
+});
+
 // GET /api/items
 router.get('/api/items', loginRequired, async (req, res) => {
   try {

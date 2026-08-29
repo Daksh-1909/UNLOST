@@ -418,8 +418,7 @@ const SmiloRobot: React.FC<{
 /* ══════════════════════════════════════════════════════ */
 const SmiloWidget: React.FC = () => {
   const location = useLocation();
-
-  if (location.pathname === '/assistant') return null;
+  const navigate = useNavigate();
 
  const messagesEndRef = useRef<HTMLDivElement>(null);
  const [mouseX, setMouseX] = useState(0);
@@ -467,10 +466,8 @@ const [thinkIdx, setThinkIdx] = useState(0);
  const [particles, setParticles] = useState<{id:number;angle:number;color:string;dist:number}[]>([]);
  const [clickCount, setClickCount] = useState(0);
 
- const navigate = useNavigate();
-
- // Chat Panel State
- const [chatOpen, setChatOpen] = useState(false);
+  // Chat Panel State
+  const [chatOpen, setChatOpen] = useState(false);
  const [messages, setMessages] = useState<Message[]>([
  { sender: 'bot', text:"Hi! I'm Smilo, your UNLOST assistant. Ask me anything about lost & found items or how to use the portal!", timestamp: new Date() }
  ]);
@@ -642,6 +639,8 @@ const [thinkIdx, setThinkIdx] = useState(0);
  };
 
  const acc = mood==='excited'?'#facc15': mood==='thinking'?'#67e8f9': mood==='happy'?'#4ade80':'#a3e635';
+
+ if (location.pathname === '/assistant') return null;
 
  return (
  <>
@@ -1049,8 +1048,8 @@ const [thinkIdx, setThinkIdx] = useState(0);
  }
  @media (max-width: 768px) {
  .sm-widget-container {
- bottom: 16px;
- right: 16px;
+ bottom: 12px;
+ right: 12px;
  }
  }
  `}</style>
@@ -1064,7 +1063,8 @@ const [thinkIdx, setThinkIdx] = useState(0);
  {/* ── CHAT PANEL ── */}
  {chatOpen && (
  <div style={{
- width: '330px',
+ width: 'min(calc(100vw - 24px), 340px)',
+ maxHeight: 'calc(100dvh - 120px)',
  height: '420px',
  background: 'rgba(15, 23, 42, 0.95)',
  border: '1px solid rgba(255, 255, 255, 0.1)',

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
  Search, PlusCircle, Calendar, MapPin, Tag, ChevronRight, Eye, Bookmark, 
  Share2, Smartphone, Watch, Backpack, Key, Wallet, Map, 
@@ -8,7 +8,7 @@ import {
  Shield, X, AlertCircle, Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { tapHoverVariants, buttonHoverVariants, scrollRevealVariants, scrollRevealViewport, staggerContainer, staggerItem } from '../utils/animations';
+import { tapHoverVariants, buttonHoverVariants, scrollRevealVariants, scrollRevealViewport, staggerContainer, staggerItem, TRANSITION_BASE } from '../utils/animations';
 import AmbientGlowBg from '../components/AmbientGlowBg';
 
 interface Item {
@@ -17,7 +17,7 @@ interface Item {
  description: string;
  category: string;
  location: string;
- status: 'Lost' | 'Found' | 'Claimed' | 'Archived';
+ status: 'Lost' | 'Found' | 'Claimed' | 'Returned' | 'Archived' | string;
  date: string;
  reporter_email: string;
  image_file: string | null;
@@ -28,29 +28,33 @@ interface Item {
 
 // Stats upward counter animation helper
 const AnimatedCounter: React.FC<{ value: number; suffix?: string }> = ({ value, suffix = '' }) => {
- const [count, setCount] = useState(0);
+  const [count, setCount] = useState(0);
 
- useEffect(() => {
- let start = 0;
- const end = value;
- if (start === end) return;
+  useEffect(() => {
+    let start = 0;
+    const end = Math.max(0, value);
+    if (end === 0) {
+      setCount(0);
+      return;
+    }
 
- const duration = 1.6;
- const totalMiliseconds = duration * 1000;
- const incrementTime = Math.max(Math.floor(totalMiliseconds / end), 12);
- 
- const timer = setInterval(() => {
- start += 1;
- setCount(start);
- if (start === end) {
- clearInterval(timer);
- }
- }, incrementTime);
+    const duration = 1.2;
+    const totalMiliseconds = duration * 1000;
+    const incrementTime = Math.max(Math.floor(totalMiliseconds / end), 16);
+    
+    const timer = setInterval(() => {
+      start += 1;
+      setCount(start);
+      if (start >= end) {
+        setCount(end);
+        clearInterval(timer);
+      }
+    }, incrementTime);
 
- return () => clearInterval(timer);
- }, [value]);
+    return () => clearInterval(timer);
+  }, [value]);
 
- return <span className="font-extrabold text-2xl sm:text-3xl text-primary tracking-tight">{count}{suffix}</span>;
+  return <span className="font-extrabold text-2xl sm:text-3xl text-primary tracking-tight">{count}{suffix}</span>;
 };
 
 // Vector SVGs category generator for placeholder images
@@ -101,55 +105,96 @@ const CategoryImageFallback: React.FC<{ category: string }> = ({ category }) => 
 };
 
 const Home: React.FC = () => {
- // State management
- const [, setDbItems] = useState<Item[]>([]);
- const [allItems, setAllItems] = useState<Item[]>([]);
- const [filteredItems, setFilteredItems] = useState<Item[]>([]);
- const [loading, setLoading] = useState(true);
- 
- // Filters state
- const [searchQuery, setSearchQuery] = useState('');
- const [selectedCategory, setSelectedCategory] = useState<string>('All');
- const [selectedStatus, setSelectedStatus] = useState<string>('All');
- const [selectedLocation, setSelectedLocation] = useState<string>('All');
- const [selectedDate, setSelectedDate] = useState<string>('All');
- 
- // Custom Interactive features
- const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([]);
- const [selectedItemModal, setSelectedItemModal] = useState<Item | null>(null);
- const [toastMessage, setToastMessage] = useState<string | null>(null);
- 
- // Map Pin Selection State
- const [hoveredMapPin, setHoveredMapPin] = useState<Item | null>(null);
- const [activeMapPin, setActiveMapPin] = useState<Item | null>(null);
+  const navigate = useNavigate();
 
- // Carousel ref
- const carouselRef = useRef<HTMLDivElement>(null);
+  // State management
+  const [, setDbItems] = useState<Item[]>([]);
+  const [allItems, setAllItems] = useState<Item[]>([]);
+  const [filteredItems, setFilteredItems] = useState<Item[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [platformStats, setPlatformStats] = useState<{
+    lost: number;
+    found: number;
+    claimed: number;
+    returned: number;
+    resolved: number;
+    activeReports: number;
+    total: number;
+    returnedPercentage: number;
+  }>({
+    lost: 0,
+    found: 0,
+    claimed: 0,
+    returned: 0,
+    resolved: 0,
+    activeReports: 0,
+    total: 0,
+    returnedPercentage: 0
+  });
+  
+  // Filters state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [selectedStatus, setSelectedStatus] = useState<string>('All');
+  const [selectedLocation, setSelectedLocation] = useState<string>('All');
+  const [selectedDate, setSelectedDate] = useState<string>('All');
+  
+  // Custom Interactive features
+  const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([]);
+  const [selectedItemModal, setSelectedItemModal] = useState<Item | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  
+  // Map Pin Selection State
+  const [hoveredMapPin, setHoveredMapPin] = useState<Item | null>(null);
+  const [activeMapPin, setActiveMapPin] = useState<Item | null>(null);
 
- // Fetch database items
- useEffect(() => {
- const fetchItems = async () => {
- try {
- const response = await fetch('/api/items?limit=10');
- const data = await response.json();
- if (response.ok && data.success) {
- setDbItems(data.items);
- setAllItems(data.items);
- setFilteredItems(data.items);
- } else {
- setAllItems([]);
- setFilteredItems([]);
- }
- } catch (error) {
- console.error('Error loading latest items:', error);
- setAllItems([]);
- setFilteredItems([]);
- } finally {
- setLoading(false);
- }
- };
- fetchItems();
- }, []);
+  // Carousel ref
+  const carouselRef = useRef<HTMLDivElement>(null);
+
+  // Fetch live platform stats and database items
+  const fetchDashboardData = async () => {
+    try {
+      // 1. Fetch real-time platform stats
+      const statsRes = await fetch('/api/stats');
+      const statsData = await statsRes.json();
+      if (statsRes.ok && statsData.success && statsData.stats) {
+        setPlatformStats(statsData.stats);
+      }
+
+      // 2. Fetch reported items for directory, carousel, and map
+      const itemsRes = await fetch('/api/items');
+      const itemsData = await itemsRes.json();
+      if (itemsRes.ok && itemsData.success) {
+        setDbItems(itemsData.items);
+        setAllItems(itemsData.items);
+        setFilteredItems(itemsData.items);
+      } else {
+        setAllItems([]);
+        setFilteredItems([]);
+      }
+    } catch (error) {
+      console.error('Error loading latest items and stats:', error);
+      setAllItems([]);
+      setFilteredItems([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboardData();
+
+    const handleUpdate = () => fetchDashboardData();
+    window.addEventListener('unlost:item_updated', handleUpdate);
+    window.addEventListener('focus', handleUpdate);
+    document.addEventListener('visibilitychange', handleUpdate);
+
+    return () => {
+      window.removeEventListener('unlost:item_updated', handleUpdate);
+      window.removeEventListener('focus', handleUpdate);
+      document.removeEventListener('visibilitychange', handleUpdate);
+    };
+  }, []);
 
  // Lock body scroll when modal is open
  useEffect(() => {
@@ -265,19 +310,49 @@ const Home: React.FC = () => {
  return null;
  }).filter(Boolean))) as string[];
 
- // Statistics counters numbers
- const lostItemsCount = allItems.filter(i => i.status === 'Lost').length;
- const foundItemsCount = allItems.filter(i => i.status === 'Found').length;
- const returnedItemsCount = allItems.filter(i => i.status === 'Claimed').length;
- const totalItems = allItems.length;
- const returnedPercentage = totalItems > 0 ? Math.round((returnedItemsCount / totalItems) * 100) : 0;
- 
- const statsList = [
- { title: 'Lost Items', value: lostItemsCount, suffix: '', labelColor: 'text-secondary', glow: 'rgba(92,50,30,0.04)' },
- { title: 'Found Items', value: foundItemsCount, suffix: '', labelColor: 'text-secondary', glow: 'rgba(92,50,30,0.04)' },
- { title: 'Returned', value: returnedPercentage, suffix: '%', labelColor: 'text-secondary', glow: 'rgba(92,50,30,0.04)' },
- { title: 'Active Reports', value: lostItemsCount + foundItemsCount, suffix: '', labelColor: 'text-secondary', glow: 'rgba(92,50,30,0.04)' }
- ];
+  // Statistics counters numbers from live platform data with fallback to loaded items
+  const total = platformStats.total || allItems.length || 1;
+  const lostItemsCount = platformStats.total > 0 ? platformStats.lost : allItems.filter(i => i.status === 'Lost').length;
+  const foundItemsCount = platformStats.total > 0 ? platformStats.found : allItems.filter(i => i.status === 'Found').length;
+  const returnedPercentage = platformStats.total > 0
+    ? platformStats.returnedPercentage
+    : (allItems.length > 0 ? Math.round((allItems.filter(i => i.status === 'Claimed' || i.status === 'Returned').length / allItems.length) * 100) : 0);
+  const activeReportsCount = platformStats.total > 0 ? platformStats.activeReports : (lostItemsCount + foundItemsCount);
+  
+  const statsList = [
+    { 
+      title: 'Lost Items', 
+      value: lostItemsCount, 
+      suffix: '', 
+      percentage: Math.min(100, Math.max(8, Math.round((lostItemsCount / total) * 100))),
+      labelColor: 'text-secondary', 
+      glow: 'rgba(92,50,30,0.04)' 
+    },
+    { 
+      title: 'Found Items', 
+      value: foundItemsCount, 
+      suffix: '', 
+      percentage: Math.min(100, Math.max(8, Math.round((foundItemsCount / total) * 100))),
+      labelColor: 'text-secondary', 
+      glow: 'rgba(92,50,30,0.04)' 
+    },
+    { 
+      title: 'Returned', 
+      value: returnedPercentage, 
+      suffix: '%', 
+      percentage: Math.min(100, Math.max(returnedPercentage > 0 ? 8 : 0, returnedPercentage)),
+      labelColor: 'text-secondary', 
+      glow: 'rgba(92,50,30,0.04)' 
+    },
+    { 
+      title: 'Active Reports', 
+      value: activeReportsCount, 
+      suffix: '', 
+      percentage: Math.min(100, Math.max(8, Math.round((activeReportsCount / total) * 100))),
+      labelColor: 'text-secondary', 
+      glow: 'rgba(92,50,30,0.04)' 
+    }
+  ];
 
  // Dynamic Map Hotspots based on current items
  const getMapHotspots = () => {
@@ -513,9 +588,9 @@ const Home: React.FC = () => {
  </div>
  <div className="w-full h-1 bg-primary/10 rounded-xl mt-3 overflow-hidden">
  <div 
- className="h-full rounded-xl bg-primary-gradient" 
+ className="h-full rounded-xl bg-primary-gradient transition-all duration-700 ease-out" 
  style={{ 
- width: `${Math.min(stat.value / 3, 100)}%`
+ width: `${stat.percentage}%`
  }}
  />
  </div>
@@ -929,132 +1004,141 @@ const Home: React.FC = () => {
 
 
  {/* ── VIEW DETAILS GLASSMORPHISM MODAL ── */}
- <AnimatePresence>
- {selectedItemModal && createPortal(
- <div className="fixed inset-0 z-[99999] flex items-center justify-center px-4">
- 
- {/* Dark blur background backdrop overlay */}
- <motion.div 
- initial={{ opacity: 0 }}
- animate={{ opacity: 1 }}
- exit={{ opacity: 0 }}
- onClick={() => setSelectedItemModal(null)}
- className="absolute inset-0 bg-black/50"
- style={{ backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}
- />
+ {typeof document !== 'undefined' && createPortal(
+    <AnimatePresence>
+      {selectedItemModal && (
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+          {/* Dark blur background backdrop overlay */}
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSelectedItemModal(null)}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm cursor-pointer"
+          />
 
- {/* Glassmorphic detailed dialog modal */}
- <motion.div
- initial={{ opacity: 0, scale: 0.95, y: 20 }}
- animate={{ opacity: 1, scale: 1, y: 0 }}
- exit={{ opacity: 0, scale: 0.95, y: 20 }}
- className="w-full max-w-lg glass-panel rounded-xl overflow-hidden border border-text/15 relative z-10 bg-shade-5"
- >
- 
- {/* Close Button */}
- <motion.button variants={tapHoverVariants} whileHover="hover" whileTap="tap"
- onClick={() => setSelectedItemModal(null)}
- className="absolute top-4 right-4 p-2 rounded-xl bg-surface/50 text-secondary hover:text-primary hover:bg-surface border border-primary/20 cursor-pointer z-50 transition-colors"
- >
- <X className="w-4 h-4 text-primary transition-all duration-300 transform hover:scale-110 hover:text-accent" />
- </motion.button>
+          {/* Glassmorphic detailed dialog modal */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 15 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 15 }}
+            transition={TRANSITION_BASE}
+            className="w-full max-w-lg glass-panel rounded-2xl overflow-hidden border border-text/15 relative z-10 bg-surface my-auto max-h-[90dvh] flex flex-col shadow-2xl"
+          >
+            {/* Scrollable Container for small screens */}
+            <div className="overflow-y-auto max-h-[90dvh]">
+              {/* Close Button */}
+              <button 
+                type="button"
+                onClick={() => setSelectedItemModal(null)}
+                className="absolute top-4 right-4 p-2 rounded-xl bg-black/40 hover:bg-black/60 text-white border border-white/20 cursor-pointer z-50 transition-colors"
+                aria-label="Close modal"
+              >
+                <X className="w-5 h-5 text-white" />
+              </button>
 
- {/* Graphic Category Header */}
- <div className="h-48 w-full relative border-b border-primary/10">
- {selectedItemModal.image_file ? (
- <img 
- src={selectedItemModal.image_file.startsWith('data:') || selectedItemModal.image_file.startsWith('http') ? selectedItemModal.image_file : `/static/uploads/${selectedItemModal.image_file}`} 
- alt={selectedItemModal.title} 
- className="w-full h-full object-cover"
- />
- ) : (
- <CategoryImageFallback category={selectedItemModal.category} />
- )}
+              {/* Graphic Category Header */}
+              <div className="h-48 w-full relative border-b border-primary/10">
+                {selectedItemModal.image_file ? (
+                  <img 
+                    src={selectedItemModal.image_file.startsWith('data:') || selectedItemModal.image_file.startsWith('http') ? selectedItemModal.image_file : `/static/uploads/${selectedItemModal.image_file}`} 
+                    alt={selectedItemModal.title} 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <CategoryImageFallback category={selectedItemModal.category} />
+                )}
 
- {/* Status tag */}
- <span className={`absolute top-4 left-4 px-3.5 py-1 text-xs font-black uppercase tracking-wider rounded-xl shadow-lg border ${
- selectedItemModal.status === 'Lost' 
- ? 'bg-rose-500/20 text-rose-700 border-rose-500/30' 
- : selectedItemModal.status === 'Claimed'
- ? 'bg-slate-500/20 text-slate-700 border-slate-500/30'
- : 'bg-emerald-500/20 text-emerald-700 border-emerald-500/30'
- }`}>
- {selectedItemModal.status}
- </span>
- </div>
+                {/* Status tag */}
+                <span className={`absolute top-4 left-4 px-3.5 py-1 text-xs font-black uppercase tracking-wider rounded-xl shadow-lg border ${
+                  selectedItemModal.status === 'Lost' 
+                    ? 'bg-rose-500/20 text-rose-700 border-rose-500/30' 
+                    : selectedItemModal.status === 'Claimed'
+                    ? 'bg-slate-500/20 text-slate-700 border-slate-500/30'
+                    : 'bg-emerald-500/20 text-emerald-700 border-emerald-500/30'
+                }`}>
+                  {selectedItemModal.status}
+                </span>
+              </div>
 
- {/* Detailed Content body */}
- <div className="p-6 sm:p-8 space-y-6">
- 
- <div className="space-y-2">
- <h3 className="text-xl sm:text-2xl font-black text-text tracking-tight leading-tight">{selectedItemModal.title}</h3>
- <div className="flex flex-wrap gap-2 pt-1">
- <span className="px-2.5 py-1 rounded-lg bg-primary/10 border border-primary/5 text-[10px] font-bold text-text">
- {selectedItemModal.category}
- </span>
- <span className="px-2.5 py-1 rounded-lg bg-primary/10 border border-primary/5 text-[10px] font-bold text-secondary flex items-center gap-1">
- <MapPin className="w-3 h-3 text-primary transition-all duration-300 transform hover:scale-110 hover:text-accent" />
- {selectedItemModal.location}
- </span>
- </div>
- </div>
+              {/* Detailed Content body */}
+              <div className="p-6 sm:p-8 space-y-6">
+                <div className="space-y-2">
+                  <h3 className="text-xl sm:text-2xl font-black text-text tracking-tight leading-tight">{selectedItemModal.title}</h3>
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    <span className="px-2.5 py-1 rounded-lg bg-primary/10 border border-primary/5 text-[10px] font-bold text-text">
+                      {selectedItemModal.category}
+                    </span>
+                    <span className="px-2.5 py-1 rounded-lg bg-primary/10 border border-primary/5 text-[10px] font-bold text-secondary flex items-center gap-1">
+                      <MapPin className="w-3 h-3 text-primary" />
+                      {selectedItemModal.location}
+                    </span>
+                  </div>
+                </div>
 
- <div className="space-y-3">
- <h4 className="text-xs uppercase font-bold text-textSecondary tracking-wider">Item Description</h4>
- <p className="text-sm text-text leading-relaxed bg-surface/50 border border-primary/5 p-4 rounded-xl">
- {selectedItemModal.description}
- </p>
- </div>
+                <div className="space-y-3">
+                  <h4 className="text-xs uppercase font-bold text-textSecondary tracking-wider">Item Description</h4>
+                  <p className="text-sm text-text leading-relaxed bg-surface/50 border border-primary/5 p-4 rounded-xl">
+                    {selectedItemModal.description}
+                  </p>
+                </div>
 
- {/* Date & reporter meta row */}
- <div className="grid grid-cols-2 gap-4 text-xs bg-surface/50 p-4 rounded-xl border border-primary/5">
- <div className="space-y-1">
- <span className="text-textSecondary font-semibold block uppercase text-[9px] tracking-wider">Reported Date</span>
- <span className="text-text font-bold">{formatDate(selectedItemModal.date)}</span>
- </div>
- <div className="space-y-1">
- <span className="text-textSecondary font-semibold block uppercase text-[9px] tracking-wider">Reporter Email</span>
- <span className="text-text font-bold truncate block">{selectedItemModal.reporter_email}</span>
- </div>
- </div>
+                {/* Date & reporter meta row */}
+                <div className="grid grid-cols-2 gap-4 text-xs bg-surface/50 p-4 rounded-xl border border-primary/5">
+                  <div className="space-y-1">
+                    <span className="text-textSecondary font-semibold block uppercase text-[9px] tracking-wider">Reported Date</span>
+                    <span className="text-text font-bold">{formatDate(selectedItemModal.date)}</span>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-textSecondary font-semibold block uppercase text-[9px] tracking-wider">Reporter Email</span>
+                    <span className="text-text font-bold truncate block">{selectedItemModal.reporter_email}</span>
+                  </div>
+                </div>
 
- {/* Claim verification security query if applicable */}
- {selectedItemModal.security_question && (
- <div className="space-y-2 text-xs bg-primary/5 p-4 rounded-xl border border-primary/20">
- <div className="font-bold text-primary flex items-center gap-1.5">
- <Shield className="w-3.5 h-3.5 text-primary" />
- <span>Security Verification Quest</span>
- </div>
- <p className="text-text/95">{selectedItemModal.security_question}</p>
- </div>
- )}
+                {/* Claim verification security query if applicable */}
+                {selectedItemModal.security_question && (
+                  <div className="space-y-2 text-xs bg-primary/5 p-4 rounded-xl border border-primary/20">
+                    <div className="font-bold text-primary flex items-center gap-1.5">
+                      <Shield className="w-3.5 h-3.5 text-primary" />
+                      <span>Security Verification Question</span>
+                    </div>
+                    <p className="text-text/95">{selectedItemModal.security_question}</p>
+                  </div>
+                )}
 
- {/* Modal actions */}
- <div className="flex gap-4 pt-2">
- <motion.button variants={buttonHoverVariants} whileHover="hover" whileTap="tap" 
- onClick={() => {
- setSelectedItemModal(null);
- triggerToast('Claim request details generated. Check inbox.');
- }}
- className="flex-1 py-3 rounded-xl btn-primary-custom font-extrabold text-sm text-center"
- >
- Claim & Recover Item
- </motion.button>
- <motion.button variants={tapHoverVariants} whileHover="hover" whileTap="tap"
- onClick={(e) => toggleBookmark(selectedItemModal.id, e)}
- className="px-4 rounded-xl bg-primary/10 hover:bg-primary/20 border border-primary/10 text-secondary hover:text-primary transition-colors"
- >
- <Bookmark className={`w-5 h-5 ${bookmarkedIds.includes(selectedItemModal.id) ? 'fill-primary text-primary' : ''}`} />
- </motion.button>
- </div>
-
- </div>
-
- </motion.div>
- </div>,
- document.body
- )}
- </AnimatePresence>
+                {/* Modal actions */}
+                <div className="flex gap-3 pt-2">
+                  <motion.button 
+                    variants={buttonHoverVariants} 
+                    whileHover="hover" 
+                    whileTap="tap" 
+                    onClick={() => {
+                      const targetId = selectedItemModal.id;
+                      setSelectedItemModal(null);
+                      navigate(`/item/${targetId}`);
+                    }}
+                    className="flex-1 py-3 px-4 rounded-xl btn-primary-custom font-extrabold text-sm text-center shadow-lg cursor-pointer"
+                  >
+                    Claim & Full Details
+                  </motion.button>
+                  <motion.button 
+                    variants={tapHoverVariants} 
+                    whileHover="hover" 
+                    whileTap="tap"
+                    onClick={(e) => toggleBookmark(selectedItemModal.id, e)}
+                    className="px-4 rounded-xl bg-primary/10 hover:bg-primary/20 border border-primary/10 text-secondary hover:text-primary transition-colors flex items-center justify-center cursor-pointer"
+                  >
+                    <Bookmark className={`w-5 h-5 ${bookmarkedIds.includes(selectedItemModal.id) ? 'fill-primary text-primary' : ''}`} />
+                  </motion.button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>,
+    document.body
+  )}
 
  </div>
  </AmbientGlowBg>
