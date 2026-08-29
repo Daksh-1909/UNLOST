@@ -52,13 +52,9 @@ const ItemDetail: React.FC = () => {
     };
 
     fetchItem();
-    
-    // Poll every 3 seconds for real-time updates
-    const intervalId = setInterval(fetchItem, 3000);
 
     return () => {
       isMounted = false;
-      clearInterval(intervalId);
     };
   }, [id]);
 
@@ -168,6 +164,8 @@ const ItemDetail: React.FC = () => {
               <img
                 src={item.image_file.startsWith('data:') || item.image_file.startsWith('http') ? item.image_file : `/static/uploads/${item.image_file}`}
                 alt={item.title}
+                loading="lazy"
+                decoding="async"
                 className="w-full h-80 object-cover"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = 'https://placehold.co/600x400/E6CAAB/5C321E?text=No+Image';

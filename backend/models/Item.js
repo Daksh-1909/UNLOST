@@ -53,6 +53,11 @@ const itemSchema = new mongoose.Schema({
   }
 });
 
+itemSchema.index({ status: 1, date: -1 });
+itemSchema.index({ category: 1, status: 1 });
+itemSchema.index({ date: -1 });
+itemSchema.index({ title: 'text', description: 'text' });
+
 const Item = mongoose.model('Item', itemSchema, 'items');
 
 export default Item;

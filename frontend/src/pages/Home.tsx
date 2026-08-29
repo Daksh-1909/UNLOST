@@ -564,8 +564,10 @@ const Home: React.FC = () => {
  <div className="h-36 w-full relative overflow-hidden bg-surface/30 flex items-center justify-center">
  {item.image_file ? (
  <img 
- src={`/static/uploads/${item.image_file}`} 
+ src={item.image_file.startsWith('data:') || item.image_file.startsWith('http') ? item.image_file : `/static/uploads/${item.image_file}`} 
  alt={item.title} 
+ loading="lazy"
+ decoding="async"
  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
  />
  ) : (
@@ -750,8 +752,10 @@ const Home: React.FC = () => {
  <div className="h-44 w-full bg-surface/30 relative overflow-hidden flex items-center justify-center border-b border-primary/5">
  {item.image_file ? (
  <img 
- src={`/static/uploads/${item.image_file}`} 
+ src={item.image_file.startsWith('data:') || item.image_file.startsWith('http') ? item.image_file : `/static/uploads/${item.image_file}`} 
  alt={item.title} 
+ loading="lazy"
+ decoding="async"
  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
  />
  ) : (

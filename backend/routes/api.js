@@ -332,12 +332,10 @@ const buildItemsFilter = (query) => {
 // GET /api/items
 router.get('/api/items', loginRequired, async (req, res) => {
   try {
-    await Item.deleteMany({ title: { $regex: /Parul Student ID Card|Daksh Patel/i } });
-
     const filter = buildItemsFilter(req.query);
     const limit = parseInt(req.query.limit, 10) || 0; // 0 means no limit
     
-    let query = Item.find(filter).sort({ date: -1 });
+    let query = Item.find(filter).sort({ date: -1 }).lean();
     if (limit > 0) {
       query = query.limit(limit);
     }
@@ -351,13 +349,14 @@ router.get('/api/items', loginRequired, async (req, res) => {
       category: doc.category,
       location: doc.location,
       status: doc.status,
-      date: doc.date ? doc.date.toISOString() : null,
+      date: doc.date ? (doc.date instanceof Date ? doc.date.toISOString() : doc.date) : null,
       image_file: doc.image_file,
       security_question: doc.security_question,
       has_security_answer: !!doc.security_answer,
       reporter_email: doc.reporter_email || 'Anonymous'
     }));
 
+    res.setHeader('Cache-Control', 'public, max-age=5, stale-while-revalidate=20');
     res.status(200).json({ success: true, items: formattedItems });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Failed to retrieve items.' });
@@ -616,9 +615,6 @@ router.get('/api/profile', loginRequired, async (req, res) => {
 // GET /api/admin/stats
 router.get('/api/admin/stats', adminRequired, async (req, res) => {
   try {
-    // Purge unwanted items matching Parul Student ID Card from MongoDB
-    await Item.deleteMany({ title: { $regex: /Parul Student ID Card|Daksh Patel/i } });
-
     const activeItemsCount = await Item.countDocuments({ status: { $ne: 'Archived' } });
     const lostItems = await Item.countDocuments({ status: 'Lost' });
     const foundItems = await Item.countDocuments({ status: 'Found' });
@@ -877,8 +873,9 @@ router.post('/api/admin/messages/:id/delete', adminRequired, async (req, res) =>
 // GET /api/items/:id
 router.get('/api/items/:id', async (req, res) => {
   try {
-    const item = await Item.findById(req.params.id);
+    const item = await Item.findById(req.params.id).lean();
     if (!item) return res.status(404).json({ success: false, message: 'Item not found' });
+    res.setHeader('Cache-Control', 'public, max-age=5, stale-while-revalidate=20');
     res.json({ success: true, item });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Error fetching item' });

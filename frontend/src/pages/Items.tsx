@@ -42,8 +42,10 @@ const Items: React.FC = () => {
   const [verifying, setVerifying] = useState(false);
   const [verificationResult, setVerificationResult] = useState<{ success: boolean; data?: string; message?: string } | null>(null);
 
-  const fetchItems = async () => {
-    setLoading(true);
+  const fetchItems = async (isInitial = false) => {
+    if (isInitial || items.length === 0) {
+      setLoading(true);
+    }
     try {
       const params = new URLSearchParams();
       if (search) params.append('q', search);
@@ -238,6 +240,8 @@ const Items: React.FC = () => {
                       <img 
                         src={item.image_file.startsWith('data:') || item.image_file.startsWith('http') ? item.image_file : `/static/uploads/${item.image_file}`} 
                         alt={item.title} 
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover transition-transform duration-500"
                       />
                     ) : (
