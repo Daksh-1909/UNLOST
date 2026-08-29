@@ -233,21 +233,29 @@ const Report: React.FC = () => {
  </div>
  </div>
 
- {/* Description */}
- <div className="space-y-1.5">
- <label className="text-xs font-semibold text-secondary uppercase tracking-wider flex items-center gap-1">
- <FileText className="h-3.5 w-3.5" />
- <span>Description <span className="text-danger">*</span></span>
- </label>
- <textarea
- required
- rows={4}
- value={description}
- onChange={(e) => setDescription(e.target.value)}
- placeholder="Describe characteristics, tags, brands, content, cash inside, etc."
- className="glass-input w-full resize-none"
- />
- </div>
+            {/* Description */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-secondary uppercase tracking-wider flex items-center gap-1">
+                  <FileText className="h-3.5 w-3.5" />
+                  <span>Description <span className="text-danger">*</span></span>
+                </label>
+                <span className="text-[11px] text-textMuted font-medium">
+                  If unknown, write <span className="font-semibold text-textSecondary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20">NA</span>
+                </span>
+              </div>
+              <textarea
+                required
+                rows={4}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Describe characteristics, tags, brands, content, cash inside, etc. (If you don't know, write NA)"
+                className="glass-input w-full resize-none"
+              />
+              <p className="text-[11px] text-textMuted flex items-center gap-1">
+                <span>Note: If you don't know the description, please write <strong>NA</strong>.</span>
+              </p>
+            </div>
 
  {/* Category, Location, Date */}
  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

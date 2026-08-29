@@ -416,6 +416,83 @@ router.post('/api/report', loginRequired, uploadMiddleware, async (req, res) => 
   }
 });
 
+// Flexible Security Answer Matcher
+// Ignores /, -, _, &, "and", "," and allows single token or combined matching
+export const verifySecurityAnswer = (dbAnswer, userAnswer) => {
+  if (!dbAnswer || dbAnswer.trim() === '') return true;
+  if (!userAnswer || userAnswer.trim() === '') return false;
+
+  // Clean and normalize strings:
+  // 1. Lowercase
+  // 2. Treat '/', '-', '_', '&', ',', and the word 'and' as word boundaries/separators
+  // 3. Strip remaining punctuation
+  // 4. Collapse spaces and trim
+  const clean = (str) => {
+    return (str || '')
+      .toLowerCase()
+      .replace(/\band\b/gi, ' ')
+      .replace(/[\/\-_&,]/g, ' ')
+      .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  };
+
+  const cleanUser = clean(userAnswer);
+  const cleanDb = clean(dbAnswer);
+
+  if (!cleanUser) return false;
+  if (!cleanDb) return true;
+
+  // 1. Direct match on normalized strings (e.g., "red blue" === "red blue")
+  if (cleanUser === cleanDb) return true;
+
+  // 2. Direct match without spaces (e.g., "redblue" === "redblue")
+  const compactUser = cleanUser.replace(/\s+/g, '');
+  const compactDb = cleanDb.replace(/\s+/g, '');
+  if (compactUser === compactDb) return true;
+
+  // 3. Extract individual segments from DB answer separated by /, -, _, &, comma, or "and"
+  // e.g. "red/blue" -> ["red", "blue"], "hyundai, creta" -> ["hyundai", "creta"]
+  const dbSegments = dbAnswer
+    .toLowerCase()
+    .split(/[\/\-_&,]|\band\b/i)
+    .map(s => clean(s))
+    .filter(Boolean);
+
+  // If user answer matches any of the individual segments (e.g. user entered "red" or "blue")
+  if (dbSegments.some(seg => seg === cleanUser || seg.replace(/\s+/g, '') === compactUser)) {
+    return true;
+  }
+
+  // 4. Extract individual segments from user answer
+  const userSegments = userAnswer
+    .toLowerCase()
+    .split(/[\/\-_&,]|\band\b/i)
+    .map(s => clean(s))
+    .filter(Boolean);
+
+  // If all segments provided by user exist in DB segments
+  if (userSegments.length > 0 && userSegments.every(uSeg => dbSegments.includes(uSeg))) {
+    return true;
+  }
+
+  // 5. Individual word token matching
+  const dbWords = cleanDb.split(' ').filter(w => w.length > 0);
+  const userWords = cleanUser.split(' ').filter(w => w.length > 0);
+
+  // If user entered a single word that exists in DB answer (e.g. "red" for "red/blue")
+  if (userWords.length === 1 && dbWords.includes(userWords[0])) {
+    return true;
+  }
+
+  // If all user words are present in DB words
+  if (userWords.length > 0 && userWords.every(w => dbWords.includes(w))) {
+    return true;
+  }
+
+  return false;
+};
+
 // POST /api/verify_claim
 router.post('/api/verify_claim', loginRequired, verifyRateLimiter, async (req, res) => {
   const targetId = req.body.item_id || req.body.id;
@@ -432,10 +509,7 @@ router.post('/api/verify_claim', loginRequired, verifyRateLimiter, async (req, r
 
     const user = await User.findById(req.userId);
 
-    const cleanInput = answer.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "").replace(/\s+/g, " ").toLowerCase().trim();
-    const cleanDb = item.security_answer ? item.security_answer.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "").replace(/\s+/g, " ").toLowerCase().trim() : "";
-
-    const isMatch = !item.security_answer || cleanDb === "" || cleanInput === cleanDb;
+    const isMatch = verifySecurityAnswer(item.security_answer, answer);
 
     if (isMatch) {
       item.status = 'Claimed';
@@ -919,10 +993,9 @@ router.post('/api/items/:id/claim', loginRequired, async (req, res) => {
 
     // Validate security answer if configured on the item
     if (item.security_answer && item.security_answer.trim() !== '') {
-      const cleanInput = (answer || "").replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "").replace(/\s+/g, " ").toLowerCase().trim();
-      const cleanDb = item.security_answer.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "").replace(/\s+/g, " ").toLowerCase().trim();
+      const isMatch = verifySecurityAnswer(item.security_answer, answer);
 
-      if (cleanInput !== cleanDb) {
+      if (!isMatch) {
         await new Log({
           action: `Security Alert: Fake/Incorrect claim attempt for "${item.title}" (Entered: "${answer || 'None'}")`,
           user: user.email
