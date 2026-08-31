@@ -464,6 +464,39 @@ const Admin: React.FC = () => {
     l.user.toLowerCase().includes(logSearchQuery.toLowerCase())
   );
 
+  const [testingEmail, setTestingEmail] = useState(false);
+
+  const handleTestEmail = async () => {
+    setTestingEmail(true);
+    try {
+      const response = await fetch('/api/admin/test-email', { method: 'POST', credentials: 'include' });
+      const resData = await response.json();
+      if (response.ok && resData.success) {
+        if (resData.details?.simulated) {
+          setActionMessage({
+            type: 'error',
+            text: 'Email simulated in server logs. To receive real emails in Gmail, please set GMAIL_USER and GMAIL_APP_PASSWORD in backend/.env.'
+          });
+        } else {
+          setActionMessage({
+            type: 'success',
+            text: `Test notification email successfully sent to ${resData.details?.recipients?.join(', ')}!`
+          });
+        }
+      } else {
+        setActionMessage({
+          type: 'error',
+          text: resData.message || 'Failed to dispatch test email.'
+        });
+      }
+    } catch (err) {
+      console.error('Test email error:', err);
+      setActionMessage({ type: 'error', text: 'Server unreachable while sending test email.' });
+    } finally {
+      setTestingEmail(false);
+    }
+  };
+
   return (
     <motion.div 
       variants={pageVariants}
@@ -481,17 +514,32 @@ const Admin: React.FC = () => {
           </h1>
           <p className="text-sm text-textSecondary">Manage system operations, view global statistics, search registered users, read contact messages, and moderate reported items.</p>
         </div>
-        <motion.button
-          onClick={() => fetchAdminStats(true)}
-          disabled={refreshing}
-          variants={tapHoverVariants}
-          whileHover="hover"
-          whileTap="tap"
-          className="self-start sm:self-center px-4 py-2 bg-surface hover:bg-surface/80 border border-primary/20 rounded-xl text-xs font-semibold text-text flex items-center gap-1.5 transition-all shadow disabled:opacity-50 cursor-pointer"
-        >
-          <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin text-primary' : ''}`} />
-          <span>{refreshing ? 'Refreshing...' : 'Refresh'}</span>
-        </motion.button>
+        <div className="flex items-center gap-2 self-start sm:self-center flex-wrap">
+          <motion.button
+            onClick={handleTestEmail}
+            disabled={testingEmail}
+            variants={tapHoverVariants}
+            whileHover="hover"
+            whileTap="tap"
+            className="px-3.5 py-2 bg-primary/10 hover:bg-primary/20 border border-primary/30 rounded-xl text-xs font-semibold text-primary flex items-center gap-1.5 transition-all shadow disabled:opacity-50 cursor-pointer"
+            title="Send a sample item alert email to all registered administrators"
+          >
+            <Send className={`h-3.5 w-3.5 ${testingEmail ? 'animate-pulse' : ''}`} />
+            <span>{testingEmail ? 'Sending Test...' : 'Test Gmail Alert'}</span>
+          </motion.button>
+
+          <motion.button
+            onClick={() => fetchAdminStats(true)}
+            disabled={refreshing}
+            variants={tapHoverVariants}
+            whileHover="hover"
+            whileTap="tap"
+            className="px-4 py-2 bg-surface hover:bg-surface/80 border border-primary/20 rounded-xl text-xs font-semibold text-text flex items-center gap-1.5 transition-all shadow disabled:opacity-50 cursor-pointer"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin text-primary' : ''}`} />
+            <span>{refreshing ? 'Refreshing...' : 'Refresh'}</span>
+          </motion.button>
+        </div>
       </motion.div>
 
       {/* Action alerts */}

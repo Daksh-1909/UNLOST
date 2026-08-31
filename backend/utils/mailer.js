@@ -16,30 +16,29 @@ const ADMIN_FALLBACK_EMAILS = [
 ];
 
 /**
- * Initializes nodemailer transporter from environment variables
+ * Initializes nodemailer transporter for Gmail / SMTP
  */
 function getTransporter() {
-  if (!nodemailer) return null;
-
-  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
-  const port = parseInt(process.env.SMTP_PORT || '587', 10);
-  const user = process.env.SMTP_USER || process.env.GMAIL_USER || process.env.EMAIL_USER;
-  const pass = process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD || process.env.EMAIL_PASS;
-
-  if (!user || !pass) {
-    return null; // SMTP credentials not configured
+  if (!nodemailer) {
+    console.warn('[MAILER] Nodemailer module is not loaded.');
+    return null;
   }
 
+  const user = (process.env.GMAIL_USER || process.env.SMTP_USER || process.env.EMAIL_USER || process.env.ADMIN_EMAIL || '').trim();
+  const rawPass = (process.env.GMAIL_APP_PASSWORD || process.env.SMTP_PASS || process.env.EMAIL_PASS || '').trim();
+  const pass = rawPass.replace(/\s+/g, ''); // Google App Passwords often contain spaces (e.g. "abcd efgh ijkl mnop")
+
+  if (!user || !pass) {
+    console.warn('[MAILER] Missing GMAIL_USER or GMAIL_APP_PASSWORD in backend/.env.');
+    return null;
+  }
+
+  // Standard Gmail Transport
   return nodemailer.createTransport({
-    host,
-    port,
-    secure: port === 465,
+    service: 'gmail',
     auth: {
       user,
       pass
-    },
-    tls: {
-      rejectUnauthorized: false
     }
   });
 }
@@ -205,7 +204,27 @@ function escapeHtml(str) {
     .replace(/'/g, '&#039;');
 }
 
+export async function sendTestAdminEmail() {
+  const dummyItem = {
+    title: 'Test Notification - Blue Lenovo Laptop',
+    description: 'This is a test notification to verify that all administrators receive email notifications correctly via Gmail.',
+    category: 'Electronics',
+    location: 'Central Library, 2nd Floor',
+    status: 'Found',
+    date: new Date(),
+    reporter_email: 'test.student@paruluniversity.ac.in',
+    contact_info: '+91 9876543210'
+  };
+  const dummyReporter = {
+    email: 'test.student@paruluniversity.ac.in',
+    username: 'Test Student'
+  };
+  return await sendAdminItemReportEmail(dummyItem, dummyReporter);
+}
+
 export default {
-  sendAdminItemReportEmail
+  sendAdminItemReportEmail,
+  sendTestAdminEmail
 };
+
 

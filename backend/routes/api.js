@@ -9,7 +9,7 @@ import User from '../models/User.js';
 import Item from '../models/Item.js';
 import Notification from '../models/Notification.js';
 import { findMatchesAndNotify } from '../utils/matcher.js';
-import { sendAdminItemReportEmail } from '../utils/mailer.js';
+import { sendAdminItemReportEmail, sendTestAdminEmail } from '../utils/mailer.js';
 import Log from '../models/Log.js';
 import ContactMessage from '../models/ContactMessage.js';
 import jwt from 'jsonwebtoken';
@@ -1312,5 +1312,16 @@ router.get('/api/admin/analytics', adminRequired, async (req, res) => {
   }
 });
 
+// POST /api/admin/test-email
+router.post('/api/admin/test-email', adminRequired, async (req, res) => {
+  try {
+    const result = await sendTestAdminEmail();
+    res.json({ success: true, message: 'Test email processed', details: result });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to send test email', error: err.message });
+  }
+});
+
 export default router;
+
 
