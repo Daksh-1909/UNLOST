@@ -1,7 +1,4 @@
-/**
- * UNLOST Automated Mailer Utility
- * Dispatches email notifications to Admin(s) when items are reported or updated.
- */
+import User from '../models/User.js';
 
 // Try importing nodemailer dynamically if installed
 let nodemailer = null;
@@ -48,14 +45,31 @@ function getTransporter() {
 }
 
 /**
- * Sends an email notification to Admin when a Lost or Found item is reported.
+ * Sends an email notification to ALL Admins when a Lost or Found item is reported.
  * 
  * @param {Object} item The newly created Item document
  * @param {Object} reporter The User who submitted the report
  */
 export async function sendAdminItemReportEmail(item, reporter) {
   try {
-    const adminEmail = process.env.ADMIN_EMAIL || ADMIN_FALLBACK_EMAILS[0];
+    // 1. Gather all admin emails from config, env, and database
+    const adminSet = new Set(ADMIN_FALLBACK_EMAILS.map(e => e.toLowerCase().trim()));
+    if (process.env.ADMIN_EMAIL) {
+      adminSet.add(process.env.ADMIN_EMAIL.toLowerCase().trim());
+    }
+
+    try {
+      const dbAdmins = await User.find({
+        $or: [{ role: 'admin' }, { is_admin: true }]
+      }).lean();
+      dbAdmins.forEach(u => {
+        if (u.email) adminSet.add(u.email.toLowerCase().trim());
+      });
+    } catch (dbErr) {
+      console.warn('[MAILER] Could not fetch DB admins, using static list:', dbErr.message);
+    }
+
+    const recipientEmails = Array.from(adminSet);
     const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
     const isLost = item.status === 'Lost';
     const statusColor = isLost ? '#ef4444' : '#10b981';
@@ -66,7 +80,7 @@ export async function sendAdminItemReportEmail(item, reporter) {
       timeStyle: 'short'
     });
 
-    const subject = `[UNLOST Alert] New ${item.status} Item: "${item.title}" Reported on Campus`;
+    const subject = `[UNLOST Admin Alert] New ${item.status} Item: "${item.title}" Reported on Campus`;
 
     const htmlContent = `
 <!DOCTYPE html>
@@ -88,6 +102,8 @@ export async function sendAdminItemReportEmail(item, reporter) {
     .details-table td.value { color: #f1f5f9; }
     .details-table tr:last-child td { border-bottom: none; }
     .description-box { background-color: #0f172a; border-left: 4px solid #6366f1; padding: 14px 16px; border-radius: 4px; margin: 16px 0; font-size: 14px; line-height: 1.5; color: #cbd5e1; }
+    .image-preview { margin: 16px 0; text-align: center; background-color: #0f172a; border-radius: 12px; padding: 12px; border: 1px solid #334155; }
+    .image-preview img { max-width: 100%; max-height: 250px; border-radius: 8px; object-fit: contain; }
     .btn-container { text-align: center; margin: 28px 0 16px; }
     .btn { display: inline-block; padding: 12px 28px; background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); color: #ffffff !important; text-decoration: none; font-weight: 600; font-size: 15px; border-radius: 10px; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4); }
     .footer { padding: 18px 24px; text-align: center; background-color: #0f172a; font-size: 12px; color: #64748b; border-top: 1px solid #334155; }
@@ -96,7 +112,7 @@ export async function sendAdminItemReportEmail(item, reporter) {
 <body>
   <div class="container">
     <div class="header">
-      <h1>UNLOST Management Alert</h1>
+      <h1>UNLOST Administrative Alert</h1>
       <p>Parul University Smart Lost & Found System</p>
     </div>
     <div class="content">
@@ -107,6 +123,13 @@ export async function sendAdminItemReportEmail(item, reporter) {
         <strong>Description:</strong><br/>
         ${escapeHtml(item.description)}
       </div>
+
+      ${item.image_file ? `
+      <div class="image-preview">
+        <p style="margin: 0 0 8px; font-size: 12px; color: #94a3b8;">Item Attachment:</p>
+        <img src="${item.image_file.startsWith('data:') ? item.image_file : `${clientUrl}/static/uploads/${item.image_file}`}" alt="Reported Item" />
+      </div>
+      ` : ''}
 
       <table class="details-table">
         <tr>
@@ -136,7 +159,7 @@ export async function sendAdminItemReportEmail(item, reporter) {
       </div>
     </div>
     <div class="footer">
-      <p>This is an automated administrative notification sent by UNLOST System.</p>
+      <p>This automated alert was dispatched to all administrators (${recipientEmails.length} active admins).</p>
       <p>&copy; ${new Date().getFullYear()} UNLOST - Parul University</p>
     </div>
   </div>
@@ -147,24 +170,24 @@ export async function sendAdminItemReportEmail(item, reporter) {
     const transporter = getTransporter();
     if (transporter) {
       const info = await transporter.sendMail({
-        from: `"UNLOST Alert" <${process.env.SMTP_USER || process.env.GMAIL_USER || 'no-reply@unlost.com'}>`,
-        to: adminEmail,
+        from: `"UNLOST Alert System" <${process.env.SMTP_USER || process.env.GMAIL_USER || 'no-reply@unlost.com'}>`,
+        to: recipientEmails.join(', '),
         subject,
         html: htmlContent
       });
-      console.log(`[MAILER] Admin notification email sent successfully to ${adminEmail}. MessageId: ${info.messageId}`);
-      return { success: true, messageId: info.messageId };
+      console.log(`[MAILER] Admin notification email sent to ${recipientEmails.join(', ')}. MessageId: ${info.messageId}`);
+      return { success: true, messageId: info.messageId, recipients: recipientEmails };
     } else {
-      // SMTP not configured - log cleanly to console for local dev/demo
+      // SMTP not configured - log simulation cleanly with all recipients
       console.log(`\n========================================`);
-      console.log(`[MAILER SIMULATION] Admin Email Triggered:`);
-      console.log(`To: ${adminEmail}`);
+      console.log(`[MAILER] Dispatched to ALL Admins (${recipientEmails.length} recipients):`);
+      console.log(`Recipients: ${recipientEmails.join(', ')}`);
       console.log(`Subject: ${subject}`);
-      console.log(`Item: [${item.status}] ${item.title} at ${item.location}`);
+      console.log(`Item: [${item.status}] ${item.title} (${item.category}) at ${item.location}`);
       console.log(`Reporter: ${reporter?.email || item.reporter_email}`);
-      console.log(`Tip: Configure SMTP_USER and SMTP_PASS in backend/.env to enable live email delivery.`);
+      console.log(`Note: Configure SMTP_USER and SMTP_PASS in backend/.env for live SMTP delivery.`);
       console.log(`========================================\n`);
-      return { success: true, simulated: true };
+      return { success: true, simulated: true, recipients: recipientEmails };
     }
   } catch (error) {
     console.error('[MAILER ERROR] Failed to send admin email notification:', error.message);
@@ -185,3 +208,4 @@ function escapeHtml(str) {
 export default {
   sendAdminItemReportEmail
 };
+
