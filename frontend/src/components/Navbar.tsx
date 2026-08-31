@@ -1,16 +1,36 @@
-import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Menu, X, LogOut, LayoutGrid, PlusCircle, Shield, User, Phone, Home, ChevronDown, Sun, Moon, Bell } from 'lucide-react';
+import { 
+  Menu, X, LogOut, LayoutGrid, PlusCircle, Shield, User, Phone, Home, 
+  ChevronDown, Sun, Moon, Bell, CheckCheck, Sparkles, Tag, ShieldAlert, 
+  Clock, Package, RefreshCw 
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { tapHoverVariants, TRANSITION_BASE } from '../utils/animations';
 import { usePageTransition } from '../context/TransitionContext';
 
 const MotionLink = motion(Link);
 
+function formatTimeAgo(dateString: string | Date) {
+  if (!dateString) return 'Just now';
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInSec = Math.floor((now.getTime() - date.getTime()) / 1000);
+  if (diffInSec < 45) return 'Just now';
+  const diffInMin = Math.floor(diffInSec / 60);
+  if (diffInMin < 60) return `${diffInMin}m ago`;
+  const diffInHours = Math.floor(diffInMin / 60);
+  if (diffInHours < 24) return `${diffInHours}h ago`;
+  const diffInDays = Math.floor(diffInHours / 24);
+  if (diffInDays < 7) return `${diffInDays}d ago`;
+  return date.toLocaleDateString();
+}
+
 const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const { triggerTransition } = usePageTransition();
   const [isOpen, setIsOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -28,25 +48,81 @@ const Navbar: React.FC = () => {
     }
   }, [isDark]);
 
-  React.useEffect(() => {
-    if (user) {
-      fetch('/api/notifications')
-        .then(res => res.json())
-        .then(data => {
-          if (data?.success) {
-            setNotifications(data.notifications || []);
-          }
-        })
-        .catch(() => {});
-    }
+  // Fetch notifications dynamically
+  const fetchNotifications = React.useCallback(() => {
+    if (!user) return;
+    fetch('/api/notifications')
+      .then(res => res.json())
+      .then(data => {
+        if (data?.success && Array.isArray(data.notifications)) {
+          setNotifications(data.notifications);
+        }
+      })
+      .catch(() => {});
   }, [user]);
 
+  // Dynamic real-time polling every 6 seconds + focus/custom event listeners
+  React.useEffect(() => {
+    if (!user) {
+      setNotifications([]);
+      return;
+    }
+
+    fetchNotifications();
+
+    const interval = setInterval(fetchNotifications, 6000);
+
+    const handleFocus = () => fetchNotifications();
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchNotifications();
+      }
+    };
+    const handleItemUpdated = () => fetchNotifications();
+
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('unlost:item_updated', handleItemUpdated);
+    window.addEventListener('unlost:refresh_notifications', handleItemUpdated);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('unlost:item_updated', handleItemUpdated);
+      window.removeEventListener('unlost:refresh_notifications', handleItemUpdated);
+    };
+  }, [user, fetchNotifications]);
+
   const markAsRead = async (id: string) => {
-    await fetch(`/api/notifications/${id}/read`, { method: 'PUT' });
-    setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n));
+    try {
+      await fetch(`/api/notifications/${id}/read`, { method: 'PUT' });
+      setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n));
+    } catch (e) {
+      console.error('Failed to mark notification as read', e);
+    }
   };
 
-  const navRef = React.useRef<HTMLElement>(null);
+  const markAllAsRead = async () => {
+    try {
+      await fetch('/api/notifications/read-all', { method: 'PUT' });
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+    } catch (e) {
+      console.error('Failed to mark all as read', e);
+    }
+  };
+
+  const handleNotificationClick = async (notification: any) => {
+    if (!notification.isRead) {
+      await markAsRead(notification._id);
+    }
+    setIsNotificationsOpen(false);
+    if (notification.link) {
+      navigate(notification.link);
+    }
+  };
+
+  const navRef = useRef<HTMLElement>(null);
 
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -67,6 +143,7 @@ const Navbar: React.FC = () => {
   }, [location.pathname]);
 
   const isAdmin = Boolean(user?.is_admin || user?.role === 'admin');
+  const unreadCount = notifications.filter(n => !n.isRead).length;
 
   const navigation = [
     { name: 'Home', href: '/', icon: Home },
@@ -151,50 +228,172 @@ const Navbar: React.FC = () => {
               <div className="relative">
                 <motion.button
                   onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                  className="p-2 rounded-xl text-textSecondary hover:text-text hover:bg-primary/10 transition-colors relative focus:outline-none"
+                  className={`p-2 rounded-xl transition-all relative focus:outline-none ${
+                    isNotificationsOpen 
+                      ? 'bg-primary/15 text-primary' 
+                      : 'text-textSecondary hover:text-text hover:bg-primary/10'
+                  }`}
                   whileHover="hover"
                   whileTap="tap"
                   variants={tapHoverVariants}
                   aria-label="Notifications"
                 >
-                  <Bell className="w-5 h-5" />
-                  {notifications.filter(n => !n.isRead).length > 0 && (
-                    <span className="absolute top-1 right-1 w-2 h-2 bg-danger rounded-full animate-pulse" />
+                  <Bell className={`w-5 h-5 ${unreadCount > 0 ? 'text-primary animate-wiggle' : ''}`} />
+                  
+                  {/* Dynamic Pulsing / Blinking Badge */}
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-danger opacity-75" />
+                      <span className="relative inline-flex rounded-full h-4 w-4 bg-danger items-center justify-center text-[10px] font-bold text-white leading-none shadow-md shadow-danger/50">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    </span>
                   )}
                 </motion.button>
 
                 <AnimatePresence>
                   {isNotificationsOpen && (
                     <motion.div
-                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      initial={{ opacity: 0, y: 10, scale: 0.96 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.96 }}
                       transition={TRANSITION_BASE}
-                      className="absolute right-0 mt-2 w-72 sm:w-80 bg-surface rounded-xl shadow-xl border border-white/10 overflow-hidden z-50"
+                      className="absolute right-0 mt-2 w-80 sm:w-96 bg-surface/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 overflow-hidden z-50 divide-y divide-white/5"
                     >
-                      <div className="p-3 border-b border-white/5 font-bold text-text flex items-center justify-between">
-                        <span>Notifications</span>
-                        {notifications.length > 0 && (
-                          <span className="text-xs font-normal text-textSecondary">{notifications.length} total</span>
+                      {/* Notifications Header */}
+                      <div className="p-3.5 px-4 font-bold text-text flex items-center justify-between bg-white/[0.02]">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold">Notifications</span>
+                          {unreadCount > 0 && (
+                            <span className="px-2 py-0.5 text-[11px] font-semibold bg-danger/15 text-danger rounded-full border border-danger/25 animate-pulse">
+                              {unreadCount} new
+                            </span>
+                          )}
+                        </div>
+                        {unreadCount > 0 && (
+                          <button 
+                            onClick={markAllAsRead}
+                            className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 font-medium transition-colors"
+                            title="Mark all notifications as read"
+                          >
+                            <CheckCheck className="w-3.5 h-3.5" />
+                            <span>Mark all read</span>
+                          </button>
                         )}
                       </div>
-                      <div className="max-h-64 overflow-y-auto">
+
+                      {/* Notification Items List */}
+                      <div className="max-h-80 overflow-y-auto divide-y divide-white/5 custom-scrollbar">
                         {notifications.length === 0 ? (
-                          <div className="p-4 text-center text-sm text-textSecondary">No notifications</div>
-                        ) : (
-                          notifications.map(n => (
-                            <div 
-                              key={n._id} 
-                              className={`p-3 border-b border-white/5 text-sm transition-colors ${n.isRead ? 'opacity-60' : 'bg-primary/5 hover:bg-primary/10 cursor-pointer'}`}
-                              onClick={() => {
-                                if (!n.isRead) markAsRead(n._id);
-                                if (n.link) window.location.href = n.link;
-                              }}
-                            >
-                              <p className="text-text">{n.message}</p>
-                              <span className="text-xs text-textSecondary">{new Date(n.date).toLocaleDateString()}</span>
+                          <div className="py-10 text-center space-y-2">
+                            <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto">
+                              <Bell className="w-5 h-5 opacity-60" />
                             </div>
-                          ))
+                            <p className="text-sm font-medium text-text">All caught up!</p>
+                            <p className="text-xs text-textMuted">No new notifications at this time.</p>
+                          </div>
+                        ) : (
+                          notifications.map(n => {
+                            const isLost = n.type === 'item_lost' || n.item_status === 'Lost';
+                            const isFound = n.type === 'item_found' || n.item_status === 'Found';
+                            const isAdminAlert = n.type === 'admin_alert' || n.forAdmin;
+                            const isMatch = n.type === 'match';
+
+                            return (
+                              <div 
+                                key={n._id} 
+                                className={`p-3.5 transition-all flex items-start gap-3 cursor-pointer group ${
+                                  n.isRead 
+                                    ? 'opacity-65 hover:opacity-100 hover:bg-white/[0.02]' 
+                                    : 'bg-primary/[0.06] hover:bg-primary/[0.12] border-l-2 border-l-primary'
+                                }`}
+                                onClick={() => handleNotificationClick(n)}
+                              >
+                                {/* Left Status Icon / Badge */}
+                                <div className="flex-shrink-0 mt-0.5">
+                                  {isAdminAlert ? (
+                                    <div className="w-8 h-8 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-400">
+                                      <ShieldAlert className="w-4 h-4" />
+                                    </div>
+                                  ) : isMatch ? (
+                                    <div className="w-8 h-8 rounded-xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-400">
+                                      <Sparkles className="w-4 h-4" />
+                                    </div>
+                                  ) : isLost ? (
+                                    <div className="w-8 h-8 rounded-xl bg-danger/15 border border-danger/30 flex items-center justify-center text-danger">
+                                      <Tag className="w-4 h-4" />
+                                    </div>
+                                  ) : isFound ? (
+                                    <div className="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                                      <Package className="w-4 h-4" />
+                                    </div>
+                                  ) : (
+                                    <div className="w-8 h-8 rounded-xl bg-primary/15 border border-primary/30 flex items-center justify-center text-primary">
+                                      <Bell className="w-4 h-4" />
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Main Text Body */}
+                                <div className="flex-1 min-w-0 space-y-1">
+                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                    {isAdminAlert && (
+                                      <span className="px-1.5 py-0.2 text-[9px] font-bold uppercase rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                                        Admin Alert
+                                      </span>
+                                    )}
+                                    {isLost && (
+                                      <span className="px-1.5 py-0.2 text-[9px] font-bold uppercase rounded bg-danger/20 text-danger border border-danger/30">
+                                        Lost Item
+                                      </span>
+                                    )}
+                                    {isFound && (
+                                      <span className="px-1.5 py-0.2 text-[9px] font-bold uppercase rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                                        Found Item
+                                      </span>
+                                    )}
+                                    {isMatch && (
+                                      <span className="px-1.5 py-0.2 text-[9px] font-bold uppercase rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                                        Potential Match
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  <p className="text-xs sm:text-sm text-text font-medium leading-snug line-clamp-2 group-hover:text-primary transition-colors">
+                                    {n.message}
+                                  </p>
+
+                                  <div className="flex items-center gap-2 text-[11px] text-textMuted pt-0.5">
+                                    <span className="flex items-center gap-1">
+                                      <Clock className="w-3 h-3" />
+                                      {formatTimeAgo(n.date)}
+                                    </span>
+                                    {n.item_location && (
+                                      <>
+                                        <span>•</span>
+                                        <span className="truncate max-w-[120px]">{n.item_location}</span>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Right Side: Thumbnail or Unread Dot */}
+                                <div className="flex flex-col items-end justify-between flex-shrink-0 self-stretch">
+                                  {!n.isRead && (
+                                    <span className="w-2 h-2 rounded-full bg-primary shadow-sm shadow-primary animate-pulse mt-1" />
+                                  )}
+                                  {n.item_image && (
+                                    <img 
+                                      src={n.item_image} 
+                                      alt="Thumbnail" 
+                                      className="w-8 h-8 rounded-lg object-cover border border-white/10 mt-auto" 
+                                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                    />
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })
                         )}
                       </div>
                     </motion.div>

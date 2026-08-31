@@ -9,6 +9,7 @@ import User from '../models/User.js';
 import Item from '../models/Item.js';
 import Notification from '../models/Notification.js';
 import { findMatchesAndNotify } from '../utils/matcher.js';
+import { sendAdminItemReportEmail } from '../utils/mailer.js';
 import Log from '../models/Log.js';
 import ContactMessage from '../models/ContactMessage.js';
 import jwt from 'jsonwebtoken';
@@ -431,7 +432,52 @@ router.post('/api/report', loginRequired, uploadMiddleware, async (req, res) => 
     });
     await newItem.save();
 
-    // Run matching engine and notify
+    // 1. Create Broadcast Notification for all active users
+    try {
+      const isLost = newItem.status === 'Lost';
+      const broadcastNotification = new Notification({
+        title: `New ${newItem.status} Item Reported`,
+        message: `${isLost ? '🔴' : '🟢'} ${newItem.category}: "${newItem.title}" reported at ${newItem.location}.`,
+        type: isLost ? 'item_lost' : 'item_found',
+        item_id: newItem._id,
+        item_status: newItem.status,
+        item_category: newItem.category,
+        item_location: newItem.location,
+        item_image: imageFileValue,
+        link: `/items`,
+        isBroadcast: true,
+        readBy: [currentUser._id]
+      });
+      await broadcastNotification.save();
+    } catch (notifErr) {
+      console.error('Failed to create broadcast notification:', notifErr);
+    }
+
+    // 2. Create High-Priority Alert for Admins
+    try {
+      const adminNotification = new Notification({
+        title: `[ADMIN ALERT] New ${newItem.status} Item Reported`,
+        message: `User ${currentUser.email} reported a ${newItem.status.toLowerCase()} item: "${newItem.title}" at ${newItem.location}.`,
+        type: 'admin_alert',
+        item_id: newItem._id,
+        item_status: newItem.status,
+        item_category: newItem.category,
+        item_location: newItem.location,
+        item_image: imageFileValue,
+        link: `/admin`,
+        forAdmin: true
+      });
+      await adminNotification.save();
+    } catch (adminNotifErr) {
+      console.error('Failed to create admin notification:', adminNotifErr);
+    }
+
+    // 3. Dispatch Email Alert to Admin(s)
+    sendAdminItemReportEmail(newItem, currentUser).catch(mailErr => {
+      console.error('Failed to dispatch admin email alert:', mailErr);
+    });
+
+    // 4. Run matching engine and notify potential owners
     const matches = await findMatchesAndNotify(newItem);
     const matchIds = matches.map(m => m.item._id);
 
@@ -1100,9 +1146,52 @@ router.post('/api/admin/items/:id/approve-claim', adminRequired, async (req, res
 router.get('/api/notifications', loginRequired, async (req, res) => {
   try {
     const user = await User.findById(req.userId);
-    const notifications = await Notification.find({ user_email: user.email }).sort({ date: -1 }).limit(20);
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'User not found' });
+    }
+
+    const isAdminUser = Boolean(user.role === 'admin' || user.is_admin);
+
+    const query = {
+      $or: [
+        { user_email: user.email },
+        { isBroadcast: true },
+        ...(isAdminUser ? [{ forAdmin: true }] : [])
+      ]
+    };
+
+    const rawNotifications = await Notification.find(query)
+      .sort({ date: -1 })
+      .limit(30)
+      .lean();
+
+    const notifications = rawNotifications.map(n => {
+      const isReadByUser = Boolean(
+        n.isRead || 
+        (Array.isArray(n.readBy) && n.readBy.some(id => id && id.toString() === req.userId.toString()))
+      );
+
+      return {
+        _id: n._id.toString(),
+        title: n.title || (n.type === 'item_lost' ? 'Lost Item Alert' : n.type === 'item_found' ? 'Found Item Alert' : 'Notification'),
+        message: n.message,
+        type: n.type || 'general',
+        item_id: n.item_id ? n.item_id.toString() : null,
+        item_status: n.item_status || null,
+        item_category: n.item_category || null,
+        item_location: n.item_location || null,
+        item_image: n.item_image || null,
+        link: n.link || '/items',
+        isBroadcast: Boolean(n.isBroadcast),
+        forAdmin: Boolean(n.forAdmin),
+        isRead: isReadByUser,
+        date: n.date
+      };
+    });
+
     res.json({ success: true, notifications });
   } catch (err) {
+    console.error('Error fetching notifications:', err);
     res.status(500).json({ success: false, message: 'Error fetching notifications' });
   }
 });
@@ -1110,10 +1199,56 @@ router.get('/api/notifications', loginRequired, async (req, res) => {
 // PUT /api/notifications/:id/read
 router.put('/api/notifications/:id/read', loginRequired, async (req, res) => {
   try {
-    await Notification.findByIdAndUpdate(req.params.id, { isRead: true });
-    res.json({ success: true });
+    const notification = await Notification.findById(req.params.id);
+    if (!notification) {
+      return res.status(404).json({ success: false, message: 'Notification not found' });
+    }
+
+    if (notification.isBroadcast || notification.forAdmin) {
+      await Notification.findByIdAndUpdate(req.params.id, {
+        $addToSet: { readBy: req.userId }
+      });
+    } else {
+      await Notification.findByIdAndUpdate(req.params.id, { isRead: true });
+    }
+
+    res.json({ success: true, message: 'Notification marked as read' });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Error updating notification' });
+  }
+});
+
+// PUT /api/notifications/read-all
+router.put('/api/notifications/read-all', loginRequired, async (req, res) => {
+  try {
+    const user = await User.findById(req.userId);
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'User not found' });
+    }
+
+    // 1. Mark all user-targeted notifications as read
+    await Notification.updateMany(
+      { user_email: user.email, isRead: false },
+      { $set: { isRead: true } }
+    );
+
+    // 2. Add current userId to readBy for all broadcast and admin notifications
+    const isAdminUser = Boolean(user.role === 'admin' || user.is_admin);
+    const broadcastQuery = {
+      $or: [
+        { isBroadcast: true },
+        ...(isAdminUser ? [{ forAdmin: true }] : [])
+      ]
+    };
+
+    await Notification.updateMany(broadcastQuery, {
+      $addToSet: { readBy: req.userId }
+    });
+
+    res.json({ success: true, message: 'All notifications marked as read' });
+  } catch (err) {
+    console.error('Error marking all notifications as read:', err);
+    res.status(500).json({ success: false, message: 'Error updating notifications' });
   }
 });
 

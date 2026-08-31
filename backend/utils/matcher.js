@@ -45,8 +45,15 @@ export async function findMatchesAndNotify(newItem) {
         await new Notification({
           user_id: existingUser._id,
           user_email: existingUser.email,
-          message: `A potential match for your ${targetStatus.toLowerCase()} item "${match.item.title}" has been reported.`,
-          link: `/item/${newItem._id}`
+          title: `Potential Match for "${match.item.title}"`,
+          message: `🔍 A potential match for your ${targetStatus.toLowerCase()} item "${match.item.title}" was just reported!`,
+          type: 'match',
+          item_id: newItem._id,
+          item_status: newItem.status,
+          item_category: newItem.category,
+          item_location: newItem.location,
+          item_image: newItem.image_file,
+          link: `/items`
         }).save();
       }
 
@@ -56,8 +63,15 @@ export async function findMatchesAndNotify(newItem) {
         await new Notification({
           user_id: newUser._id,
           user_email: newUser.email,
-          message: `A potential match for your ${newItem.status.toLowerCase()} item "${newItem.title}" was found in our system.`,
-          link: `/item/${match.item._id}`
+          title: `Potential Match for "${newItem.title}"`,
+          message: `🔍 A matching ${match.item.status.toLowerCase()} item "${match.item.title}" was found in our system.`,
+          type: 'match',
+          item_id: match.item._id,
+          item_status: match.item.status,
+          item_category: match.item.category,
+          item_location: match.item.location,
+          item_image: match.item.image_file,
+          link: `/items`
         }).save();
       }
     }
