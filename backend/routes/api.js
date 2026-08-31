@@ -446,14 +446,35 @@ router.post('/api/report', loginRequired, uploadMiddleware, async (req, res) => 
         item_image: imageFileValue,
         link: `/items`,
         isBroadcast: true,
-        readBy: [currentUser._id]
+        readBy: [] // Starts unread for all users so the red dot triggers
       });
       await broadcastNotification.save();
     } catch (notifErr) {
       console.error('Failed to create broadcast notification:', notifErr);
     }
 
-    // 2. Create High-Priority Alert for Admins
+    // 2. Create Personal Confirmation Notification for the reporter
+    try {
+      const userNotification = new Notification({
+        title: `Report Submitted: "${newItem.title}"`,
+        message: `Your ${newItem.status.toLowerCase()} report for "${newItem.title}" was submitted successfully.`,
+        type: newItem.status === 'Lost' ? 'item_lost' : 'item_found',
+        user_id: currentUser._id,
+        user_email: currentUser.email,
+        item_id: newItem._id,
+        item_status: newItem.status,
+        item_category: newItem.category,
+        item_location: newItem.location,
+        item_image: imageFileValue,
+        link: `/items`,
+        isRead: false
+      });
+      await userNotification.save();
+    } catch (userNotifErr) {
+      console.error('Failed to create user notification:', userNotifErr);
+    }
+
+    // 3. Create High-Priority Alert for Admins
     try {
       const adminNotification = new Notification({
         title: `[ADMIN ALERT] New ${newItem.status} Item Reported`,
@@ -465,7 +486,8 @@ router.post('/api/report', loginRequired, uploadMiddleware, async (req, res) => 
         item_location: newItem.location,
         item_image: imageFileValue,
         link: `/admin`,
-        forAdmin: true
+        forAdmin: true,
+        readBy: []
       });
       await adminNotification.save();
     } catch (adminNotifErr) {
@@ -1145,30 +1167,42 @@ router.post('/api/admin/items/:id/approve-claim', adminRequired, async (req, res
 // GET /api/notifications
 router.get('/api/notifications', loginRequired, async (req, res) => {
   try {
-    const user = await User.findById(req.userId);
-    if (!user) {
-      return res.status(401).json({ success: false, message: 'User not found' });
+    let user = null;
+    if (req.userId) {
+      try {
+        user = await User.findById(req.userId).lean();
+      } catch (e) {}
+    }
+    if (!user && req.user) {
+      user = req.user;
     }
 
-    const isAdminUser = Boolean(user.role === 'admin' || user.is_admin);
+    const userEmail = (user?.email || req.user?.email || '').trim().toLowerCase();
+    const isAdminUser = Boolean(user?.role === 'admin' || user?.is_admin || req.user?.is_admin || req.user?.role === 'admin');
+    const currentUserIdStr = (req.userId || user?._id || user?.id || '').toString();
 
     const query = {
       $or: [
-        { user_email: user.email },
+        ...(userEmail ? [
+          { user_email: userEmail },
+          { user_email: { $regex: new RegExp(`^${userEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } }
+        ] : []),
         { isBroadcast: true },
+        { isBroadcast: { $exists: false } },
         ...(isAdminUser ? [{ forAdmin: true }] : [])
       ]
     };
 
     const rawNotifications = await Notification.find(query)
       .sort({ date: -1 })
-      .limit(30)
+      .limit(40)
       .lean();
 
     const notifications = rawNotifications.map(n => {
+      const isTargetedToUser = n.user_email && userEmail && n.user_email.toLowerCase() === userEmail;
       const isReadByUser = Boolean(
-        n.isRead || 
-        (Array.isArray(n.readBy) && n.readBy.some(id => id && id.toString() === req.userId.toString()))
+        (isTargetedToUser && n.isRead) ||
+        (Array.isArray(n.readBy) && currentUserIdStr && n.readBy.some(id => id && id.toString() === currentUserIdStr))
       );
 
       return {

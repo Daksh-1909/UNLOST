@@ -107,13 +107,14 @@ const Report: React.FC = () => {
  body: formData, // fetch automatically configures multipart boundary
  });
  const data = await response.json();
- if (response.ok && data.success) {
- window.dispatchEvent(new Event('unlost:item_updated'));
- setSuccess(true);
- setTimeout(() => {
- navigate('/items');
- }, 1800);
- } else {
+    if (response.ok && data.success) {
+      window.dispatchEvent(new Event('unlost:item_updated'));
+      window.dispatchEvent(new Event('unlost:refresh_notifications'));
+      setSuccess(true);
+      setTimeout(() => {
+        navigate('/items');
+      }, 1800);
+    } else {
  setError(data.message || 'Failed to submit report.');
  }
  } catch (err) {

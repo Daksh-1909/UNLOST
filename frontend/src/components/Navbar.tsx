@@ -51,17 +51,19 @@ const Navbar: React.FC = () => {
   // Fetch notifications dynamically
   const fetchNotifications = React.useCallback(() => {
     if (!user) return;
-    fetch('/api/notifications')
+    fetch('/api/notifications', { credentials: 'include' })
       .then(res => res.json())
       .then(data => {
         if (data?.success && Array.isArray(data.notifications)) {
           setNotifications(data.notifications);
         }
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.error('Error loading notifications:', err);
+      });
   }, [user]);
 
-  // Dynamic real-time polling every 6 seconds + focus/custom event listeners
+  // Dynamic real-time polling every 5 seconds + focus/custom event listeners
   React.useEffect(() => {
     if (!user) {
       setNotifications([]);
@@ -70,7 +72,7 @@ const Navbar: React.FC = () => {
 
     fetchNotifications();
 
-    const interval = setInterval(fetchNotifications, 6000);
+    const interval = setInterval(fetchNotifications, 5000);
 
     const handleFocus = () => fetchNotifications();
     const handleVisibilityChange = () => {
@@ -96,7 +98,7 @@ const Navbar: React.FC = () => {
 
   const markAsRead = async (id: string) => {
     try {
-      await fetch(`/api/notifications/${id}/read`, { method: 'PUT' });
+      await fetch(`/api/notifications/${id}/read`, { method: 'PUT', credentials: 'include' });
       setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n));
     } catch (e) {
       console.error('Failed to mark notification as read', e);
@@ -105,7 +107,7 @@ const Navbar: React.FC = () => {
 
   const markAllAsRead = async () => {
     try {
-      await fetch('/api/notifications/read-all', { method: 'PUT' });
+      await fetch('/api/notifications/read-all', { method: 'PUT', credentials: 'include' });
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
     } catch (e) {
       console.error('Failed to mark all as read', e);
@@ -227,7 +229,13 @@ const Navbar: React.FC = () => {
             {user && (
               <div className="relative">
                 <motion.button
-                  onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                  onClick={() => {
+                    const nextState = !isNotificationsOpen;
+                    setIsNotificationsOpen(nextState);
+                    if (nextState) {
+                      fetchNotifications();
+                    }
+                  }}
                   className={`p-2 rounded-xl transition-all relative focus:outline-none ${
                     isNotificationsOpen 
                       ? 'bg-primary/15 text-primary' 
@@ -240,13 +248,11 @@ const Navbar: React.FC = () => {
                 >
                   <Bell className={`w-5 h-5 ${unreadCount > 0 ? 'text-primary animate-wiggle' : ''}`} />
                   
-                  {/* Dynamic Pulsing / Blinking Badge */}
+                  {/* Dynamic Blinking / Pulsing Red Dot on Bell */}
                   {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-danger opacity-75" />
-                      <span className="relative inline-flex rounded-full h-4 w-4 bg-danger items-center justify-center text-[10px] font-bold text-white leading-none shadow-md shadow-danger/50">
-                        {unreadCount > 9 ? '9+' : unreadCount}
-                      </span>
+                    <span className="absolute top-1.5 right-1.5 flex h-3 w-3 pointer-events-none">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-80" />
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500 border-2 border-surface shadow-sm shadow-red-500/80" />
                     </span>
                   )}
                 </motion.button>
