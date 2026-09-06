@@ -1,22 +1,35 @@
-import React, { useEffect } from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { pageVariants } from './utils/animations';
+import { TransitionProvider } from './context/TransitionContext';
 
 import Navbar from './components/Navbar';
-import Home from './pages/Home';
-import Items from './pages/Items';
-import Report from './pages/Report';
-import Contact from './pages/Contact';
-import Profile from './pages/Profile';
-import Admin from './pages/Admin';
-import Login from './pages/Login';
-import Register from './pages/Register';
 import SmiloWidget from './components/SmiloWidget';
-import SmiloPage from './pages/SmiloPage';
-import ItemDetail from './pages/ItemDetail';
-import AdminAnalytics from './pages/AdminAnalytics';
+
+// Route Code-Splitting: Lazy load all pages on-demand for lightning-fast initial load
+const Home = lazy(() => import('./pages/Home'));
+const Items = lazy(() => import('./pages/Items'));
+const Report = lazy(() => import('./pages/Report'));
+const Contact = lazy(() => import('./pages/Contact'));
+const Profile = lazy(() => import('./pages/Profile'));
+const Admin = lazy(() => import('./pages/Admin'));
+const Login = lazy(() => import('./pages/Login'));
+const Register = lazy(() => import('./pages/Register'));
+const SmiloPage = lazy(() => import('./pages/SmiloPage'));
+const ItemDetail = lazy(() => import('./pages/ItemDetail'));
+const AdminAnalytics = lazy(() => import('./pages/AdminAnalytics'));
+
+// Ultra-lightweight page loading skeleton
+const PageLoader: React.FC = () => (
+  <div className="w-full min-h-[50vh] flex items-center justify-center">
+    <div className="relative flex items-center justify-center">
+      <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary/20 border-t-primary"></div>
+      <span className="absolute text-[10px] font-bold text-primary tracking-tight">UL</span>
+    </div>
+  </div>
+);
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode; requireAdmin?: boolean }> = ({ 
   children, 
@@ -24,7 +37,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode; requireAdmin?: boole
 }) => {
   const { user, loading } = useAuth();
 
-  if (loading) {
+  if (loading && !user) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
         <div className="relative flex items-center justify-center">
@@ -46,17 +59,25 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode; requireAdmin?: boole
   return <>{children}</>;
 };
 
-// Component to handle route animations
+// Component to handle instant route transitions
 const AnimatedRoutes: React.FC = () => {
   const location = useLocation();
 
   return (
-    <AnimatePresence mode="wait">
+    <Suspense fallback={<PageLoader />}>
       <Routes location={location} key={location.pathname}>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route path="/login" element={
+          <motion.div initial="initial" animate="animate" exit="exit" variants={pageVariants} className="w-full h-full">
+            <Login />
+          </motion.div>
+        } />
+        <Route path="/register" element={
+          <motion.div initial="initial" animate="animate" exit="exit" variants={pageVariants} className="w-full h-full">
+            <Register />
+          </motion.div>
+        } />
         
-        {/* Wrap protected routes to apply page transitions consistently */}
+        {/* Protected routes */}
         <Route path="/" element={
           <ProtectedRoute>
             <motion.div initial="initial" animate="animate" exit="exit" variants={pageVariants} className="w-full h-full">
@@ -125,62 +146,26 @@ const AnimatedRoutes: React.FC = () => {
         {/* Fallback to home */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </AnimatePresence>
+    </Suspense>
   );
 };
 
 const AppContent: React.FC = () => {
   const { user } = useAuth();
 
-  useEffect(() => {
-    // 1. Prevent context menu globally to block right-click saving
-    const handleContextMenu = (e: MouseEvent) => {
-      e.preventDefault();
-    };
-    document.addEventListener('contextmenu', handleContextMenu);
-
-    // 2. Prevent screenshot shortcuts and common developer tools
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (
-        e.key === 'PrintScreen' ||
-        (e.ctrlKey && e.key === 's') || 
-        (e.ctrlKey && e.key === 'p') || 
-        e.key === 'F12' || 
-        (e.ctrlKey && e.shiftKey && e.key === 'I') || 
-        (e.ctrlKey && e.key === 'u') || 
-        (e.metaKey && e.shiftKey && (e.key === '3' || e.key === '4' || e.key === '5')) 
-      ) {
-        e.preventDefault();
-        if (navigator.clipboard) {
-          navigator.clipboard.writeText('');
-        }
-      }
-    };
-    document.addEventListener('keydown', handleKeyDown);
-    
-    // 3. Clear clipboard on PrintScreen keyup just in case
-    const handleKeyUp = (e: KeyboardEvent) => {
-      if (e.key === 'PrintScreen') {
-        if (navigator.clipboard) {
-          navigator.clipboard.writeText('');
-        }
-      }
-    };
-    document.addEventListener('keyup', handleKeyUp);
-
-    return () => {
-      document.removeEventListener('contextmenu', handleContextMenu);
-      document.removeEventListener('keydown', handleKeyDown);
-      document.removeEventListener('keyup', handleKeyUp);
-    };
-  }, []);
-
   return (
     <Router>
       <div className="min-h-screen bg-background text-primary flex flex-col relative overflow-hidden">
-        {/* Decorative background glow blobs */}
-        <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-primary/5 blur-[120px] pointer-events-none"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-secondary/5 blur-[120px] pointer-events-none"></div>
+        {/* Hardware-accelerated decorative background radial glows (0 CPU overhead) */}
+        <div 
+          className="pointer-events-none fixed inset-0 z-0 opacity-40 dark:opacity-20"
+          style={{
+            backgroundImage: `
+              radial-gradient(circle 400px at 0% 0%, rgba(var(--color-primary), 0.12), transparent 70%),
+              radial-gradient(circle 400px at 100% 100%, rgba(var(--color-secondary), 0.12), transparent 70%)
+            `
+          }}
+        />
         
         {user && <Navbar />}
         <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 z-10">
@@ -191,8 +176,6 @@ const AppContent: React.FC = () => {
     </Router>
   );
 };
-
-import { TransitionProvider } from './context/TransitionContext';
 
 const App: React.FC = () => {
   return (
@@ -205,3 +188,4 @@ const App: React.FC = () => {
 };
 
 export default App;
+

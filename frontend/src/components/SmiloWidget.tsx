@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { motion, useMotionValue, useSpring } from 'framer-motion';
+import { motion, useMotionValue, useSpring, useTransform, MotionValue } from 'framer-motion';
 
 /* ══════════════════════════════════════════════════════ */
 /* SOUND – Warm Bell Chimes */
@@ -68,27 +68,24 @@ interface Message {
 /* SMILO ROBOT – Framer Motion driven */
 /* ══════════════════════════════════════════════════════ */
 const SmiloRobot: React.FC<{
- mouseX: number;
- mouseY: number;
+ rawMouseX: MotionValue<number>;
+ rawMouseY: MotionValue<number>;
  isWaving: boolean;
  isClicked: boolean;
  isHovered: boolean;
  isWavingHover: boolean;
  mood: string;
  hoverGreeting: string;
-}> = ({ mouseX, mouseY, isWaving, isClicked, isHovered, isWavingHover, mood, hoverGreeting }) => {
+}> = ({ rawMouseX, rawMouseY, isWaving, isClicked, isHovered, isWavingHover, mood, hoverGreeting }) => {
 
- // Spring-smoothed mouse-driven head rotation
- const rotY = useSpring(useMotionValue(mouseX * 20), { stiffness: 60, damping: 18 });
- const rotX = useSpring(useMotionValue(-mouseY * 14), { stiffness: 60, damping: 18 });
- const rotZ = useSpring(useMotionValue(mouseX * 5), { stiffness: 50, damping: 20 });
+ // Spring-smoothed mouse-driven head rotation (zero React re-renders)
+ const targetRotY = useTransform(rawMouseX, (v: number) => v * 22);
+ const targetRotX = useTransform(rawMouseY, (v: number) => -v * 14);
+ const targetRotZ = useTransform(rawMouseX, (v: number) => v * 5);
 
- // Update springs on mouse change
- useEffect(() => {
- rotY.set(mouseX * 22);
- rotX.set(-mouseY * 14);
- rotZ.set(mouseX * 5);
- }, [mouseX, mouseY, rotY, rotX, rotZ]);
+ const rotY = useSpring(targetRotY, { stiffness: 60, damping: 18 });
+ const rotX = useSpring(targetRotX, { stiffness: 60, damping: 18 });
+ const rotZ = useSpring(targetRotZ, { stiffness: 50, damping: 20 });
 
  // Read theme on render (updates often due to mouse events)
  const isDark = document.documentElement.classList.contains('dark');
@@ -421,8 +418,8 @@ const SmiloWidget: React.FC = () => {
   const navigate = useNavigate();
 
  const messagesEndRef = useRef<HTMLDivElement>(null);
- const [mouseX, setMouseX] = useState(0);
- const [mouseY, setMouseY] = useState(0);
+ const rawMouseX = useMotionValue(0);
+ const rawMouseY = useMotionValue(0);
  const [isWaving, setIsWaving] = useState(false);
  const [isClicked, setIsClicked] = useState(false);
  const [isHovered, setIsHovered] = useState(false);
@@ -474,14 +471,19 @@ const [thinkIdx, setThinkIdx] = useState(0);
  const [inputValue, setInputValue] = useState('');
  const [botTyping, setBotTyping] = useState(false);
 
-  // Global mouse position tracking relative to viewport (throttled for 60fps performance)
+  // Global mouse position tracking relative to viewport (zero React re-renders)
   useEffect(() => {
+    // Only track if fine pointer (mouse/trackpad) exists
+    if (typeof window === 'undefined' || !window.matchMedia('(pointer: fine)').matches) {
+      return;
+    }
+
     let ticking = false;
     const handleGlobalMouseMove = (e: MouseEvent) => {
       if (!ticking) {
         window.requestAnimationFrame(() => {
-          setMouseX((e.clientX / window.innerWidth - 0.5) * 2);
-          setMouseY((e.clientY / window.innerHeight - 0.5) * 2);
+          rawMouseX.set((e.clientX / window.innerWidth - 0.5) * 2);
+          rawMouseY.set((e.clientY / window.innerHeight - 0.5) * 2);
           ticking = false;
         });
         ticking = true;
@@ -489,7 +491,7 @@ const [thinkIdx, setThinkIdx] = useState(0);
     };
     window.addEventListener('mousemove', handleGlobalMouseMove, { passive: true });
     return () => window.removeEventListener('mousemove', handleGlobalMouseMove);
-  }, []);
+  }, [rawMouseX, rawMouseY]);
 
  // Rotate thinking phrases
  useEffect(() => {
@@ -1322,8 +1324,8 @@ const [thinkIdx, setThinkIdx] = useState(0);
  title="Click Smilo!"
  >
  <SmiloRobot
- mouseX={mouseX}
- mouseY={mouseY}
+ rawMouseX={rawMouseX}
+ rawMouseY={rawMouseY}
  isWaving={isWaving}
  isClicked={isClicked}
  isHovered={isHovered}

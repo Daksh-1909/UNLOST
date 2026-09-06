@@ -151,20 +151,24 @@ const Home: React.FC = () => {
   // Carousel ref
   const carouselRef = useRef<HTMLDivElement>(null);
 
-  // Fetch live platform stats and database items
+  // Fetch live platform stats and database items in parallel
   const fetchDashboardData = async () => {
     try {
-      // 1. Fetch real-time platform stats
-      const statsRes = await fetch('/api/stats');
-      const statsData = await statsRes.json();
-      if (statsRes.ok && statsData.success && statsData.stats) {
+      const [statsRes, itemsRes] = await Promise.all([
+        fetch('/api/stats', { headers: { 'Accept': 'application/json' } }),
+        fetch('/api/items', { headers: { 'Accept': 'application/json' } })
+      ]);
+
+      const [statsData, itemsData] = await Promise.all([
+        statsRes.json().catch(() => null),
+        itemsRes.json().catch(() => null)
+      ]);
+
+      if (statsRes.ok && statsData?.success && statsData.stats) {
         setPlatformStats(statsData.stats);
       }
 
-      // 2. Fetch reported items for directory, carousel, and map
-      const itemsRes = await fetch('/api/items');
-      const itemsData = await itemsRes.json();
-      if (itemsRes.ok && itemsData.success) {
+      if (itemsRes.ok && itemsData?.success && Array.isArray(itemsData.items)) {
         setDbItems(itemsData.items);
         setAllItems(itemsData.items);
         setFilteredItems(itemsData.items);

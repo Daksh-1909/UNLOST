@@ -1,14 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
   Menu, X, LogOut, LayoutGrid, PlusCircle, Shield, User, Phone, Home, 
   ChevronDown, Sun, Moon, Bell, CheckCheck, Sparkles, Tag, ShieldAlert, 
-  Clock, Package, RefreshCw 
+  Clock, Package 
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { tapHoverVariants, TRANSITION_BASE } from '../utils/animations';
-import { usePageTransition } from '../context/TransitionContext';
 
 const MotionLink = motion(Link);
 
@@ -31,14 +30,13 @@ const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const { triggerTransition } = usePageTransition();
   const [isOpen, setIsOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isDark, setIsDark] = useState(() => localStorage.getItem('theme') === 'dark');
   const [notifications, setNotifications] = useState<any[]>([]);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (isDark) {
       document.documentElement.classList.add('dark');
       localStorage.setItem('theme', 'dark');
@@ -49,7 +47,7 @@ const Navbar: React.FC = () => {
   }, [isDark]);
 
   // Fetch notifications dynamically
-  const fetchNotifications = React.useCallback(() => {
+  const fetchNotifications = useCallback(() => {
     if (!user) return;
     fetch('/api/notifications', { credentials: 'include' })
       .then(res => res.json())
@@ -63,8 +61,8 @@ const Navbar: React.FC = () => {
       });
   }, [user]);
 
-  // Dynamic real-time polling every 5 seconds + focus/custom event listeners
-  React.useEffect(() => {
+  // Dynamic real-time polling every 30 seconds + focus/custom event listeners
+  useEffect(() => {
     if (!user) {
       setNotifications([]);
       return;
@@ -72,7 +70,7 @@ const Navbar: React.FC = () => {
 
     fetchNotifications();
 
-    const interval = setInterval(fetchNotifications, 5000);
+    const interval = setInterval(fetchNotifications, 30000);
 
     const handleFocus = () => fetchNotifications();
     const handleVisibilityChange = () => {

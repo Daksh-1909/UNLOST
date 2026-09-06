@@ -53,9 +53,11 @@ const Items: React.FC = () => {
       if (status) params.append('status', status);
       if (date) params.append('date', date);
 
-      const response = await fetch(`/api/items?${params.toString()}`);
+      const response = await fetch(`/api/items?${params.toString()}`, {
+        headers: { 'Accept': 'application/json' }
+      });
       const data = await response.json();
-      if (response.ok && data.success) {
+      if (response.ok && data.success && Array.isArray(data.items)) {
         setItems(data.items);
       }
     } catch (error) {
@@ -66,10 +68,36 @@ const Items: React.FC = () => {
   };
 
   useEffect(() => {
-    const handler = setTimeout(() => {
-      fetchItems();
-    }, 300);
-    return () => clearTimeout(handler);
+    const controller = new AbortController();
+    const handler = setTimeout(async () => {
+      try {
+        const params = new URLSearchParams();
+        if (search) params.append('q', search);
+        if (category) params.append('category', category);
+        if (status) params.append('status', status);
+        if (date) params.append('date', date);
+
+        const response = await fetch(`/api/items?${params.toString()}`, {
+          signal: controller.signal,
+          headers: { 'Accept': 'application/json' }
+        });
+        const data = await response.json();
+        if (response.ok && data.success && Array.isArray(data.items)) {
+          setItems(data.items);
+        }
+      } catch (error: any) {
+        if (error?.name !== 'AbortError') {
+          console.error('Error fetching items:', error);
+        }
+      } finally {
+        setLoading(false);
+      }
+    }, 200);
+
+    return () => {
+      clearTimeout(handler);
+      controller.abort();
+    };
   }, [search, category, status, date]);
 
   const handleClaimSubmit = async (e: React.FormEvent) => {
