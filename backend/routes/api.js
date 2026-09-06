@@ -120,22 +120,47 @@ const generateJWT = (user) => {
   );
 };
 
-router.post('/api/auth/google', (req, res, next) => {
-  if (!req.body.token && req.body.credential) {
-    // Handling standard OAuth2 library token names just in case
-    req.body.id_token = req.body.credential;
-  } else if (req.body.token) {
-    req.body.id_token = req.body.token;
+import { OAuth2Client } from 'google-auth-library';
+const googleClient = new OAuth2Client(process.env.VITE_GOOGLE_CLIENT_ID);
+
+router.post('/api/auth/google', async (req, res, next) => {
+  let idToken = req.body.token || req.body.credential;
+
+  if (!idToken) {
+    return res.status(400).json({ success: false, message: 'Missing Google ID token.' });
   }
 
-  passport.authenticate('google-id-token', { session: false }, (err, user, info) => {
-    if (err || !user) {
-      console.error('Google OAuth error:', err || info);
-      return res.status(401).json({ success: false, message: 'Google authentication failed.' });
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken,
+      audience: process.env.VITE_GOOGLE_CLIENT_ID,
+    });
+    
+    const payload = ticket.getPayload();
+    const email = payload.email;
+
+    if (!validateParulEmail(email)) {
+      return res.status(403).json({ success: false, message: 'Only @paruluniversity.ac.in emails are allowed.' });
     }
 
-    if (!validateParulEmail(user.email)) {
-      return res.status(403).json({ success: false, message: 'Only @paruluniversity.ac.in emails are allowed.' });
+    let user = await User.findOne({ email });
+    
+    if (!user) {
+      user = new User({
+        username: payload.name,
+        email: payload.email,
+        profilePicture: payload.picture,
+        is_admin: false,
+        role: 'user',
+        auth_provider: 'google'
+      });
+      await user.save();
+    } else {
+        // Update profile picture if missing or changed
+        if (!user.profilePicture && payload.picture) {
+            user.profilePicture = payload.picture;
+            await user.save();
+        }
     }
 
     const jwtToken = generateJWT(user);
@@ -157,7 +182,11 @@ router.post('/api/auth/google', (req, res, next) => {
         profilePicture: user.profilePicture
       }
     });
-  })(req, res, next);
+
+  } catch (error) {
+    console.error('Google OAuth error:', error);
+    return res.status(401).json({ success: false, message: 'Google authentication failed.' });
+  }
 });
 
 // --- Regular Local Authentication ---

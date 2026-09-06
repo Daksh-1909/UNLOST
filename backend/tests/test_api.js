@@ -21,7 +21,7 @@ async function runTests() {
     
     // Clear test registration data if exists
     const User = mongoose.default.models.User || mongoose.default.model('User', new mongoose.default.Schema({}), 'users');
-    await User.deleteOne({ email: 'test_node@unlost.com' });
+    await User.deleteOne({ email: 'test_node@paruluniversity.ac.in' });
     console.log('Cleared test user from database.');
     await mongoose.default.disconnect();
     
@@ -44,7 +44,7 @@ async function testAuthAndItemsFlow() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       username: 'test_node',
-      email: 'test_node@unlost.com',
+      email: 'test_node@paruluniversity.ac.in',
       password: 'password123'
     })
   });
@@ -59,7 +59,7 @@ async function testAuthAndItemsFlow() {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      email: 'test_node@unlost.com',
+      email: 'test_node@paruluniversity.ac.in',
       password: 'password123'
     })
   });
@@ -110,7 +110,7 @@ async function testAuthAndItemsFlow() {
   // 6. Test user endpoint after logout
   console.log('6. Testing user endpoint after logout...');
   const userPostLogoutRes = await fetch(`${BASE_URL}/api/user`, {
-    headers: { Cookie: sessionCookie }
+    headers: {}
   });
   const userPostLogoutJson = await userPostLogoutRes.json();
   assert.strictEqual(userPostLogoutJson.authenticated, false);

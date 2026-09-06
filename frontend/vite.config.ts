@@ -12,6 +12,7 @@ export default defineConfig({
           'vendor-framer': ['framer-motion'],
           'vendor-icons': ['lucide-react', 'qrcode.react'],
           'vendor-charts': ['recharts'],
+          'vendor-auth': ['@react-oauth/google']
         }
       }
     },

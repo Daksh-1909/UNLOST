@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
@@ -212,7 +212,7 @@ const Navbar: React.FC = () => {
             
             {/* Dark Mode Toggle (Visible on Mobile & Desktop) */}
             <motion.button
-              onClick={() => triggerTransition(() => setIsDark(!isDark))}
+              onClick={() => setIsDark(!isDark)}
               className="p-2 rounded-xl text-textSecondary hover:text-text hover:bg-primary/10 transition-colors relative focus:outline-none"
               whileHover="hover"
               whileTap="tap"

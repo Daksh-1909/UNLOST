@@ -42,30 +42,7 @@ const Items: React.FC = () => {
   const [verifying, setVerifying] = useState(false);
   const [verificationResult, setVerificationResult] = useState<{ success: boolean; data?: string; message?: string } | null>(null);
 
-  const fetchItems = async (isInitial = false) => {
-    if (isInitial || items.length === 0) {
-      setLoading(true);
-    }
-    try {
-      const params = new URLSearchParams();
-      if (search) params.append('q', search);
-      if (category) params.append('category', category);
-      if (status) params.append('status', status);
-      if (date) params.append('date', date);
 
-      const response = await fetch(`/api/items?${params.toString()}`, {
-        headers: { 'Accept': 'application/json' }
-      });
-      const data = await response.json();
-      if (response.ok && data.success && Array.isArray(data.items)) {
-        setItems(data.items);
-      }
-    } catch (error) {
-      console.error('Error fetching items:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
     const controller = new AbortController();
