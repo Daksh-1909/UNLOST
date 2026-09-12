@@ -99,13 +99,11 @@
 /* Glassmorphism minimal utility classes */
 .glass-panel {
   @apply bg-surface/70 border border-primary/10 backdrop-blur-md rounded-xl shadow-sm;
-  contain: paint;
   will-change: transform;
 }
 
 .glass-card {
   @apply bg-surface/75 border border-primary/10 rounded-xl backdrop-blur-md transition-all duration-150 ease-out;
-  contain: paint;
   will-change: transform, opacity;
   transform: translateZ(0);
 }
