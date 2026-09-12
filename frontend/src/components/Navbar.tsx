@@ -248,9 +248,9 @@ const Navbar: React.FC = () => {
                   
                   {/* Dynamic Blinking / Pulsing Red Dot on Bell */}
                   {unreadCount > 0 && (
-                    <span className="absolute top-2 right-2 flex h-2.5 w-2.5 pointer-events-none">
+                    <span className="absolute top-1 right-1 flex h-2 w-2 pointer-events-none">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-80" />
-                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500 shadow-sm shadow-red-500/80" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500 shadow-sm shadow-red-500/80" />
                     </span>
                   )}
                 </motion.button>
