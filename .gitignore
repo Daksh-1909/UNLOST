@@ -5,3 +5,5 @@ instance/
 node_modules/
 dist/
 *.log
+powershell.cmd
+powershell.bat
