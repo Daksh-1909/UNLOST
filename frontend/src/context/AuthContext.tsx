@@ -33,7 +33,7 @@ const getInitialCachedUser = (): User | null => {
           id: parsed.id || parsed._id,
           username: parsed.username || parsed.email.split('@')[0],
           email: parsed.email,
-          is_admin: Boolean(parsed.is_admin),
+          is_admin: Boolean(parsed.is_admin || parsed.role === 'admin'),
           role: parsed.role || (parsed.is_admin ? 'admin' : 'user'),
           profilePicture: parsed.profilePicture
         };
@@ -60,7 +60,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: data.user.id || data.user._id,
           username: data.user.username,
           email: data.user.email,
-          is_admin: Boolean(data.user.is_admin),
+          is_admin: Boolean(data.user.is_admin || data.user.role === 'admin'),
           role: data.user.role,
           profilePicture: data.user.profilePicture,
         };
@@ -99,7 +99,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: data.user.id || data.user._id,
           username: data.user.username,
           email: data.user.email,
-          is_admin: Boolean(data.user.is_admin),
+          is_admin: Boolean(data.user.is_admin || data.user.role === 'admin'),
           role: data.user.role,
           profilePicture: data.user.profilePicture,
         };
@@ -130,7 +130,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: data.user.id || data.user._id,
           username: data.user.username,
           email: data.user.email,
-          is_admin: Boolean(data.user.is_admin),
+          is_admin: Boolean(data.user.is_admin || data.user.role === 'admin'),
           role: data.user.role,
           profilePicture: data.user.profilePicture,
         };
