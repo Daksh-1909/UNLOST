@@ -101,6 +101,7 @@ const Admin: React.FC = () => {
   const [msgPage, setMsgPage] = useState(1);
   const itemsPerPage = 10;
   const [refreshing, setRefreshing] = useState(false);
+  const [testingEmail, setTestingEmail] = useState(false);
 
   const fetchAdminStats = async (isManual = false) => {
     if (isManual) setRefreshing(true);
@@ -522,8 +523,6 @@ const Admin: React.FC = () => {
     includesSearch(l.action, logSearchQuery) ||
     includesSearch(l.user, logSearchQuery)
   );
-
-  const [testingEmail, setTestingEmail] = useState(false);
 
   const handleTestEmail = async () => {
     setTestingEmail(true);
