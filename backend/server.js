@@ -84,6 +84,10 @@ app.use(async (req, res, next) => {
 });
 
 // Route handler
+app.get('/', (req, res) => {
+  res.status(200).json({ success: true, service: 'UNLOST API', status: 'online' });
+});
+
 app.use('/', apiRouter);
 
 // Global Error Handler
