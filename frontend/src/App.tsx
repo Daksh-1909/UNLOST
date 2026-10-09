@@ -7,6 +7,7 @@ import { TransitionProvider } from './context/TransitionContext';
 
 import Navbar from './components/Navbar';
 import SmiloWidget from './components/SmiloWidget';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 // Route Code-Splitting: Lazy load all pages on-demand for lightning-fast initial load
 const Home = lazy(() => import('./pages/Home'));
@@ -169,7 +170,9 @@ const AppContent: React.FC = () => {
         
         {user && <Navbar />}
         <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 z-10">
-          <AnimatedRoutes />
+          <ErrorBoundary>
+            <AnimatedRoutes />
+          </ErrorBoundary>
         </main>
         {user && <SmiloWidget />}
       </div>

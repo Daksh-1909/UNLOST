@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { Mail, Calendar, Clock, Shield, Activity, FileText } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { pageVariants, staggerContainer, staggerItem } from '../utils/animations';
+import { authFetch } from '../utils/api';
 
 interface ProfileLog {
  action: string;
@@ -28,7 +29,7 @@ const Profile: React.FC = () => {
  useEffect(() => {
  const fetchProfile = async () => {
  try {
- const response = await fetch('/api/profile');
+ const response = await authFetch('/api/profile');
  const data = await response.json();
  if (response.ok && data.success) {
  setProfileData(data);

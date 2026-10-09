@@ -2,10 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { 
   Shield, Users, Layers, AlertTriangle, Archive, RefreshCw, 
   Trash2, Clock, CheckCircle2, AlertCircle, Calendar, Search, X, 
-  ShieldCheck, UserCheck, Filter, MessageSquare, Mail, Send, Check, Trash 
+  ShieldCheck, UserCheck, Filter, MessageSquare, Mail, Send, Check, Trash,
+  ShieldAlert 
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { pageVariants, staggerContainer, staggerItem, tapHoverVariants, TRANSITION_BASE } from '../utils/animations';
+import { authFetch } from '../utils/api';
 
 interface AdminStats {
   total_items: number;
@@ -80,6 +82,7 @@ const includesSearch = (value: unknown, query: string) =>
 const Admin: React.FC = () => {
   const [data, setData] = useState<AdminData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'messages' | 'users' | 'items' | 'trash' | 'logs'>('overview');
   const [actionMessage, setActionMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -102,7 +105,7 @@ const Admin: React.FC = () => {
   const fetchAdminStats = async (isManual = false) => {
     if (isManual) setRefreshing(true);
     try {
-      const response = await fetch('/api/admin/stats');
+      const response = await authFetch('/api/admin/stats');
       const resData = await response.json();
       if (response.ok && resData.success) {
         setData({
@@ -112,6 +115,7 @@ const Admin: React.FC = () => {
             archived_items: 0,
             new_today: 0,
             security_alerts: 0,
+            unread_messages: 0,
             ...resData.stats,
           },
           recent_items: Array.isArray(resData.recent_items) ? resData.recent_items : [],
@@ -120,16 +124,25 @@ const Admin: React.FC = () => {
           users: Array.isArray(resData.users) ? resData.users : [],
           contact_messages: Array.isArray(resData.contact_messages) ? resData.contact_messages : [],
         });
+        setFetchError(null);
         if (isManual) {
           setActionMessage({ type: 'success', text: 'Admin panel data refreshed successfully.' });
         }
-      } else if (isManual) {
-        setActionMessage({ type: 'error', text: resData.message || 'Failed to refresh data.' });
+      } else {
+        const errorMsg = resData.message || (response.status === 401 || response.status === 403 
+          ? 'Admin privileges required. Please verify that your account has administrator role.' 
+          : 'Failed to load admin data from server.');
+        setFetchError(errorMsg);
+        if (isManual) {
+          setActionMessage({ type: 'error', text: errorMsg });
+        }
       }
     } catch (error) {
       console.error('Failed to load admin stats:', error);
+      const errMsg = 'UNLOST server is currently unreachable. Please check backend connection.';
+      setFetchError(errMsg);
       if (isManual) {
-        setActionMessage({ type: 'error', text: 'Server is currently unreachable.' });
+        setActionMessage({ type: 'error', text: errMsg });
       }
     } finally {
       setLoading(false);
@@ -185,7 +198,7 @@ const Admin: React.FC = () => {
     });
 
     try {
-      const response = await fetch(`/api/admin/messages/${msgId}/mark-read`, { method: 'POST' });
+      const response = await authFetch(`/api/admin/messages/${msgId}/mark-read`, { method: 'POST' });
       const resData = await response.json();
       if (response.ok && resData.success) {
         setActionMessage({ type: 'success', text: 'Message marked as read.' });
@@ -216,7 +229,7 @@ const Admin: React.FC = () => {
     });
 
     try {
-      const response = await fetch(`/api/admin/messages/${msgId}/delete`, { method: 'POST' });
+      const response = await authFetch(`/api/admin/messages/${msgId}/delete`, { method: 'POST' });
       const resData = await response.json();
       if (response.ok && resData.success) {
         setActionMessage({ type: 'success', text: 'Message deleted successfully.' });
@@ -234,8 +247,8 @@ const Admin: React.FC = () => {
     
     setData(prev => {
       if (!prev) return prev;
-      const targetItem = prev.recent_items.find(i => i.id === itemId);
-      const updatedRecent = prev.recent_items.filter(i => i.id !== itemId);
+      const targetItem = (prev.recent_items || []).find(i => i.id === itemId);
+      const updatedRecent = (prev.recent_items || []).filter(i => i.id !== itemId);
       const updatedTrash = targetItem ? [
         {
           id: targetItem.id,
@@ -244,8 +257,8 @@ const Admin: React.FC = () => {
           deleted_at: new Date().toISOString(),
           days_deleted: 0
         },
-        ...prev.trash_items
-      ] : prev.trash_items;
+        ...(prev.trash_items || [])
+      ] : (prev.trash_items || []);
 
       return {
         ...prev,
@@ -260,7 +273,7 @@ const Admin: React.FC = () => {
     });
 
     try {
-      const response = await fetch(`/api/admin/delete/${itemId}`, { method: 'POST' });
+      const response = await authFetch(`/api/admin/delete/${itemId}`, { method: 'POST' });
       const resData = await response.json();
       if (response.ok && resData.success) {
         setActionMessage({ type: 'success', text: resData.message });
@@ -279,8 +292,8 @@ const Admin: React.FC = () => {
   const handleRecoverItem = async (itemId: string) => {
     setData(prev => {
       if (!prev) return prev;
-      const targetTrash = prev.trash_items.find(i => i.id === itemId);
-      const updatedTrash = prev.trash_items.filter(i => i.id !== itemId);
+      const targetTrash = (prev.trash_items || []).find(i => i.id === itemId);
+      const updatedTrash = (prev.trash_items || []).filter(i => i.id !== itemId);
       const updatedRecent = targetTrash ? [
         {
           id: targetTrash.id,
@@ -291,8 +304,8 @@ const Admin: React.FC = () => {
           date: new Date().toISOString(),
           reporter_email: 'Admin'
         },
-        ...prev.recent_items
-      ] : prev.recent_items;
+        ...(prev.recent_items || [])
+      ] : (prev.recent_items || []);
 
       return {
         ...prev,
@@ -307,7 +320,7 @@ const Admin: React.FC = () => {
     });
 
     try {
-      const response = await fetch(`/api/admin/recover/${itemId}`, { method: 'POST' });
+      const response = await authFetch(`/api/admin/recover/${itemId}`, { method: 'POST' });
       const resData = await response.json();
       if (response.ok && resData.success) {
         setActionMessage({ type: 'success', text: resData.message });
@@ -330,7 +343,7 @@ const Admin: React.FC = () => {
 
     setData(prev => {
       if (!prev) return prev;
-      const updatedTrash = prev.trash_items.filter(i => i.id !== itemId);
+      const updatedTrash = (prev.trash_items || []).filter(i => i.id !== itemId);
       return {
         ...prev,
         trash_items: updatedTrash,
@@ -342,7 +355,7 @@ const Admin: React.FC = () => {
     });
 
     try {
-      const response = await fetch(`/api/admin/permanent-delete/${itemId}`, { method: 'POST' });
+      const response = await authFetch(`/api/admin/permanent-delete/${itemId}`, { method: 'POST' });
       const resData = await response.json();
       if (response.ok && resData.success) {
         setActionMessage({ type: 'success', text: resData.message });
@@ -391,6 +404,35 @@ const Admin: React.FC = () => {
         <div className="relative flex items-center justify-center">
           <div className="h-12 w-12 animate-spin rounded-xl border-4 border-primary/25 border-t-primary"></div>
           <span className="absolute text-xs font-semibold text-primary">UL</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6 space-y-4">
+        <div className="p-4 rounded-full bg-danger/10 text-danger border border-danger/20">
+          <ShieldAlert className="h-10 w-10" />
+        </div>
+        <h2 className="text-2xl font-bold font-heading text-text">Admin Access Error</h2>
+        <p className="text-sm text-textSecondary max-w-md leading-relaxed">
+          {fetchError || 'Unable to retrieve administrative data. Please verify you are signed in as an administrator.'}
+        </p>
+        <div className="flex items-center gap-3 pt-3">
+          <button
+            onClick={() => fetchAdminStats(true)}
+            className="px-4 py-2 bg-primary text-white rounded-xl text-xs font-semibold shadow hover:bg-primary/90 transition-all flex items-center gap-2 cursor-pointer"
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            <span>Try Again</span>
+          </button>
+          <a
+            href="/"
+            className="px-4 py-2 bg-surface border border-white/10 text-textSecondary hover:text-text rounded-xl text-xs font-semibold transition-all"
+          >
+            Back to Home
+          </a>
         </div>
       </div>
     );
@@ -486,7 +528,7 @@ const Admin: React.FC = () => {
   const handleTestEmail = async () => {
     setTestingEmail(true);
     try {
-      const response = await fetch('/api/admin/test-email', { method: 'POST', credentials: 'include' });
+      const response = await authFetch('/api/admin/test-email', { method: 'POST' });
       const resData = await response.json();
       if (response.ok && resData.success) {
         if (resData.details?.simulated) {
@@ -657,7 +699,7 @@ const Admin: React.FC = () => {
                   <button onClick={() => setActiveTab('items')} className="text-xs font-semibold text-primary hover:underline">View All &rarr;</button>
                 </div>
                 <div className="space-y-3">
-                  {data?.recent_items.slice(0, 5).map((item) => (
+                  {(data?.recent_items || []).slice(0, 5).map((item) => (
                     <div key={item.id} className="p-4 rounded-xl bg-surface border border-primary/10 shadow-sm flex items-center justify-between gap-4">
                       <div>
                         <h4 className="text-sm font-bold text-text">{item.title}</h4>
@@ -679,7 +721,7 @@ const Admin: React.FC = () => {
                   <button onClick={() => setActiveTab('logs')} className="text-xs font-semibold text-primary hover:underline">View Logs &rarr;</button>
                 </div>
                 <div className="space-y-3">
-                  {data?.logs.slice(0, 5).map((log, i) => (
+                  {(data?.logs || []).slice(0, 5).map((log, i) => (
                     <div key={i} className={`p-4 rounded-xl border shadow-sm flex flex-col gap-1.5 text-xs transition-all ${
                       log.action.includes('Security Alert') ? 'bg-danger/10 border-danger/30' : 'bg-surface border-primary/10'
                     }`}>
@@ -1100,7 +1142,7 @@ const Admin: React.FC = () => {
               className="overflow-x-auto -mx-6"
             >
               <div className="inline-block min-w-full align-middle px-6">
-                {data?.trash_items.length === 0 ? (
+                {(data?.trash_items || []).length === 0 ? (
                   <div className="text-center py-8 text-textSecondary text-sm">
                     <Archive className="h-10 w-10 text-textMuted mx-auto mb-2" />
                     <p>Trash is empty. Soft deleted listings are saved here.</p>
@@ -1123,7 +1165,7 @@ const Admin: React.FC = () => {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-primary/10">
-                        {data?.trash_items.map((item) => (
+                        {(data?.trash_items || []).map((item) => (
                           <tr key={item.id} className="hover:bg-surface/80 transition-all text-text">
                             <td className="py-3.5 px-4 font-bold">{item.title}</td>
                             <td className="py-3.5 px-4">

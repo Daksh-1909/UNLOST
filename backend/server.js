@@ -83,8 +83,8 @@ app.use(async (req, res, next) => {
   }
 });
 
-// Route handler
-app.get('/', (req, res) => {
+// Health check route handler
+app.get(['/', '/server.js', '/api', '/api/health'], (req, res) => {
   res.status(200).json({ success: true, service: 'UNLOST API', status: 'online' });
 });
 

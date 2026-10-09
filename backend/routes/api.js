@@ -39,8 +39,9 @@ const verifyRateLimiter = rateLimit({
 const ADMIN_EMAILS = [
   'shlokapatel20@gmail.com',
   'rudraprajapati1819@gmail.com',
-  'admin@unlost.com'
-];
+  'admin@unlost.com',
+  process.env.ADMIN_EMAIL
+].filter(Boolean).map(e => e.toLowerCase());
 
 const validateParulEmail = (email) => {
   if (!email) return false;
@@ -173,6 +174,7 @@ router.post('/api/auth/google', async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
+      token: jwtToken,
       user: {
         id: user._id.toString(),
         username: user.username,
@@ -193,7 +195,13 @@ router.post('/api/auth/google', async (req, res, next) => {
 
 // GET /api/user
 router.get('/api/user', async (req, res) => {
-  const token = req.cookies?.token;
+  let token = req.cookies?.token;
+  if (!token && req.headers.authorization) {
+    const parts = req.headers.authorization.split(' ');
+    if (parts.length === 2 && /^bearer$/i.test(parts[0])) {
+      token = parts[1];
+    }
+  }
   if (token) {
     try {
       const decoded = jwt.verify(token, JWT_SECRET);
@@ -273,6 +281,7 @@ router.post('/api/login', authRateLimiter, (req, res, next) => {
 
       return res.status(200).json({
         success: true,
+        token: jwtToken,
         user: {
           id: user._id.toString(),
           username: user.username,

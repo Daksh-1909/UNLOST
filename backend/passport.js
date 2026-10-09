@@ -5,11 +5,17 @@ import GoogleTokenStrategy from 'passport-google-id-token';
 import bcrypt from 'bcryptjs';
 import User from './models/User.js';
 
-// Extractor function to get JWT from the 'token' cookie
-const cookieExtractor = (req) => {
+// Extractor function to get JWT from 'token' cookie or Authorization Bearer header
+const tokenExtractor = (req) => {
   let token = null;
-  if (req && req.cookies) {
+  if (req && req.cookies && req.cookies.token) {
     token = req.cookies.token;
+  }
+  if (!token && req && req.headers && req.headers.authorization) {
+    const parts = req.headers.authorization.split(' ');
+    if (parts.length === 2 && /^bearer$/i.test(parts[0])) {
+      token = parts[1];
+    }
   }
   return token;
 };
@@ -36,7 +42,7 @@ passport.use(new LocalStrategy({
 
 // 2. JWT Strategy (for loginRequired / adminRequired)
 passport.use(new JwtStrategy({
-  jwtFromRequest: cookieExtractor,
+  jwtFromRequest: tokenExtractor,
   secretOrKey: process.env.JWT_SECRET_KEY || 'jwtsecret123'
 }, async (jwtPayload, done) => {
   try {
@@ -65,8 +71,9 @@ passport.use(new GoogleTokenStrategy({
     const adminEmails = [
       'shlokapatel20@gmail.com',
       'rudraprajapati1819@gmail.com',
-      'admin@unlost.com'
-    ];
+      'admin@unlost.com',
+      process.env.ADMIN_EMAIL
+    ].filter(Boolean).map(e => e.toLowerCase());
     const isAdmin = email && adminEmails.includes(email.toLowerCase());
     let user = await User.findOne({ email });
     if (user) {

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { authFetch, setAuthToken } from '../utils/api';
 
 export interface User {
   id: string;
@@ -51,7 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const checkAuth = async () => {
     try {
-      const response = await fetch('/api/user', {
+      const response = await authFetch('/api/user', {
         headers: { 'Accept': 'application/json' }
       });
       const data = await response.json();
@@ -70,6 +71,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } catch (_) {}
       } else {
         setUser(null);
+        setAuthToken(null);
         try {
           localStorage.removeItem(USER_STORAGE_KEY);
         } catch (_) {}
@@ -88,13 +90,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await fetch('/api/login', {
+      const response = await authFetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
       const data = await response.json();
       if (response.ok && data.success && data.user) {
+        if (data.token) {
+          setAuthToken(data.token);
+        }
         const userData: User = {
           id: data.user.id || data.user._id,
           username: data.user.username,
@@ -119,13 +124,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loginWithGoogle = async (token: string) => {
     try {
-      const response = await fetch('/api/auth/google', {
+      const response = await authFetch('/api/auth/google', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token }),
       });
       const data = await response.json();
       if (response.ok && data.success && data.user) {
+        if (data.token) {
+          setAuthToken(data.token);
+        }
         const userData: User = {
           id: data.user.id || data.user._id,
           username: data.user.username,
@@ -150,7 +158,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const registerUser = async (username: string, email: string, password: string) => {
     try {
-      const response = await fetch('/api/register', {
+      const response = await authFetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, email, password }),
@@ -169,11 +177,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
-      await fetch('/api/logout');
+      await authFetch('/api/logout');
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
       setUser(null);
+      setAuthToken(null);
       try {
         localStorage.removeItem(USER_STORAGE_KEY);
       } catch (_) {}

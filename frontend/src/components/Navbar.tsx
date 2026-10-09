@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { tapHoverVariants, TRANSITION_BASE } from '../utils/animations';
+import { authFetch } from '../utils/api';
 
 const MotionLink = motion(Link);
 
@@ -49,7 +50,7 @@ const Navbar: React.FC = () => {
   // Fetch notifications dynamically
   const fetchNotifications = useCallback(() => {
     if (!user) return;
-    fetch('/api/notifications', { credentials: 'include' })
+    authFetch('/api/notifications')
       .then(res => res.json())
       .then(data => {
         if (data?.success && Array.isArray(data.notifications)) {
@@ -96,7 +97,7 @@ const Navbar: React.FC = () => {
 
   const markAsRead = async (id: string) => {
     try {
-      await fetch(`/api/notifications/${id}/read`, { method: 'PUT', credentials: 'include' });
+      await authFetch(`/api/notifications/${id}/read`, { method: 'PUT' });
       setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n));
     } catch (e) {
       console.error('Failed to mark notification as read', e);
@@ -105,7 +106,7 @@ const Navbar: React.FC = () => {
 
   const markAllAsRead = async () => {
     try {
-      await fetch('/api/notifications/read-all', { method: 'PUT', credentials: 'include' });
+      await authFetch('/api/notifications/read-all', { method: 'PUT' });
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
     } catch (e) {
       console.error('Failed to mark all as read', e);

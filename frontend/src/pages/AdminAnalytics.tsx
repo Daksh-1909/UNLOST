@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { CheckCircle2 } from 'lucide-react';
 import { scrollRevealVariants, staggerContainer, staggerItem } from '../utils/animations';
+import { authFetch } from '../utils/api';
 
 interface Analytics {
   totalItems: number;
@@ -18,13 +19,16 @@ const AdminAnalytics: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   const fetchAnalytics = () => {
-    fetch('/api/admin/analytics')
+    authFetch('/api/admin/analytics')
       .then(res => res.json())
       .then(data => {
         if (data.success) setAnalytics(data.analytics);
         setLoading(false);
       })
-      .catch(err => console.error(err));
+      .catch(err => {
+        console.error(err);
+        setLoading(false);
+      });
   };
 
   useEffect(() => {
@@ -47,7 +51,7 @@ const AdminAnalytics: React.FC = () => {
 
   const handleApprove = async (id: string) => {
     try {
-      const res = await fetch(`/api/admin/items/${id}/approve-claim`, { method: 'POST' });
+      const res = await authFetch(`/api/admin/items/${id}/approve-claim`, { method: 'POST' });
       const data = await res.json();
       if (data.success) {
         setAnalytics(prev => prev ? {
@@ -61,8 +65,8 @@ const AdminAnalytics: React.FC = () => {
     }
   };
 
-  if (loading) return <div className="text-center p-10">Loading analytics...</div>;
-  if (!analytics) return <div className="text-center p-10 text-danger">Failed to load analytics</div>;
+  if (loading) return <div className="text-center p-10 text-textSecondary">Loading analytics...</div>;
+  if (!analytics) return <div className="text-center p-10 text-danger font-semibold">Failed to load analytics dashboard. Please check administrator credentials.</div>;
 
   const statusData = Object.entries(analytics.statusCounts).map(([name, value]) => ({ name, value }));
 
