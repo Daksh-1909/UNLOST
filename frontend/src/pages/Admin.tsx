@@ -74,6 +74,9 @@ interface AdminData {
   contact_messages?: ContactMessage[];
 }
 
+const includesSearch = (value: unknown, query: string) =>
+  String(value ?? '').toLowerCase().includes(query.toLowerCase());
+
 const Admin: React.FC = () => {
   const [data, setData] = useState<AdminData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -102,7 +105,21 @@ const Admin: React.FC = () => {
       const response = await fetch('/api/admin/stats');
       const resData = await response.json();
       if (response.ok && resData.success) {
-        setData(resData);
+        setData({
+          stats: {
+            total_items: 0,
+            total_users: 0,
+            archived_items: 0,
+            new_today: 0,
+            security_alerts: 0,
+            ...resData.stats,
+          },
+          recent_items: Array.isArray(resData.recent_items) ? resData.recent_items : [],
+          trash_items: Array.isArray(resData.trash_items) ? resData.trash_items : [],
+          logs: Array.isArray(resData.logs) ? resData.logs : [],
+          users: Array.isArray(resData.users) ? resData.users : [],
+          contact_messages: Array.isArray(resData.contact_messages) ? resData.contact_messages : [],
+        });
         if (isManual) {
           setActionMessage({ type: 'success', text: 'Admin panel data refreshed successfully.' });
         }
@@ -428,10 +445,10 @@ const Admin: React.FC = () => {
   // Filtering contact messages
   const filteredMessages = (data?.contact_messages || []).filter(m => {
     const matchesSearch = 
-      m.name.toLowerCase().includes(msgSearchQuery.toLowerCase()) ||
-      m.email.toLowerCase().includes(msgSearchQuery.toLowerCase()) ||
-      m.subject.toLowerCase().includes(msgSearchQuery.toLowerCase()) ||
-      m.message.toLowerCase().includes(msgSearchQuery.toLowerCase());
+      includesSearch(m.name, msgSearchQuery) ||
+      includesSearch(m.email, msgSearchQuery) ||
+      includesSearch(m.subject, msgSearchQuery) ||
+      includesSearch(m.message, msgSearchQuery);
 
     if (msgStatusFilter === 'unread') return matchesSearch && m.status === 'Unread';
     if (msgStatusFilter === 'read') return matchesSearch && m.status === 'Read';
@@ -441,9 +458,9 @@ const Admin: React.FC = () => {
   // Filtering users
   const filteredUsers = (data?.users || []).filter(u => {
     const matchesSearch = 
-      u.username.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
-      u.email.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
-      (u.role && u.role.toLowerCase().includes(userSearchQuery.toLowerCase()));
+      includesSearch(u.username, userSearchQuery) ||
+      includesSearch(u.email, userSearchQuery) ||
+      includesSearch(u.role, userSearchQuery);
     
     if (userRoleFilter === 'admin') return matchesSearch && (u.is_admin || u.role === 'admin');
     if (userRoleFilter === 'user') return matchesSearch && (!u.is_admin && u.role !== 'admin');
@@ -452,16 +469,16 @@ const Admin: React.FC = () => {
 
   // Filtering items
   const filteredItems = (data?.recent_items || []).filter(i => 
-    i.title.toLowerCase().includes(itemSearchQuery.toLowerCase()) ||
-    i.category.toLowerCase().includes(itemSearchQuery.toLowerCase()) ||
-    i.location.toLowerCase().includes(itemSearchQuery.toLowerCase()) ||
-    i.reporter_email.toLowerCase().includes(itemSearchQuery.toLowerCase())
+    includesSearch(i.title, itemSearchQuery) ||
+    includesSearch(i.category, itemSearchQuery) ||
+    includesSearch(i.location, itemSearchQuery) ||
+    includesSearch(i.reporter_email, itemSearchQuery)
   );
 
   // Filtering logs
   const filteredLogs = (data?.logs || []).filter(l => 
-    l.action.toLowerCase().includes(logSearchQuery.toLowerCase()) ||
-    l.user.toLowerCase().includes(logSearchQuery.toLowerCase())
+    includesSearch(l.action, logSearchQuery) ||
+    includesSearch(l.user, logSearchQuery)
   );
 
   const [testingEmail, setTestingEmail] = useState(false);
